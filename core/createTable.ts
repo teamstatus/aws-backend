@@ -58,7 +58,7 @@ export const createTable = async (db: DynamoDBClient, table: string) =>
 			BillingMode: BillingMode.PAY_PER_REQUEST,
 			GlobalSecondaryIndexes: [
 				{
-					IndexName: 'memberOrganizations',
+					IndexName: 'organizationMember',
 					KeySchema: [
 						{
 							AttributeName: 'organizationMember__user',

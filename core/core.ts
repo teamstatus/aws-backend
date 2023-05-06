@@ -1,4 +1,5 @@
 import {
+	ConditionalCheckFailedException,
 	DynamoDBClient,
 	PutItemCommand,
 	QueryCommand,
@@ -32,6 +33,7 @@ export type CoreEvent =
 	  }
 type listenerFn = (event: CoreEvent) => unknown
 const l = (s: string) => s.toLowerCase()
+
 export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 	const listeners: { event: CoreEventType | '*'; fn: listenerFn }[] = []
 	const notify = (event: CoreEvent) => {
@@ -41,6 +43,44 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 		]) {
 			fn(event)
 		}
+	}
+	const isMember = async (organizationId: string, userId: string) => {
+		if (!isUserId(userId)) {
+			return {
+				error: new Error(`Not a valid user ID: ${userId}`),
+			}
+		}
+		const userIdKey = l(userId)
+		if (!isOrganizationId(organizationId)) {
+			return {
+				error: new Error(`Not a valid organization ID: ${organizationId}`),
+			}
+		}
+		const organizationIdKey = l(organizationId)
+
+		const res = await db.send(
+			new QueryCommand({
+				TableName: table,
+				IndexName: 'organizationMember',
+				KeyConditionExpression:
+					'#user = :user AND #organization = :organization',
+				ExpressionAttributeNames: {
+					'#user': 'organizationMember__user',
+					'#organization': 'organizationMember__organization',
+				},
+				ExpressionAttributeValues: {
+					':user': {
+						S: userIdKey,
+					},
+					':organization': {
+						S: organizationIdKey,
+					},
+				},
+				Limit: 1,
+			}),
+		)
+
+		return (res.Items?.length ?? 0) > 0
 	}
 	return {
 		authenticate: (userId: string) => ({
@@ -57,48 +97,59 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 						}
 					}
 					const userIdKey = l(userId)
-					await db.send(
-						new PutItemCommand({
-							TableName: table,
-							Item: {
-								id: {
-									S: organizationIdKey,
+					try {
+						await db.send(
+							new PutItemCommand({
+								TableName: table,
+								Item: {
+									id: {
+										S: organizationIdKey,
+									},
+									type: {
+										S: 'organization',
+									},
 								},
-								type: {
-									S: 'organization',
+								ConditionExpression: 'attribute_not_exists(id)',
+							}),
+						)
+						await db.send(
+							new PutItemCommand({
+								TableName: table,
+								Item: {
+									id: {
+										S: ulid(),
+									},
+									type: {
+										S: 'organizationMember',
+									},
+									organizationMember__organization: {
+										S: organizationIdKey,
+									},
+									organizationMember__user: {
+										S: userIdKey,
+									},
+									role: {
+										S: 'owner',
+									},
 								},
-							},
-						}),
-					)
-					await db.send(
-						new PutItemCommand({
-							TableName: table,
-							Item: {
-								id: {
-									S: ulid(),
-								},
-								type: {
-									S: 'organizationMember',
-								},
-								organizationMember__organization: {
-									S: organizationIdKey,
-								},
-								organizationMember__user: {
-									S: userIdKey,
-								},
-								role: {
-									S: 'owner',
-								},
-							},
-						}),
-					)
-					const event: CoreEvent = {
-						type: CoreEventType.ORGANIZATION_CREATED,
-						id: organizationId,
-						owner: userId,
+							}),
+						)
+						const event: CoreEvent = {
+							type: CoreEventType.ORGANIZATION_CREATED,
+							id: organizationId,
+							owner: userId,
+						}
+						notify(event)
+						return { organization: event }
+					} catch (error) {
+						if ((error as Error).name === ConditionalCheckFailedException.name)
+							return {
+								error: new Error(
+									`Organization '${organizationIdKey}' already exists.`,
+								),
+							}
+						return { error: error as Error }
 					}
-					notify(event)
-					return { organization: event }
 				},
 				list: async () => {
 					if (!isUserId(userId)) {
@@ -110,7 +161,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 					const res = await db.send(
 						new QueryCommand({
 							TableName: table,
-							IndexName: 'memberOrganizations',
+							IndexName: 'organizationMember',
 							KeyConditionExpression: '#user = :user',
 							ExpressionAttributeNames: {
 								'#user': 'organizationMember__user',
@@ -142,7 +193,6 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 			},
 			organization: (organizationId: string) => ({
 				projects: {
-					// FIXME: check write permission
 					create: async (projectId: string) => {
 						if (!isUserId(userId)) {
 							return {
@@ -157,6 +207,14 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 							return {
 								error: new Error(
 									`Not a valid project ID: ${organizationProjectId}`,
+								),
+							}
+						}
+
+						if (!(await isMember(organizationId, userId))) {
+							return {
+								error: new Error(
+									`Only members of ${organizationId} can create new projects.`,
 								),
 							}
 						}
@@ -212,7 +270,14 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 						}
 						const userIdKey = l(userId)
 
-						// TODO: Check permission
+						if (!(await isMember(organizationId, userId))) {
+							return {
+								error: new Error(
+									`Only members of ${organizationId} can view projects.`,
+								),
+							}
+						}
+
 						const res = await db.send(
 							new QueryCommand({
 								TableName: table,
@@ -248,7 +313,6 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 				},
 				project: (projectId: string) => ({
 					status: {
-						// FIXME: check write permission
 						create: async (message: string) => {
 							if (!isUserId(userId)) {
 								return {
@@ -266,7 +330,14 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 								}
 							}
 
-							// TODO: Check permission
+							if (!(await isMember(organizationId, userId))) {
+								return {
+									error: new Error(
+										`Only members of '${organizationId}' are allowed to create status.`,
+									),
+								}
+							}
+
 							const id = ulid()
 
 							await db.send(
@@ -318,7 +389,14 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 								}
 							}
 
-							// TODO: Check permission
+							if (!(await isMember(organizationId, userId))) {
+								return {
+									error: new Error(
+										`Only members of '${organizationId}' are allowed to list status.`,
+									),
+								}
+							}
+
 							const res = await db.send(
 								new QueryCommand({
 									TableName: table,

@@ -18,6 +18,5 @@
     "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true
-  },
-  "exclude": ["cdk.out/**/*", "dist/**/*"]
+  }
 }
