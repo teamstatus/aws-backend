@@ -1,6 +1,8 @@
 import {
 	ConditionalCheckFailedException,
+	DeleteItemCommand,
 	DynamoDBClient,
+	GetItemCommand,
 	PutItemCommand,
 	QueryCommand,
 } from '@aws-sdk/client-dynamodb'
@@ -12,6 +14,12 @@ export enum CoreEventType {
 	ORGANIZATION_CREATED = 'ORGANIZATION_CREATED',
 	PROJECT_CREATED = 'PROJECT_CREATED',
 	STATUS_CREATED = 'STATUS_CREATED',
+	PROJECT_MEMBER_INVITED = 'PROJECT_MEMBER_INVITED',
+	PROJECT_MEMBER_CREATED = 'PROJECT_MEMBER_CREATED',
+}
+export enum Role {
+	OWNER = 'owner',
+	MEMBER = 'member',
 }
 export type CoreEvent =
 	| {
@@ -31,6 +39,21 @@ export type CoreEvent =
 			message: string
 			project: string
 	  }
+	| {
+			type: CoreEventType.PROJECT_MEMBER_INVITED
+			id: string
+			project: string
+			inviter: string
+			invitee: string
+			role: Role
+	  }
+	| {
+			type: CoreEventType.PROJECT_MEMBER_CREATED
+			id: string
+			project: string
+			user: string
+			role: Role
+	  }
 type listenerFn = (event: CoreEvent) => unknown
 const l = (s: string) => s.toLowerCase()
 
@@ -44,7 +67,10 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 			fn(event)
 		}
 	}
-	const isMember = async (organizationId: string, userId: string) => {
+	const getOrganizationMember = async (
+		organizationId: string,
+		userId: string,
+	) => {
 		if (!isUserId(userId)) {
 			return {
 				error: new Error(`Not a valid user ID: ${userId}`),
@@ -80,8 +106,92 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 			}),
 		)
 
-		return (res.Items?.length ?? 0) > 0
+		const memberInfo = res.Items?.[0]
+		return memberInfo !== undefined ? unmarshall(memberInfo) : null
 	}
+	const isOrganizationMember = async (organizationId: string, userId: string) =>
+		(await getOrganizationMember(organizationId, userId)) !== null
+	const isOrganizationOwner = async (organizationId: string, userId: string) =>
+		(await getOrganizationMember(organizationId, userId))?.role === Role.OWNER
+
+	const getProjectMember = async (projectId: string, userId: string) => {
+		if (!isUserId(userId)) {
+			return {
+				error: new Error(`Not a valid user ID: ${userId}`),
+			}
+		}
+		const userIdKey = l(userId)
+		if (!isProjectId(projectId)) {
+			return {
+				error: new Error(`Not a valid project ID: ${projectId}`),
+			}
+		}
+		const projectIdKey = l(projectId)
+
+		const res = await db.send(
+			new QueryCommand({
+				TableName: table,
+				IndexName: 'projectMember',
+				KeyConditionExpression: '#user = :user AND #project = :project',
+				ExpressionAttributeNames: {
+					'#user': 'projectMember__user',
+					'#project': 'projectMember__project',
+				},
+				ExpressionAttributeValues: {
+					':user': {
+						S: userIdKey,
+					},
+					':project': {
+						S: projectIdKey,
+					},
+				},
+				Limit: 1,
+			}),
+		)
+
+		const memberInfo = res.Items?.[0]
+		return memberInfo !== undefined ? unmarshall(memberInfo) : null
+	}
+	const isProjectMember = async (projectId: string, userId: string) =>
+		(await getProjectMember(projectId, userId)) !== null
+
+	const createProjectMember = async (
+		organizationProjectId: string,
+		userIdKey: string,
+		role: Role,
+	): Promise<CoreEvent> => {
+		const id = ulid()
+		await db.send(
+			new PutItemCommand({
+				TableName: table,
+				Item: {
+					id: {
+						S: id,
+					},
+					type: {
+						S: 'projectMember',
+					},
+					projectMember__project: {
+						S: organizationProjectId,
+					},
+					projectMember__user: {
+						S: userIdKey,
+					},
+					role: {
+						S: role,
+					},
+				},
+			}),
+		)
+		return {
+			type: CoreEventType.PROJECT_MEMBER_CREATED,
+			id,
+			project: organizationProjectId,
+			user: userIdKey,
+			role,
+		}
+	}
+
 	return {
 		authenticate: (userId: string) => ({
 			organizations: {
@@ -129,7 +239,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 										S: userIdKey,
 									},
 									role: {
-										S: 'owner',
+										S: Role.OWNER,
 									},
 								},
 							}),
@@ -178,7 +288,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 							(res.Items ?? []).map((item) => {
 								const d: {
 									organizationMember__organization: string // '$acme',
-									role: 'owner'
+									role: Role.OWNER
 									id: string // '01GZQ0QH3BQF9W3JQXTDHGB251',
 									organizationMember__user: string //'@alex'
 								} = unmarshall(item) as any
@@ -211,7 +321,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 							}
 						}
 
-						if (!(await isMember(organizationId, userId))) {
+						if (!(await isOrganizationMember(organizationId, userId))) {
 							return {
 								error: new Error(
 									`Only members of ${organizationId} can create new projects.`,
@@ -233,34 +343,21 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 									ConditionExpression: 'attribute_not_exists(id)',
 								}),
 							)
-							await db.send(
-								new PutItemCommand({
-									TableName: table,
-									Item: {
-										id: {
-											S: ulid(),
-										},
-										type: {
-											S: 'projectMember',
-										},
-										projectMember__project: {
-											S: organizationProjectId,
-										},
-										projectMember__user: {
-											S: userIdKey,
-										},
-										role: {
-											S: 'owner',
-										},
-									},
-								}),
-							)
 							const event: CoreEvent = {
 								type: CoreEventType.PROJECT_CREATED,
 								id: organizationProjectId,
 								owner: userId,
 							}
 							notify(event)
+
+							const memberEvent = await createProjectMember(
+								organizationProjectId,
+								userIdKey,
+								Role.OWNER,
+							)
+
+							notify(memberEvent)
+
 							return { project: event }
 						} catch (error) {
 							if (
@@ -282,7 +379,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 						}
 						const userIdKey = l(userId)
 
-						if (!(await isMember(organizationId, userId))) {
+						if (!(await isOrganizationMember(organizationId, userId))) {
 							return {
 								error: new Error(
 									`Only members of ${organizationId} can view projects.`,
@@ -293,7 +390,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 						const res = await db.send(
 							new QueryCommand({
 								TableName: table,
-								IndexName: 'memberProjects',
+								IndexName: 'projectMember',
 								KeyConditionExpression: '#user = :user',
 								ExpressionAttributeNames: {
 									'#user': 'projectMember__user',
@@ -310,7 +407,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 								(res.Items ?? []).map((item) => {
 									const d: {
 										projectMember__project: string // '#teamstatus',
-										role: 'owner'
+										role: Role.OWNER
 										id: string // '01GZQ0QH3BQF9W3JQXTDHGB251',
 										projectMember__user: string //'@alex'
 									} = unmarshall(item) as any
@@ -342,10 +439,10 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 								}
 							}
 
-							if (!(await isMember(organizationId, userId))) {
+							if (!(await isProjectMember(organizationProjectId, userId))) {
 								return {
 									error: new Error(
-										`Only members of '${organizationId}' are allowed to create status.`,
+										`Only members of '${organizationProjectId}' are allowed to create status.`,
 									),
 								}
 							}
@@ -401,7 +498,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 								}
 							}
 
-							if (!(await isMember(organizationId, userId))) {
+							if (!(await isOrganizationMember(organizationId, userId))) {
 								return {
 									error: new Error(
 										`Only members of '${organizationId}' are allowed to list status.`,
@@ -447,6 +544,138 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 							}
 						},
 					},
+					invite: async (invitedUserId: string) => {
+						if (!isUserId(userId)) {
+							return {
+								error: new Error(`Not a valid user ID: ${userId}`),
+							}
+						}
+						const userIdKey = l(userId)
+
+						if (!isUserId(invitedUserId)) {
+							return {
+								error: new Error(`Not a valid user ID: ${invitedUserId}`),
+							}
+						}
+						const invitedUserIdKey = l(invitedUserId)
+
+						const organizationProjectId = l(`${organizationId}${projectId}`)
+						if (!isProjectId(organizationProjectId)) {
+							return {
+								error: new Error(
+									`Not a valid project ID: ${organizationProjectId}`,
+								),
+							}
+						}
+
+						if (!(await isOrganizationOwner(organizationId, userId))) {
+							return {
+								error: new Error(
+									`Only members of ${organizationId} can view projects.`,
+								),
+							}
+						}
+
+						const id = ulid()
+
+						await db.send(
+							new PutItemCommand({
+								TableName: table,
+								Item: {
+									id: {
+										S: id,
+									},
+									type: {
+										S: 'projectInvitation',
+									},
+									projectInvitation__project: {
+										S: organizationProjectId,
+									},
+									projectInvitation__invitee: {
+										S: invitedUserIdKey,
+									},
+									projectInvitation__inviter: {
+										S: userIdKey,
+									},
+									projectInvitation__role: {
+										S: Role.MEMBER,
+									},
+								},
+							}),
+						)
+						const event: CoreEvent = {
+							type: CoreEventType.PROJECT_MEMBER_INVITED,
+							id,
+							project: organizationProjectId,
+							invitee: invitedUserIdKey,
+							inviter: userIdKey,
+							role: Role.MEMBER,
+						}
+						notify(event)
+						return { invitation: event }
+					},
+					invitation: (invitationId: string) => ({
+						accept: async () => {
+							const { Item } = await db.send(
+								new GetItemCommand({
+									TableName: table,
+									Key: {
+										id: {
+											S: invitationId,
+										},
+										type: {
+											S: 'projectInvitation',
+										},
+									},
+								}),
+							)
+
+							if (Item === undefined)
+								return {
+									error: new Error(`Invitation '${invitationId}' not found!`),
+								}
+
+							const invitation = unmarshall(Item)
+
+							if (invitation.projectInvitation__invitee !== l(userId)) {
+								return {
+									error: new Error(
+										`Invitation '${invitationId}' is not for you!`,
+									),
+								}
+							}
+
+							const [event] = await Promise.all([
+								createProjectMember(
+									invitation.projectInvitation__project,
+									invitation.projectInvitation__invitee,
+									invitation.projectInvitation__role,
+								),
+								db.send(
+									new DeleteItemCommand({
+										TableName: table,
+										Key: {
+											id: {
+												S: invitationId,
+											},
+											type: {
+												S: 'projectInvitation',
+											},
+										},
+									}),
+								),
+							])
+
+							notify(event)
+
+							return {
+								projectMembership: {
+									id: event.id,
+									role: invitation.projectInvitation__role,
+								},
+							}
+						},
+					}),
 				}),
 			}),
 		}),

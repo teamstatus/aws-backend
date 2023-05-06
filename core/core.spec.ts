@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { before, describe, test as it } from 'node:test'
 import { check, objectMatching, stringMatching } from 'tsmatchers'
 import { ulid } from 'ulid'
-import { CoreEventType, core, type CoreEvent } from './core.js'
+import { CoreEventType, Role, core, type CoreEvent } from './core.js'
 import { createTable } from './createTable.js'
 
 describe('core', async () => {
@@ -60,7 +60,7 @@ describe('core', async () => {
 			check(organizations?.[0]).is(
 				objectMatching({
 					id: '$acme',
-					role: 'owner',
+					role: Role.OWNER,
 				}),
 			)
 		})
@@ -70,6 +70,9 @@ describe('core', async () => {
 		it('can create a new project', async () => {
 			const events: CoreEvent[] = []
 			coreInstance.on(CoreEventType.PROJECT_CREATED, (e) => events.push(e))
+			coreInstance.on(CoreEventType.PROJECT_MEMBER_CREATED, (e) =>
+				events.push(e),
+			)
 
 			const { project } = await coreInstance
 				.authenticate('@alex')
@@ -86,6 +89,13 @@ describe('core', async () => {
 					type: CoreEventType.PROJECT_CREATED,
 					id: '$acme#teamstatus',
 					owner: '@alex',
+				}),
+			)
+			check(events[1]).is(
+				objectMatching({
+					type: CoreEventType.PROJECT_MEMBER_CREATED,
+					project: '$acme#teamstatus',
+					user: '@alex',
 				}),
 			)
 		})
@@ -110,110 +120,173 @@ describe('core', async () => {
 			check(projects?.[0]).is(
 				objectMatching({
 					id: '$acme#teamstatus',
-					role: 'owner',
+					role: Role.OWNER,
 				}),
 			)
 		})
-	})
 
-	describe('status', async () => {
-		describe('create', async () => {
-			it('can post a new status update', async () => {
+		describe('member', async () => {
+			let invitationId: string
+			it('allows project owners to invite other users to a project', async () => {
 				const events: CoreEvent[] = []
-				coreInstance.on(CoreEventType.STATUS_CREATED, (e) => events.push(e))
+				coreInstance.on(CoreEventType.PROJECT_MEMBER_INVITED, (e) =>
+					events.push(e),
+				)
 
-				const { status } = await coreInstance
+				const { invitation } = await coreInstance
 					.authenticate('@alex')
 					.organization('$acme')
 					.project('#teamstatus')
-					.status.create(
-						'Implemented ability to persist status updates for projects.',
-					)
+					.invite('@cameron')
 
-				check(status).is(
+				check(invitation).is(
 					objectMatching({
 						project: '$acme#teamstatus',
-						message:
-							'Implemented ability to persist status updates for projects.',
+						invitee: '@cameron',
+						inviter: '@alex',
+						role: Role.MEMBER,
 						id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
 					}),
 				)
 				check(events[0]).is(
 					objectMatching({
-						type: CoreEventType.STATUS_CREATED,
+						type: CoreEventType.PROJECT_MEMBER_INVITED,
 						project: '$acme#teamstatus',
-						message:
-							'Implemented ability to persist status updates for projects.',
-						author: '@alex',
+						invitee: '@cameron',
+						inviter: '@alex',
+						role: Role.MEMBER,
 						id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
 					}),
 				)
+
+				invitationId = invitation?.id ?? ''
 			})
 
-			it('allows posting status only for organization members', async () => {
+			describe('invited member', async () => {
 				const project = coreInstance
-					.authenticate('@blake')
+					.authenticate('@cameron')
 					.organization('$acme')
 					.project('#teamstatus')
 
-				const { error } = await project.status.create(
-					'I am not a member of the $acme organization, so I should not be allowed to create a status.',
-				)
-				assert.equal(
-					error?.message,
-					`Only members of '$acme' are allowed to create status.`,
-				)
+				it('should not allow an uninvited user to post a status to a project', async () => {
+					const { error } = await project.status.create('Should not work')
+					assert.equal(
+						error?.message,
+						`Only members of '$acme#teamstatus' are allowed to create status.`,
+					)
+				})
+
+				it('allows users to accept invitations', async () => {
+					const { error } = await project.invitation(invitationId).accept()
+					assert.equal(error, undefined)
+				})
+
+				it('should allow user after accepting their invitation to post a status to a project', async () => {
+					const { error } = await project.status.create('Should not work')
+					assert.equal(error, undefined)
+				})
 			})
 		})
 
-		describe('list', async () => {
-			it('can list status for a project', async () => {
-				const { status } = await coreInstance
-					.authenticate('@alex')
-					.organization('$acme')
-					.project('#teamstatus')
-					.status.list()
-				check(status?.[0]).is(
-					objectMatching({
-						id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
-						message:
+		describe('status', async () => {
+			describe('create', async () => {
+				it('can post a new status update', async () => {
+					const events: CoreEvent[] = []
+					coreInstance.on(CoreEventType.STATUS_CREATED, (e) => events.push(e))
+
+					const { status } = await coreInstance
+						.authenticate('@alex')
+						.organization('$acme')
+						.project('#teamstatus')
+						.status.create(
 							'Implemented ability to persist status updates for projects.',
-						author: '@alex',
-						project: '$acme#teamstatus',
-						role: 'author',
-					}),
-				)
+						)
+
+					check(status).is(
+						objectMatching({
+							project: '$acme#teamstatus',
+							message:
+								'Implemented ability to persist status updates for projects.',
+							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+						}),
+					)
+					check(events[0]).is(
+						objectMatching({
+							type: CoreEventType.STATUS_CREATED,
+							project: '$acme#teamstatus',
+							message:
+								'Implemented ability to persist status updates for projects.',
+							author: '@alex',
+							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+						}),
+					)
+				})
+
+				it('allows posting status only for organization members', async () => {
+					const project = coreInstance
+						.authenticate('@blake')
+						.organization('$acme')
+						.project('#teamstatus')
+
+					const { error } = await project.status.create(
+						'I am not a member of the $acme organization, so I should not be allowed to create a status.',
+					)
+					assert.equal(
+						error?.message,
+						`Only members of '$acme#teamstatus' are allowed to create status.`,
+					)
+				})
 			})
 
-			it('sorts status by creation time', async () => {
-				const project = coreInstance
-					.authenticate('@alex')
-					.organization('$acme')
-					.project('#teamstatus')
+			describe('list', async () => {
+				it('can list status for a project', async () => {
+					const { status } = await coreInstance
+						.authenticate('@alex')
+						.organization('$acme')
+						.project('#teamstatus')
+						.status.list()
+					check(status?.[0]).is(
+						objectMatching({
+							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+							message:
+								'Implemented ability to persist status updates for projects.',
+							author: '@alex',
+							project: '$acme#teamstatus',
+							role: 'author',
+						}),
+					)
+				})
 
-				await project.status.create('Status 1')
-				await project.status.create('Status 2')
-				await project.status.create('Status 3')
+				it('sorts status by creation time', async () => {
+					const project = coreInstance
+						.authenticate('@alex')
+						.organization('$acme')
+						.project('#teamstatus')
 
-				const { status } = await project.status.list()
+					await project.status.create('Status 1')
+					await project.status.create('Status 2')
+					await project.status.create('Status 3')
 
-				assert.equal(status?.length, 4)
+					const { status } = await project.status.list()
 
-				// Newest status first
-				assert.equal(status?.[0]?.message, 'Status 3')
-			})
+					assert.equal(status?.length, 5)
 
-			it('allows only organization members to list status', async () => {
-				const project = coreInstance
-					.authenticate('@blake')
-					.organization('$acme')
-					.project('#teamstatus')
+					// Newest status first
+					assert.equal(status?.[0]?.message, 'Status 3')
+				})
 
-				const { error } = await project.status.list()
-				assert.equal(
-					error?.message,
-					`Only members of '$acme' are allowed to list status.`,
-				)
+				it('allows only organization members to list status', async () => {
+					const project = coreInstance
+						.authenticate('@blake')
+						.organization('$acme')
+						.project('#teamstatus')
+
+					const { error } = await project.status.list()
+					assert.equal(
+						error?.message,
+						`Only members of '$acme' are allowed to list status.`,
+					)
+				})
 			})
 		})
 	})

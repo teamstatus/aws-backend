@@ -75,7 +75,7 @@ export const createTable = async (db: DynamoDBClient, table: string) =>
 					},
 				},
 				{
-					IndexName: 'memberProjects',
+					IndexName: 'projectMember',
 					KeySchema: [
 						{
 							AttributeName: 'projectMember__user',
