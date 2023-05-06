@@ -46,11 +46,11 @@ describe('core', async () => {
 		})
 
 		it('ensures that organizations are unique', async () => {
-			const res = await coreInstance
+			const { error } = await coreInstance
 				.authenticate('@alex')
 				.organizations.create('$acme')
 
-			assert.equal(res.error?.message, `Organization '$acme' already exists.`)
+			assert.equal(error?.message, `Organization '$acme' already exists.`)
 		})
 
 		it('can list organizations for a user', async () => {
@@ -87,6 +87,18 @@ describe('core', async () => {
 					id: '$acme#teamstatus',
 					owner: '@alex',
 				}),
+			)
+		})
+
+		it('ensures that projects are unique', async () => {
+			const res = await coreInstance
+				.authenticate('@alex')
+				.organization('$acme')
+				.projects.create('#teamstatus')
+
+			assert.equal(
+				res.error?.message,
+				`Project '$acme#teamstatus' already exists.`,
 			)
 		})
 

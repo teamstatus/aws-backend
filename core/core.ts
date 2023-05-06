@@ -218,49 +218,61 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 								),
 							}
 						}
-
-						await db.send(
-							new PutItemCommand({
-								TableName: table,
-								Item: {
-									id: {
-										S: organizationProjectId,
+						try {
+							await db.send(
+								new PutItemCommand({
+									TableName: table,
+									Item: {
+										id: {
+											S: organizationProjectId,
+										},
+										type: {
+											S: 'project',
+										},
 									},
-									type: {
-										S: 'project',
+									ConditionExpression: 'attribute_not_exists(id)',
+								}),
+							)
+							await db.send(
+								new PutItemCommand({
+									TableName: table,
+									Item: {
+										id: {
+											S: ulid(),
+										},
+										type: {
+											S: 'projectMember',
+										},
+										projectMember__project: {
+											S: organizationProjectId,
+										},
+										projectMember__user: {
+											S: userIdKey,
+										},
+										role: {
+											S: 'owner',
+										},
 									},
-								},
-							}),
-						)
-						await db.send(
-							new PutItemCommand({
-								TableName: table,
-								Item: {
-									id: {
-										S: ulid(),
-									},
-									type: {
-										S: 'projectMember',
-									},
-									projectMember__project: {
-										S: organizationProjectId,
-									},
-									projectMember__user: {
-										S: userIdKey,
-									},
-									role: {
-										S: 'owner',
-									},
-								},
-							}),
-						)
-						const event: CoreEvent = {
-							type: CoreEventType.PROJECT_CREATED,
-							id: organizationProjectId,
-							owner: userId,
+								}),
+							)
+							const event: CoreEvent = {
+								type: CoreEventType.PROJECT_CREATED,
+								id: organizationProjectId,
+								owner: userId,
+							}
+							notify(event)
+							return { project: event }
+						} catch (error) {
+							if (
+								(error as Error).name === ConditionalCheckFailedException.name
+							)
+								return {
+									error: new Error(
+										`Project '${organizationProjectId}' already exists.`,
+									),
+								}
+							return { error: error as Error }
 						}
-						notify(event)
-						return { project: event }
 					},
 					list: async () => {
 						if (!isUserId(userId)) {
