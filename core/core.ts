@@ -130,7 +130,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 									role: 'owner'
 									id: string // '01GZQ0QH3BQF9W3JQXTDHGB251',
 									organizationMember__user: string //'@alex'
-								} = unmarshall(item)
+								} = unmarshall(item) as any
 								return {
 									id: d.organizationMember__organization,
 									role: d.role,
@@ -142,6 +142,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 			},
 			organization: (organizationId: string) => ({
 				projects: {
+					// FIXME: check write permission
 					create: async (projectId: string) => {
 						if (!isUserId(userId)) {
 							return {
@@ -160,7 +161,6 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 							}
 						}
 
-						// TODO: Check permission
 						await db.send(
 							new PutItemCommand({
 								TableName: table,
@@ -236,7 +236,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 										role: 'owner'
 										id: string // '01GZQ0QH3BQF9W3JQXTDHGB251',
 										projectMember__user: string //'@alex'
-									} = unmarshall(item)
+									} = unmarshall(item) as any
 									return {
 										id: d.projectMember__project,
 										role: d.role,
@@ -248,6 +248,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 				},
 				project: (projectId: string) => ({
 					status: {
+						// FIXME: check write permission
 						create: async (message: string) => {
 							if (!isUserId(userId)) {
 								return {
@@ -342,7 +343,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 											status__author: string // '@alex'
 											id: string // '01GZQ0QH3BQF9W3JQXTDHGB251',
 											status__message: string
-										} = unmarshall(item)
+										} = unmarshall(item) as any
 										return {
 											project: d.status__project,
 											role:
