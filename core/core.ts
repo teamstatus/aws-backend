@@ -64,6 +64,16 @@ export type CoreEvent =
 type listenerFn = (event: CoreEvent) => unknown
 const l = (s: string) => s.toLowerCase()
 
+export type PersistedStatus = {
+	project: string
+	author: string
+	message: string
+	id: string
+	reactions: PersistedReaction[]
+}
+
+export type PersistedOrganization = { id: string }
+
 // Reactions can have special roles
 export enum ReactionRole {
 	// A significant thing happened, makes the status stand out from others in the list of status
@@ -82,6 +92,8 @@ export type Reaction =
 			emoji: string
 			description?: string
 	  }
+
+type PersistedReaction = { id: string } & Reaction
 
 export const bugFix: Reaction = {
 	description: 'A bug was fixed',
@@ -314,7 +326,9 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 						return { error: error as Error }
 					}
 				},
-				list: async () => {
+				list: async (): Promise<
+					{ error: Error } | { organizations: PersistedOrganization[] }
+				> => {
 					if (!isUserId(userId)) {
 						return {
 							error: new Error(`Not a valid user ID: ${userId}`),
@@ -341,13 +355,11 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 							(res.Items ?? []).map((item) => {
 								const d: {
 									organizationMember__organization: string // '$acme',
-									role: Role.OWNER
 									id: string // '01GZQ0QH3BQF9W3JQXTDHGB251',
 									organizationMember__user: string //'@alex'
 								} = unmarshall(item) as any
 								return {
 									id: d.organizationMember__organization,
-									role: d.role,
 								}
 							}),
 						),
@@ -534,7 +546,9 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 							notify(event)
 							return { status: event }
 						},
-						list: async () => {
+						list: async (): Promise<
+							{ status: PersistedStatus[] } | { error: Error }
+						> => {
 							if (!isUserId(userId)) {
 								return {
 									error: new Error(`Not a valid user ID: ${userId}`),
@@ -551,7 +565,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 								}
 							}
 
-							if (!(await isOrganizationMember(organizationId, userId))) {
+							if (!(await isOrganizationMember(organizationId, userIdKey))) {
 								return {
 									error: new Error(
 										`Only members of '${organizationId}' are allowed to list status.`,
@@ -577,7 +591,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 							)
 							return {
 								status: await Promise.all(
-									(res.Items ?? []).map((item) => {
+									(res.Items ?? []).map(async (item) => {
 										const d: {
 											status__project: string // '#teamstatus',
 											status__author: string // '@alex'
@@ -586,11 +600,13 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 										} = unmarshall(item) as any
 										return {
 											project: d.status__project,
-											role:
-												d.status__author === userIdKey ? 'author' : undefined,
 											author: d.status__author,
 											message: d.status__message,
 											id: d.id,
+											reactions: await getStatusReactions({
+												db,
+												TableName: table,
+											})(d.id),
 										}
 									}),
 								),
@@ -776,20 +792,19 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 								S: id,
 							},
 							type: {
-								S: 'reaction',
+								S: 'statusReaction',
 							},
-							reaction__author: {
-								S: userIdKey,
-							},
-							reaction__status: {
+							statusReaction__status: {
 								S: statusId,
 							},
-							reaction__emoji: {
+							author: {
+								S: userIdKey,
+							},
+							emoji: {
 								S: reaction.emoji,
 							},
-							reaction__role:
-								'role' in reaction ? { S: reaction.role } : { NULL: true },
-							reaction__description:
+							role: 'role' in reaction ? { S: reaction.role } : { NULL: true },
+							description:
 								'description' in reaction && reaction.description !== undefined
 									? { S: reaction.description }
 									: { NULL: true },
@@ -812,3 +827,36 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 		},
 	}
 }
+
+const getStatusReactions =
+	({ db, TableName }: { db: DynamoDBClient; TableName: string }) =>
+	async (statusId: string): Promise<PersistedReaction[]> =>
+		db
+			.send(
+				new QueryCommand({
+					TableName,
+					IndexName: 'statusReaction',
+					KeyConditionExpression: '#status = :status',
+					ExpressionAttributeNames: {
+						'#status': 'statusReaction__status',
+					},
+					ExpressionAttributeValues: {
+						':status': {
+							S: statusId,
+						},
+					},
+				}),
+			)
+			.then(
+				({ Items }) =>
+					Items?.map((i) => {
+						const item = unmarshall(i)
+						return {
+							id: item.id,
+							emoji: item.emoji,
+							description: item.description,
+							role: item.role,
+							author: item.author,
+						}
+					}) ?? [],
+			)

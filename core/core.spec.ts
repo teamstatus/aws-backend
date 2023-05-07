@@ -9,6 +9,8 @@ import {
 	core,
 	newVersionRelease,
 	type CoreEvent,
+	type PersistedOrganization,
+	type PersistedStatus,
 } from './core.js'
 import { createTable } from './createTable.js'
 
@@ -60,13 +62,12 @@ describe('core', async () => {
 		})
 
 		it('can list organizations for a user', async () => {
-			const { organizations } = await coreInstance
+			const { organizations } = (await coreInstance
 				.authenticate('@alex')
-				.organizations.list()
+				.organizations.list()) as { organizations: PersistedOrganization[] }
 			check(organizations?.[0]).is(
 				objectMatching({
 					id: '$acme',
-					role: Role.OWNER,
 				}),
 			)
 		})
@@ -126,7 +127,6 @@ describe('core', async () => {
 			check(projects?.[0]).is(
 				objectMatching({
 					id: '$acme#teamstatus',
-					role: Role.OWNER,
 				}),
 			)
 		})
@@ -246,11 +246,11 @@ describe('core', async () => {
 
 			describe('list', async () => {
 				it('can list status for a project', async () => {
-					const { status } = await coreInstance
+					const { status } = (await coreInstance
 						.authenticate('@alex')
 						.organization('$acme')
 						.project('#teamstatus')
-						.status.list()
+						.status.list()) as { status: PersistedStatus[] }
 					check(status?.[0]).is(
 						objectMatching({
 							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
@@ -258,7 +258,6 @@ describe('core', async () => {
 								'Implemented ability to persist status updates for projects.',
 							author: '@alex',
 							project: '$acme#teamstatus',
-							role: 'author',
 						}),
 					)
 				})
@@ -273,7 +272,9 @@ describe('core', async () => {
 					await project.status.create('Status 2')
 					await project.status.create('Status 3')
 
-					const { status } = await project.status.list()
+					const { status } = (await project.status.list()) as {
+						status: PersistedStatus[]
+					}
 
 					assert.equal(status?.length, 5)
 
@@ -287,7 +288,7 @@ describe('core', async () => {
 						.organization('$acme')
 						.project('#teamstatus')
 
-					const { error } = await project.status.list()
+					const { error } = (await project.status.list()) as { error: Error }
 					assert.equal(
 						error?.message,
 						`Only members of '$acme' are allowed to list status.`,
@@ -296,14 +297,20 @@ describe('core', async () => {
 			})
 
 			describe('reactions', async () => {
+				const projectId = `#test-${ulid()}`
 				it('allows authors to attach a reaction', async () => {
 					const events: CoreEvent[] = []
 					coreInstance.on(CoreEventType.REACTION_CREATED, (e) => events.push(e))
 
+					await coreInstance
+						.authenticate('@alex')
+						.organization('$acme')
+						.projects.create(projectId)
+
 					const { status } = await coreInstance
 						.authenticate('@alex')
 						.organization('$acme')
-						.project('#teamstatus')
+						.project(projectId)
 						.status.create(`I've released a new version!`)
 
 					const { reaction } = await coreInstance
@@ -321,6 +328,22 @@ describe('core', async () => {
 						objectMatching({
 							type: CoreEventType.REACTION_CREATED,
 							status: status?.id as string,
+							author: '@alex',
+							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+							...newVersionRelease,
+						}),
+					)
+				})
+
+				it('returns reactions with the status', async () => {
+					const { status } = (await coreInstance
+						.authenticate('@alex')
+						.organization('$acme')
+						.project(projectId)
+						.status.list()) as { status: PersistedStatus[] }
+
+					check(status[0]?.reactions[0]).is(
+						objectMatching({
 							author: '@alex',
 							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
 							...newVersionRelease,

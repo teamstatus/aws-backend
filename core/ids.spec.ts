@@ -36,6 +36,7 @@ describe('identifiers', async () => {
 		for (const [id, isValid] of [
 			['$acme#teamsite', true],
 			['$ACME2023#TeamSite', true],
+			['$acme#test-01gzw0cfrx18n8gcdcf6rw351k', true],
 			['', false],
 			['$#', false],
 			['$_#_', true],

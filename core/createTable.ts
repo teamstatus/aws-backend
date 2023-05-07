@@ -54,6 +54,10 @@ export const createTable = async (db: DynamoDBClient, table: string) =>
 					AttributeName: 'status__author',
 					AttributeType: ScalarAttributeType.S,
 				},
+				{
+					AttributeName: 'statusReaction__status',
+					AttributeType: ScalarAttributeType.S,
+				},
 			],
 			BillingMode: BillingMode.PAY_PER_REQUEST,
 			GlobalSecondaryIndexes: [
@@ -106,6 +110,23 @@ export const createTable = async (db: DynamoDBClient, table: string) =>
 					Projection: {
 						ProjectionType: ProjectionType.INCLUDE,
 						NonKeyAttributes: ['status__author', 'status__message'],
+					},
+				},
+				{
+					IndexName: 'statusReaction',
+					KeySchema: [
+						{
+							AttributeName: 'statusReaction__status',
+							KeyType: KeyType.HASH,
+						},
+						{
+							AttributeName: 'id',
+							KeyType: KeyType.RANGE,
+						},
+					],
+					Projection: {
+						ProjectionType: ProjectionType.INCLUDE,
+						NonKeyAttributes: ['author', 'emoji', 'role', 'description'],
 					},
 				},
 			],
