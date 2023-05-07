@@ -51,10 +51,6 @@ export const createTable = async (db: DynamoDBClient, table: string) =>
 					AttributeType: ScalarAttributeType.S,
 				},
 				{
-					AttributeName: 'status__author',
-					AttributeType: ScalarAttributeType.S,
-				},
-				{
 					AttributeName: 'statusReaction__status',
 					AttributeType: ScalarAttributeType.S,
 				},
@@ -109,7 +105,7 @@ export const createTable = async (db: DynamoDBClient, table: string) =>
 					],
 					Projection: {
 						ProjectionType: ProjectionType.INCLUDE,
-						NonKeyAttributes: ['status__author', 'status__message'],
+						NonKeyAttributes: ['author', 'message'],
 					},
 				},
 				{

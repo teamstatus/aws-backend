@@ -527,10 +527,10 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 										status__project: {
 											S: organizationProjectId,
 										},
-										status__author: {
+										author: {
 											S: userIdKey,
 										},
-										status__message: {
+										message: {
 											S: message,
 										},
 									},
@@ -594,14 +594,14 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 									(res.Items ?? []).map(async (item) => {
 										const d: {
 											status__project: string // '#teamstatus',
-											status__author: string // '@alex'
+											author: string // '@alex'
 											id: string // '01GZQ0QH3BQF9W3JQXTDHGB251',
-											status__message: string
+											message: string
 										} = unmarshall(item) as any
 										return {
 											project: d.status__project,
-											author: d.status__author,
-											message: d.status__message,
+											author: d.author,
+											message: d.message,
 											id: d.id,
 											reactions: await getStatusReactions({
 												db,
@@ -660,13 +660,13 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 									projectInvitation__project: {
 										S: organizationProjectId,
 									},
-									projectInvitation__invitee: {
+									invitee: {
 										S: invitedUserIdKey,
 									},
-									projectInvitation__inviter: {
+									inviter: {
 										S: userIdKey,
 									},
-									projectInvitation__role: {
+									role: {
 										S: Role.MEMBER,
 									},
 								},
@@ -706,7 +706,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 
 							const invitation = unmarshall(Item)
 
-							if (invitation.projectInvitation__invitee !== l(userId)) {
+							if (invitation.invitee !== l(userId)) {
 								return {
 									error: new Error(
 										`Invitation '${invitationId}' is not for you!`,
@@ -717,8 +717,8 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 							const [event] = await Promise.all([
 								createProjectMember(
 									invitation.projectInvitation__project,
-									invitation.projectInvitation__invitee,
-									invitation.projectInvitation__role,
+									invitation.invitee,
+									invitation.role,
 								),
 								db.send(
 									new DeleteItemCommand({
@@ -740,7 +740,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 							return {
 								projectMembership: {
 									id: event.id,
-									role: invitation.projectInvitation__role,
+									role: invitation.role,
 								},
 							}
 						},
@@ -776,7 +776,7 @@ export const core = ({ db, table }: { db: DynamoDBClient; table: string }) => {
 					}
 
 				const status = unmarshall(Item)
-				if (status.status__author !== l(userId)) {
+				if (status.author !== l(userId)) {
 					return {
 						error: `Only authors may add reactions for now!`,
 					}
