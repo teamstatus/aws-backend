@@ -3,7 +3,13 @@ import assert from 'node:assert/strict'
 import { before, describe, test as it } from 'node:test'
 import { check, objectMatching, stringMatching } from 'tsmatchers'
 import { ulid } from 'ulid'
-import { CoreEventType, Role, core, type CoreEvent } from './core.js'
+import {
+	CoreEventType,
+	Role,
+	core,
+	newVersionRelease,
+	type CoreEvent,
+} from './core.js'
 import { createTable } from './createTable.js'
 
 describe('core', async () => {
@@ -285,6 +291,40 @@ describe('core', async () => {
 					assert.equal(
 						error?.message,
 						`Only members of '$acme' are allowed to list status.`,
+					)
+				})
+			})
+
+			describe('reactions', async () => {
+				it('allows authors to attach a reaction', async () => {
+					const events: CoreEvent[] = []
+					coreInstance.on(CoreEventType.REACTION_CREATED, (e) => events.push(e))
+
+					const { status } = await coreInstance
+						.authenticate('@alex')
+						.organization('$acme')
+						.project('#teamstatus')
+						.status.create(`I've released a new version!`)
+
+					const { reaction } = await coreInstance
+						.authenticate('@alex')
+						.createReaction(status?.id as string, newVersionRelease)
+
+					check(reaction).is(
+						objectMatching({
+							status: status?.id,
+							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+							...newVersionRelease,
+						}),
+					)
+					check(events[0]).is(
+						objectMatching({
+							type: CoreEventType.REACTION_CREATED,
+							status: status?.id as string,
+							author: '@alex',
+							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+							...newVersionRelease,
+						}),
 					)
 				})
 			})
