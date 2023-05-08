@@ -8,6 +8,7 @@ import type { PersistedOrganization } from './persistence/createOrganization.js'
 import type { PersistedProject } from './persistence/createProject.js'
 import {
 	newVersionRelease,
+	thumbsUp,
 	type PersistedReaction,
 } from './persistence/createReaction.js'
 import type { PersistedStatus } from './persistence/createStatus.js'
@@ -299,6 +300,7 @@ describe('core', async () => {
 
 			describe('reactions', async () => {
 				const projectId = `#test-${ulid()}`
+				let statusId: string
 				it('allows authors to attach a reaction', async () => {
 					const events: CoreEvent[] = []
 					coreInstance.on(CoreEventType.REACTION_CREATED, (e) => events.push(e))
@@ -313,6 +315,8 @@ describe('core', async () => {
 						`I've released a new version!`,
 						{ userId: '@alex' },
 					)) as { status: PersistedStatus }
+
+					statusId = status.id as string
 
 					const { reaction } = (await coreInstance.createReaction(
 						status?.id as string,
@@ -338,6 +342,29 @@ describe('core', async () => {
 					)
 				})
 
+				it('allows project members to attach a reaction', async () => {
+					const { invitation } = (await coreInstance.inviteToProject(
+						'@blake',
+						`$acme${projectId}`,
+						{
+							userId: '@alex',
+						},
+					)) as { invitation: PersistedInvitation }
+					await coreInstance.acceptProjectInvitation(invitation.id, {
+						userId: '@blake',
+					})
+
+					const { error } = (await coreInstance.createReaction(
+						statusId,
+						thumbsUp,
+						{
+							userId: '@blake',
+						},
+					)) as { error: Error }
+
+					assert.equal(error, undefined)
+				})
+
 				it('returns reactions with the status', async () => {
 					const { status } = (await coreInstance.listStatus(
 						`$acme${projectId}`,
@@ -349,6 +376,14 @@ describe('core', async () => {
 							author: '@alex',
 							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
 							...newVersionRelease,
+						}),
+					)
+
+					check(status[0]?.reactions[1]).is(
+						objectMatching({
+							author: '@blake',
+							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+							...thumbsUp,
 						}),
 					)
 				})

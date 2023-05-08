@@ -9,6 +9,7 @@ import {
 	type DbContext,
 	type Notify,
 } from '../core.js'
+import { isProjectMember } from './getProjectMember.js'
 
 // Reactions can have special roles
 export enum ReactionRole {
@@ -67,12 +68,13 @@ export type ReactionCreatedEvent = CoreEvent & {
 } & PersistedReaction
 
 export const createReaction =
-	({ db, table }: DbContext, notify: Notify) =>
+	(dbContext: DbContext, notify: Notify) =>
 	async (
 		statusId: string,
 		reaction: Reaction,
 		{ userId }: AuthContext,
 	): Promise<{ error: Error } | { reaction: PersistedReaction }> => {
+		const { db, table } = dbContext
 		const { Item } = await db.send(
 			new GetItemCommand({
 				TableName: table,
@@ -81,7 +83,7 @@ export const createReaction =
 						S: statusId,
 					},
 					type: {
-						S: 'status',
+						S: 'projectStatus',
 					},
 				},
 			}),
@@ -93,9 +95,12 @@ export const createReaction =
 			}
 
 		const status = unmarshall(Item)
-		if (status.author !== l(userId)) {
+
+		if (
+			!(await isProjectMember(dbContext)(status.projectStatus__project, userId))
+		) {
 			return {
-				error: new Error(`Only authors may add reactions for now!`),
+				error: new Error(`Only project members can create reactions!`),
 			}
 		}
 

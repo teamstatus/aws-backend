@@ -49,7 +49,7 @@ export const createStatus =
 						S: id,
 					},
 					type: {
-						S: 'status',
+						S: 'projectStatus',
 					},
 					projectStatus__project: {
 						S: l(projectId),
