@@ -1,6 +1,6 @@
-import { QueryCommand } from '@aws-sdk/client-dynamodb'
+import { GetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { Role, l, type AuthContext, type DbContext } from '../core'
+import { l, type AuthContext, type DbContext } from '../core'
 import type { PersistedProject } from './createProject'
 import { isOrganizationMember } from './getOrganizationMember'
 
@@ -34,19 +34,44 @@ export const listProjects =
 				},
 			}),
 		)
+
+		const projects: PersistedProject[] = []
+
+		for (const membership of res.Items ?? []) {
+			const d: {
+				projectMember__project: string // '#teamstatus',
+			} = unmarshall(membership) as any
+			const project = await getProject(dbContext)(d.projectMember__project)
+			if (project !== null) projects.push(project)
+		}
+
 		return {
-			projects: await Promise.all(
-				(res.Items ?? []).map((item) => {
-					const d: {
-						projectMember__project: string // '#teamstatus',
-						role: Role.OWNER
-						id: string // '01GZQ0QH3BQF9W3JQXTDHGB251',
-						projectMember__user: string //'@alex'
-					} = unmarshall(item) as any
-					return {
-						id: d.projectMember__project,
-					}
-				}),
-			),
+			projects,
+		}
+	}
+
+const getProject =
+	({ db, table }: DbContext) =>
+	async (projectId: string): Promise<PersistedProject | null> => {
+		const { Item } = await db.send(
+			new GetItemCommand({
+				TableName: table,
+				Key: {
+					id: {
+						S: projectId,
+					},
+					type: {
+						S: 'project',
+					},
+				},
+			}),
+		)
+
+		if (Item === undefined) return null
+		const project = unmarshall(Item)
+
+		return {
+			id: projectId,
+			name: project.name,
 		}
 	}

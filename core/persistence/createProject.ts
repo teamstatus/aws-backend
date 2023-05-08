@@ -16,14 +16,12 @@ import { createProjectMember } from './createProjectMember.js'
 import { isOrganizationMember } from './getOrganizationMember.js'
 export type ProjectCreatedEvent = CoreEvent & {
 	type: CoreEventType.PROJECT_CREATED
-	id: string
-	owner: string
-}
-export type PersistedProject = { id: string }
+} & PersistedProject
+export type PersistedProject = { id: string; name: string | null }
 export const createProject =
 	(dbContext: DbContext, notify: Notify) =>
 	async (
-		projectId: string,
+		{ id: projectId, name }: { id: string; name?: string },
 		{ userId }: AuthContext,
 	): Promise<{ error: Error } | { project: PersistedProject }> => {
 		const { organization: organizationId } = parseProjectId(projectId)
@@ -53,6 +51,12 @@ export const createProject =
 						type: {
 							S: 'project',
 						},
+						name:
+							name !== undefined
+								? {
+										S: name,
+								  }
+								: { NULL: true },
 					},
 					ConditionExpression: 'attribute_not_exists(id)',
 				}),
@@ -60,7 +64,7 @@ export const createProject =
 			const event: ProjectCreatedEvent = {
 				type: CoreEventType.PROJECT_CREATED,
 				id: projectId,
-				owner: userId,
+				name: name ?? null,
 			}
 			notify(event)
 
@@ -73,6 +77,7 @@ export const createProject =
 			return {
 				project: {
 					id: projectId,
+					name: name ?? null,
 				},
 			}
 		} catch (error) {

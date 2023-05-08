@@ -14,7 +14,7 @@ import {
 } from '../core.js'
 import { isOrganizationId } from '../ids.js'
 
-export type PersistedOrganization = { id: string }
+export type PersistedOrganization = { id: string; name: string | null }
 
 export type OrganizationCreatedEvent = CoreEvent & {
 	type: CoreEventType.ORGANIZATION_CREATED
@@ -25,7 +25,7 @@ export type OrganizationCreatedEvent = CoreEvent & {
 export const createOrganization =
 	(dbContext: DbContext, notify: Notify) =>
 	async (
-		organizationId: string,
+		{ id: organizationId, name }: { id: string; name?: string },
 		{ userId }: AuthContext,
 	): Promise<{ error: Error } | { organization: PersistedOrganization }> => {
 		if (!isOrganizationId(organizationId))
@@ -44,6 +44,12 @@ export const createOrganization =
 						type: {
 							S: 'organization',
 						},
+						name:
+							name !== undefined
+								? {
+										S: name,
+								  }
+								: { NULL: true },
 					},
 					ConditionExpression: 'attribute_not_exists(id)',
 				}),
@@ -72,6 +78,7 @@ export const createOrganization =
 			)
 			const org: PersistedOrganization = {
 				id: organizationId,
+				name: name ?? null,
 			}
 			const event: OrganizationCreatedEvent = {
 				type: CoreEventType.ORGANIZATION_CREATED,

@@ -37,27 +37,35 @@ describe('core', async () => {
 		it('can create a new organization', async () => {
 			const events: CoreEvent[] = []
 			coreInstance.on(CoreEventType.ORGANIZATION_CREATED, (e) => events.push(e))
-			const { organization } = (await coreInstance.createOrganization('$acme', {
-				userId: '@alex',
-			})) as { organization: PersistedOrganization }
+			const { organization } = (await coreInstance.createOrganization(
+				{ id: '$acme', name: 'ACME Inc.' },
+				{
+					userId: '@alex',
+				},
+			)) as { organization: PersistedOrganization }
 			check(organization).is(
 				objectMatching({
 					id: '$acme',
+					name: 'ACME Inc.',
 				}),
 			)
 			check(events[0]).is(
 				objectMatching({
 					type: CoreEventType.ORGANIZATION_CREATED,
 					id: '$acme',
+					name: 'ACME Inc.',
 					owner: '@alex',
 				}),
 			)
 		})
 
 		it('ensures that organizations are unique', async () => {
-			const { error } = (await coreInstance.createOrganization('$acme', {
-				userId: '@alex',
-			})) as { error: Error }
+			const { error } = (await coreInstance.createOrganization(
+				{ id: '$acme' },
+				{
+					userId: '@alex',
+				},
+			)) as { error: Error }
 
 			assert.equal(error?.message, `Organization '$acme' already exists.`)
 		})
@@ -83,7 +91,7 @@ describe('core', async () => {
 			)
 
 			const { project } = (await coreInstance.createProject(
-				'$acme#teamstatus',
+				{ id: '$acme#teamstatus', name: 'Teamstatus' },
 				{
 					userId: '@alex',
 				},
@@ -92,13 +100,14 @@ describe('core', async () => {
 			check(project).is(
 				objectMatching({
 					id: '$acme#teamstatus',
+					name: 'Teamstatus',
 				}),
 			)
 			check(events[0]).is(
 				objectMatching({
 					type: CoreEventType.PROJECT_CREATED,
 					id: '$acme#teamstatus',
-					owner: '@alex',
+					name: 'Teamstatus',
 				}),
 			)
 			check(events[1]).is(
@@ -111,9 +120,12 @@ describe('core', async () => {
 		})
 
 		it('ensures that projects are unique', async () => {
-			const res = (await coreInstance.createProject('$acme#teamstatus', {
-				userId: '@alex',
-			})) as { error: Error }
+			const res = (await coreInstance.createProject(
+				{ id: '$acme#teamstatus' },
+				{
+					userId: '@alex',
+				},
+			)) as { error: Error }
 
 			assert.equal(
 				res.error?.message,
@@ -304,11 +316,13 @@ describe('core', async () => {
 				it('allows authors to attach a reaction', async () => {
 					const events: CoreEvent[] = []
 					coreInstance.on(CoreEventType.REACTION_CREATED, (e) => events.push(e))
-					coreInstance.on('*', (e) => console.debug(JSON.stringify(e)))
 
-					await coreInstance.createProject(`$acme${projectId}`, {
-						userId: '@alex',
-					})
+					await coreInstance.createProject(
+						{ id: `$acme${projectId}` },
+						{
+							userId: '@alex',
+						},
+					)
 
 					const { status } = (await coreInstance.createStatus(
 						`$acme${projectId}`,

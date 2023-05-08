@@ -1,4 +1,4 @@
-import { QueryCommand } from '@aws-sdk/client-dynamodb'
+import { GetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { l, type AuthContext, type DbContext } from '../core'
 import type { PersistedOrganization } from './createOrganization'
@@ -26,18 +26,42 @@ export const listOrganizations =
 				},
 			}),
 		)
+		const organizations: PersistedOrganization[] = []
+
+		for (const item of res.Items ?? []) {
+			const d = unmarshall(item)
+			const org = await getOrganization(dbContext)(
+				d.organizationMember__organization,
+			)
+			if (org !== null) organizations.push(org)
+		}
 		return {
-			organizations: await Promise.all(
-				(res.Items ?? []).map((item) => {
-					const d: {
-						organizationMember__organization: string // '$acme',
-						id: string // '01GZQ0QH3BQF9W3JQXTDHGB251',
-						organizationMember__user: string //'@alex'
-					} = unmarshall(item) as any
-					return {
-						id: d.organizationMember__organization,
-					}
-				}),
-			),
+			organizations,
+		}
+	}
+
+const getOrganization =
+	({ db, table }: DbContext) =>
+	async (organizationId: string): Promise<PersistedOrganization | null> => {
+		const { Item } = await db.send(
+			new GetItemCommand({
+				TableName: table,
+				Key: {
+					id: {
+						S: organizationId,
+					},
+					type: {
+						S: 'organization',
+					},
+				},
+			}),
+		)
+
+		if (Item === undefined) return null
+		const org = unmarshall(Item)
+
+		return {
+			id: organizationId,
+			name: org.name,
 		}
 	}
