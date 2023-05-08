@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict'
 import { describe, test as it } from 'node:test'
 import { check, objectMatching } from 'tsmatchers'
-import { isOrganizationId, isProjectId, isUserId, projectId } from './ids.js'
+import {
+	isOrganizationId,
+	isProjectId,
+	isUserId,
+	parseProjectId,
+} from './ids.js'
 
 describe('identifiers', async () => {
 	describe('user IDs', async () => {
@@ -46,13 +51,13 @@ describe('identifiers', async () => {
 				isValid ? 'valid' : 'invalid'
 			}`, () => assert.equal(isProjectId(id as string), isValid))
 		}
-		describe('projectId()', () => {
+		describe('parseProjectId()', () => {
 			it('should extract the organization', () =>
-				assert.equal(projectId('$acme#teamsite').organization, '$acme'))
+				assert.equal(parseProjectId('$acme#teamsite').organization, '$acme'))
 			it('should extract the project', () =>
-				assert.equal(projectId('$acme#teamsite').project, '#teamsite'))
+				assert.equal(parseProjectId('$acme#teamsite').project, '#teamsite'))
 			it('should not return if project id is invalid', () =>
-				check(projectId('foo')).is(
+				check(parseProjectId('foo')).is(
 					objectMatching({
 						organization: null,
 						project: null,

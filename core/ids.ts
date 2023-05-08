@@ -20,7 +20,7 @@ const projectIdRegex = new RegExp(
  */
 export const isProjectId = (id?: string): id is string =>
 	projectIdRegex.test(id ?? '')
-export const projectId = (
+export const parseProjectId = (
 	projectId?: string,
 ): { organization: string | null; project: string | null } => {
 	const { organization, project } =

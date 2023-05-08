@@ -47,7 +47,7 @@ export const createTable = async (db: DynamoDBClient, table: string) =>
 					AttributeType: ScalarAttributeType.S,
 				},
 				{
-					AttributeName: 'status__project',
+					AttributeName: 'projectStatus__project',
 					AttributeType: ScalarAttributeType.S,
 				},
 				{
@@ -95,7 +95,7 @@ export const createTable = async (db: DynamoDBClient, table: string) =>
 					IndexName: 'projectStatus',
 					KeySchema: [
 						{
-							AttributeName: 'status__project',
+							AttributeName: 'projectStatus__project',
 							KeyType: KeyType.HASH,
 						},
 						{
