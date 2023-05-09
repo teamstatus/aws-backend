@@ -40,7 +40,6 @@ jobs:
         uses: rrainn/dynamodb-action@v2.0.1
         with:
           sharedDb: true
-          port: 8000
           inMemory: true
 
       - name: Run Tests
