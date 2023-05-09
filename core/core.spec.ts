@@ -91,7 +91,7 @@ describe('core', async () => {
 			)
 
 			const { project } = (await coreInstance.createProject(
-				{ id: '$acme#teamstatus', name: 'Teamstatus' },
+				{ id: '$acme#teamstatus', name: 'Teamstatus', color: '#ff0000' },
 				{
 					userId: '@alex',
 				},
@@ -101,6 +101,7 @@ describe('core', async () => {
 				objectMatching({
 					id: '$acme#teamstatus',
 					name: 'Teamstatus',
+					color: '#ff0000',
 				}),
 			)
 			check(events[0]).is(
@@ -108,6 +109,7 @@ describe('core', async () => {
 					type: CoreEventType.PROJECT_CREATED,
 					id: '$acme#teamstatus',
 					name: 'Teamstatus',
+					color: '#ff0000',
 				}),
 			)
 			check(events[1]).is(
@@ -140,6 +142,8 @@ describe('core', async () => {
 			check(projects?.[0]).is(
 				objectMatching({
 					id: '$acme#teamstatus',
+					name: 'Teamstatus',
+					color: '#ff0000',
 				}),
 			)
 		})
