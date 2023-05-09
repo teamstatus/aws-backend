@@ -5,10 +5,11 @@ import {
 	KeyType,
 	ProjectionType,
 	ScalarAttributeType,
+	UpdateTimeToLiveCommand,
 } from '@aws-sdk/client-dynamodb'
 
-export const createTable = async (db: DynamoDBClient, table: string) =>
-	db.send(
+export const createTable = async (db: DynamoDBClient, table: string) => {
+	await db.send(
 		new CreateTableCommand({
 			TableName: table,
 			KeySchema: [
@@ -128,3 +129,13 @@ export const createTable = async (db: DynamoDBClient, table: string) =>
 			],
 		}),
 	)
+	await db.send(
+		new UpdateTimeToLiveCommand({
+			TableName: table,
+			TimeToLiveSpecification: {
+				Enabled: true,
+				AttributeName: 'ttl',
+			},
+		}),
+	)
+}

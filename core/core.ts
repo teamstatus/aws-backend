@@ -5,11 +5,26 @@ import { createProject } from './persistence/createProject.js'
 import { createReaction } from './persistence/createReaction.js'
 import { createStatus } from './persistence/createStatus.js'
 import { deleteStatus } from './persistence/deleteStatus.js'
+import { emailLoginRequest } from './persistence/emailLoginRequest.js'
+import { emailPINLogin } from './persistence/emailPINLogin.js'
 import { inviteToProject } from './persistence/inviteToProject.js'
 import { listOrganizations } from './persistence/listOrganizations.js'
 import { listProjects } from './persistence/listProjects.js'
 import { listStatus } from './persistence/listStatus.js'
 import { updateStatus } from './persistence/updateStatus.js'
+
+// openssl ecparam -name prime256v1 -genkey -noout -out key.pem
+const privateKey = `-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIC8bVp72+Z17vnIUCCbkps7pNEAFrryzk6Ts4KMq8AIyoAoGCCqGSM49
+AwEHoUQDQgAEU6W9CCt5pzBrMu1yZeAAOEeil6LDjZUXPPY/IGOVh3gXbvMfz4nv
+qpcUn98uvzHNdHqp8w0cEKoQouOf1RDySA==
+-----END EC PRIVATE KEY-----`
+
+// openssl ec -in key.pem -pubout -out public.pem
+export const publicKey = `-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEU6W9CCt5pzBrMu1yZeAAOEeil6LD
+jZUXPPY/IGOVh3gXbvMfz4nvqpcUn98uvzHNdHqp8w0cEKoQouOf1RDySA==
+-----END PUBLIC KEY-----`
 
 export type AuthContext = {
 	userId: string
@@ -24,6 +39,8 @@ export enum CoreEventType {
 	PROJECT_MEMBER_INVITED = 'PROJECT_MEMBER_INVITED',
 	PROJECT_MEMBER_CREATED = 'PROJECT_MEMBER_CREATED',
 	REACTION_CREATED = 'REACTION_CREATED',
+	EMAIL_LOGIN_REQUESTED = 'EMAIL_LOGIN_REQUESTED',
+	EMAIL_LOGIN_PIN_SUCCESS = 'EMAIL_LOGIN_PIN_SUCCESS',
 }
 export enum Role {
 	OWNER = 'owner',
@@ -66,5 +83,7 @@ export const core = (dbContext: DbContext) => {
 		acceptProjectInvitation: acceptProjectInvitation(dbContext, notify),
 		updateStatus: updateStatus(dbContext, notify),
 		deleteStatus: deleteStatus(dbContext, notify),
+		emailLoginRequest: emailLoginRequest(dbContext, notify),
+		emailPINLogin: emailPINLogin(dbContext, notify, privateKey),
 	}
 }

@@ -1,9 +1,10 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+import jwt from 'jsonwebtoken'
 import assert from 'node:assert/strict'
 import { before, describe, test as it } from 'node:test'
 import { check, objectMatching, stringMatching } from 'tsmatchers'
 import { ulid } from 'ulid'
-import { CoreEventType, Role, core, type CoreEvent } from './core.js'
+import { CoreEventType, Role, core, publicKey, type CoreEvent } from './core.js'
 import type { PersistedOrganization } from './persistence/createOrganization.js'
 import type { PersistedProject } from './persistence/createProject.js'
 import {
@@ -13,6 +14,7 @@ import {
 } from './persistence/createReaction.js'
 import type { PersistedStatus } from './persistence/createStatus.js'
 import { createTable } from './persistence/createTable.js'
+import type { EmailLoginRequest } from './persistence/emailLoginRequest.js'
 import type { PersistedInvitation } from './persistence/inviteToProject.js'
 
 describe('core', async () => {
@@ -31,6 +33,59 @@ describe('core', async () => {
 			throw err
 		}
 		console.log(`Table ${table} created.`)
+	})
+
+	describe('user management', async () => {
+		describe('allows users to log-in with their email', async () => {
+			let pin: string
+			it('generates a login request', async () => {
+				const events: CoreEvent[] = []
+				coreInstance.on(CoreEventType.EMAIL_LOGIN_REQUESTED, (e) =>
+					events.push(e),
+				)
+				const { loginRequest, pin: p } = (await coreInstance.emailLoginRequest({
+					email: 'alex@example.com',
+				})) as { loginRequest: EmailLoginRequest; pin: string }
+				check(loginRequest).is(
+					objectMatching({
+						email: 'alex@example.com',
+					}),
+				)
+				check(events[0]).is(
+					objectMatching({
+						type: CoreEventType.EMAIL_LOGIN_REQUESTED,
+						email: 'alex@example.com',
+					}),
+				)
+				check(p).is(stringMatching(/^[0-9]{8}$/))
+				pin = p
+			})
+
+			it('logs a user in using a PIN', async () => {
+				const events: CoreEvent[] = []
+				coreInstance.on(CoreEventType.EMAIL_LOGIN_PIN_SUCCESS, (e) =>
+					events.push(e),
+				)
+				const { token } = (await coreInstance.emailPINLogin({
+					email: 'alex@example.com',
+					pin,
+				})) as { token: string }
+				const parsedToken = jwt.verify(token, publicKey)
+				check(parsedToken).is(
+					objectMatching({
+						iat: Math.floor(Date.now() / 1000),
+						exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
+						sub: 'alex@example.com',
+					}),
+				)
+				check(events[0]).is(
+					objectMatching({
+						type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS,
+						email: 'alex@example.com',
+					}),
+				)
+			})
+		})
 	})
 
 	describe('organizations', async () => {
