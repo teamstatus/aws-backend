@@ -65,6 +65,7 @@ export const createProject =
 				type: CoreEventType.PROJECT_CREATED,
 				id: projectId,
 				name: name ?? null,
+				timestamp: new Date(),
 			}
 			notify(event)
 

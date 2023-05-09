@@ -59,6 +59,7 @@ export const createProjectMember =
 		notify({
 			type: CoreEventType.PROJECT_MEMBER_CREATED,
 			...member,
+			timestamp: new Date(),
 		})
 		return member
 	}

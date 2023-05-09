@@ -84,6 +84,7 @@ export const createOrganization =
 				type: CoreEventType.ORGANIZATION_CREATED,
 				owner: userId,
 				...org,
+				timestamp: new Date(),
 			}
 			notify(event)
 			return { organization: org }

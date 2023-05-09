@@ -105,7 +105,7 @@ export const createTable = async (db: DynamoDBClient, table: string) =>
 					],
 					Projection: {
 						ProjectionType: ProjectionType.INCLUDE,
-						NonKeyAttributes: ['author', 'message'],
+						NonKeyAttributes: ['author', 'message', 'version'],
 					},
 				},
 				{

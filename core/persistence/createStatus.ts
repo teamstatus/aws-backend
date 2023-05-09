@@ -20,6 +20,8 @@ export type PersistedStatus = {
 	author: string
 	message: string
 	id: string
+	version: number
+	updatedAt?: Date
 	reactions: PersistedReaction[]
 }
 
@@ -60,6 +62,9 @@ export const createStatus =
 					message: {
 						S: message,
 					},
+					version: {
+						N: `1`,
+					},
 				},
 			}),
 		)
@@ -67,12 +72,14 @@ export const createStatus =
 			message,
 			author: userId,
 			id,
+			version: 1,
 			project: projectId,
 			reactions: [],
 		}
 		const event: StatusCreatedEvent = {
 			type: CoreEventType.STATUS_CREATED,
 			...status,
+			timestamp: new Date(),
 		}
 		notify(event)
 		return { status }

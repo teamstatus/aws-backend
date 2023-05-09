@@ -142,6 +142,7 @@ export const createReaction =
 		const event: ReactionCreatedEvent = {
 			type: CoreEventType.REACTION_CREATED,
 			...persistedReaction,
+			timestamp: new Date(),
 		}
 		notify(event)
 		return { reaction: persistedReaction }

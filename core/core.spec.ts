@@ -258,6 +258,51 @@ describe('core', async () => {
 				})
 			})
 
+			describe('edit', async () => {
+				let statusId: string
+				it('allows status to be edited by the author', async () => {
+					// Create the status
+					const { status } = (await coreInstance.createStatus(
+						'$acme#teamstatus',
+						'Status with an typo',
+						{ userId: '@alex' },
+					)) as { status: PersistedStatus }
+					statusId = status.id
+
+					// Updated
+					const { status: updated } = (await coreInstance.updateStatus(
+						statusId,
+						'Status with a typo',
+						1,
+						{
+							userId: '@alex',
+						},
+					)) as { status: PersistedStatus }
+					check(updated).is(
+						objectMatching({
+							version: 2,
+						}),
+					)
+
+					// Fetch
+					const { status: statusList } = (await coreInstance.listStatus(
+						'$acme#teamstatus',
+						{ userId: '@alex' },
+					)) as {
+						status: PersistedStatus[]
+					}
+					assert.equal(statusList?.[0]?.message, 'Status with a typo')
+				})
+
+				it('allows status to be deleted by the author', async () => {
+					const { error } = (await coreInstance.deleteStatus(statusId, {
+						userId: '@alex',
+					})) as { error: Error }
+
+					assert.equal(error, undefined)
+				})
+			})
+
 			describe('list', async () => {
 				it('can list status for a project', async () => {
 					const { status } = (await coreInstance.listStatus(

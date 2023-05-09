@@ -85,6 +85,7 @@ export const inviteToProject =
 		const event: MemberInvitedEvent = {
 			type: CoreEventType.PROJECT_MEMBER_INVITED,
 			...invitation,
+			timestamp: new Date(),
 		}
 		notify(event)
 		return { invitation }

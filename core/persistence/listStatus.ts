@@ -55,6 +55,7 @@ export const listStatus =
 						author: d.author,
 						message: d.message,
 						id: d.id,
+						version: d.version,
 						reactions: await getStatusReactions({
 							db,
 							TableName: table,
