@@ -1,0 +1,58 @@
+name: Test and Release
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: write
+  issues: write
+
+env:
+  CI: 1
+  FORCE_COLOR: 3
+
+jobs:
+  test-and-release:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+
+      - name: Keep npm cache around to speed up installs
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: build-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci --no-audit
+
+      - name: Check TypeScript
+        run: npx tsc
+
+      - name: Setup DynamoDB Local
+        uses: rrainn/dynamodb-action@v2.0.1
+        with:
+          sharedDb: true
+          port: 8000
+          inMemory: true
+
+      - name: Run Tests
+        env:
+          AWS_REGION: eu-west-1
+          AWS_ACCESS_KEY_ID: fakeMyKeyId
+          AWS_SECRET_ACCESS_KEY: fakeSecretAccessKey
+        run: npm test
+
+      - name: Semantic release
+        if: github.ref == 'refs/heads/saga'
+        id: semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
