@@ -4,7 +4,8 @@ import {
 	type CoreEvent,
 	type DbContext,
 	type Notify,
-} from '../core'
+} from '../core.js'
+import { generatePIN } from './generatePIN.js'
 
 export type EmailLoginRequestedEvent = CoreEvent & {
 	type: CoreEventType.EMAIL_LOGIN_REQUESTED
@@ -60,14 +61,3 @@ export const emailLoginRequest =
 		notify(event)
 		return { loginRequest, pin }
 	}
-
-const generatePIN = (length = 8): string => {
-	let pin = ''
-	do {
-		pin = `${pin}${crypto.randomUUID()}`
-			.split('')
-			.filter((s) => /[0-9]/.test(s))
-			.join('')
-	} while (pin.length < length)
-	return pin.slice(0, length - 1)
-}
