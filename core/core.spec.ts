@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken'
 import assert from 'node:assert/strict'
 import { execSync } from 'node:child_process'
 import { before, describe, test as it } from 'node:test'
-import { check, objectMatching, stringMatching } from 'tsmatchers'
+import { check, definedValue, objectMatching, stringMatching } from 'tsmatchers'
 import { ulid } from 'ulid'
 import { CoreEventType, Role, core, type CoreEvent } from './core.js'
 import type { PersistedOrganization } from './persistence/createOrganization.js'
@@ -93,6 +93,8 @@ describe('core', async () => {
 
 				token = t
 
+				check(token).is(definedValue)
+
 				const parsedToken = jwt.verify(token, publicKey)
 				check(parsedToken).is(
 					objectMatching({
@@ -115,6 +117,15 @@ describe('core', async () => {
 						email: 'alex@example.com',
 					}),
 				)
+			})
+
+			it('prevents re-using PINs', async () => {
+				const { error } = (await coreInstance.emailPINLogin({
+					email: 'alex@example.com',
+					pin,
+				})) as { error: Error }
+
+				check(error).is(definedValue)
 			})
 
 			it('allows users to claim a user ID', async () => {
@@ -150,6 +161,7 @@ describe('core', async () => {
 					email: 'alex@example.com',
 					pin,
 				})) as { token: string }
+				check(token).is(definedValue)
 				const parsedToken = jwt.verify(token, publicKey)
 				check(parsedToken).is(
 					objectMatching({

@@ -43,7 +43,7 @@ export const emailLoginRequest =
 						S: pin,
 					},
 					ttl: {
-						N: `${Math.floor(expires.getTime())}`,
+						N: `${Math.floor(expires.getTime() / 1000)}`,
 					},
 				},
 			}),

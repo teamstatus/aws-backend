@@ -1,4 +1,9 @@
-import { GetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
+import {
+	ConditionalCheckFailedException,
+	QueryCommand,
+	ReturnValue,
+	UpdateItemCommand,
+} from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import type { SignOptions } from 'jsonwebtoken'
 import jwt from 'jsonwebtoken'
@@ -23,70 +28,88 @@ export const emailPINLogin =
 		email: string
 		pin: string
 	}): Promise<{ error: Error } | { token: string }> => {
-		const { db, table } = dbContext
-		const { Item } = await db.send(
-			new GetItemCommand({
-				TableName: table,
-				Key: {
-					id: {
-						S: email,
+		try {
+			const { db, table } = dbContext
+			await db.send(
+				new UpdateItemCommand({
+					TableName: table,
+					Key: {
+						id: {
+							S: email,
+						},
+						type: {
+							S: 'emailLoginRequest',
+						},
 					},
-					type: {
-						S: 'emailLoginRequest',
+					UpdateExpression: 'SET #ttl = :now, #deletedAt = :deletedAt',
+					ConditionExpression:
+						'attribute_not_exists(#deletedAt) AND #ttl > :now AND #pin = :pin',
+					ExpressionAttributeNames: {
+						'#ttl': 'ttl',
+						'#pin': 'pin',
+						'#deletedAt': 'deletedAt',
 					},
-				},
-			}),
-		)
-		if (Item === undefined)
-			return { error: new Error(`No entry for '${email}' found.`) }
-
-		const request = unmarshall(Item)
-
-		if (request.ttl * 1000 < Date.now())
-			return { error: new Error(`Request expired.`) }
-
-		if (pin !== request.pin)
-			return { error: new Error(`PIN ${pin} does not match.`) }
-
-		const { Items } = await db.send(
-			new QueryCommand({
-				TableName: table,
-				Limit: 1,
-				IndexName: 'emailUser',
-				KeyConditionExpression: '#email = :email',
-				ExpressionAttributeNames: {
-					'#email': 'user__email',
-				},
-				ExpressionAttributeValues: {
-					':email': {
-						S: email,
+					ExpressionAttributeValues: {
+						':now': {
+							N: `${Math.floor(Date.now() / 1000)}`,
+						},
+						':pin': {
+							S: pin,
+						},
+						':deletedAt': {
+							S: new Date().toISOString(),
+						},
 					},
-				},
-			}),
-		)
+					ReturnValues: ReturnValue.NONE,
+				}),
+			)
 
-		const event: LoggedInWithEmailAndPin = {
-			type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS,
-			email,
-			timestamp: new Date(),
-		}
-		notify(event)
-		const options: SignOptions = {
-			algorithm: 'ES256',
-			allowInsecureKeySizes: false,
-			expiresIn: 24 * 60 * 60, // seconds
-		}
-		if (Items?.[0] !== undefined) {
-			const user = unmarshall(Items[0])
-			options.subject = user.id
-		}
-		return {
-			token: jwt.sign(
-				{
-					email: request.id,
-				},
-				signingKey,
-				options,
-			),
+			const { Items } = await db.send(
+				new QueryCommand({
+					TableName: table,
+					Limit: 1,
+					IndexName: 'emailUser',
+					KeyConditionExpression: '#email = :email',
+					ExpressionAttributeNames: {
+						'#email': 'user__email',
+					},
+					ExpressionAttributeValues: {
+						':email': {
+							S: email,
+						},
+					},
+				}),
+			)
+
+			const event: LoggedInWithEmailAndPin = {
+				type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS,
+				email,
+				timestamp: new Date(),
+			}
+			notify(event)
+			const options: SignOptions = {
+				algorithm: 'ES256',
+				allowInsecureKeySizes: false,
+				expiresIn: 24 * 60 * 60, // seconds
+			}
+			if (Items?.[0] !== undefined) {
+				const user = unmarshall(Items[0])
+				options.subject = user.id
+			}
+			return {
+				token: jwt.sign(
+					{
+						email,
+					},
+					signingKey,
+					options,
+				),
+			}
+		} catch (error) {
+			if ((error as Error).name === ConditionalCheckFailedException.name)
+				return {
+					error: new Error(`Login failed.`),
+				}
+			return { error: error as Error }
 		}
 	}
