@@ -30,7 +30,7 @@ export const createProject =
 			name,
 			color,
 		}: { id: string; name?: string; color?: string },
-		{ userId }: AuthContext,
+		{ sub: userId }: AuthContext,
 	): Promise<{ error: Error } | { project: PersistedProject }> => {
 		const { organization: organizationId } = parseProjectId(projectId)
 

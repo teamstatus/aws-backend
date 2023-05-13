@@ -10,7 +10,7 @@ export const listStatus =
 	(dbContext: DbContext) =>
 	async (
 		projectId: string,
-		{ userId }: AuthContext,
+		{ sub: userId }: AuthContext,
 	): Promise<{ status: PersistedStatus[] } | { error: Error }> => {
 		const { organization } = parseProjectId(projectId)
 

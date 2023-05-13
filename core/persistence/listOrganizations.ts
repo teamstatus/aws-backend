@@ -1,12 +1,12 @@
 import { GetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { l, type AuthContext, type DbContext } from '../core'
+import { l, type AuthContext, type DbContext } from '../core.js'
 import type { PersistedOrganization } from './createOrganization'
 
 export const listOrganizations =
 	(dbContext: DbContext) =>
 	async ({
-		userId,
+		sub: userId,
 	}: AuthContext): Promise<
 		{ error: Error } | { organizations: PersistedOrganization[] }
 	> => {

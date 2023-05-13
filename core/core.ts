@@ -15,7 +15,7 @@ import { listStatus } from './persistence/listStatus.js'
 import { updateStatus } from './persistence/updateStatus.js'
 
 export type AuthContext = {
-	userId: string
+	sub: string
 }
 
 export enum CoreEventType {

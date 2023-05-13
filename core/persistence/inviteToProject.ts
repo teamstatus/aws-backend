@@ -8,9 +8,9 @@ import {
 	type CoreEvent,
 	type DbContext,
 	type Notify,
-} from '../core'
-import { parseProjectId } from '../ids'
-import { isOrganizationOwner } from './getOrganizationMember'
+} from '../core.js'
+import { parseProjectId } from '../ids.js'
+import { isOrganizationOwner } from './getOrganizationMember.js'
 
 export type MemberInvitedEvent = CoreEvent & {
 	type: CoreEventType.PROJECT_MEMBER_INVITED
@@ -29,7 +29,7 @@ export const inviteToProject =
 	async (
 		invitedUserId: string,
 		projectId: string,
-		{ userId }: AuthContext,
+		{ sub: userId }: AuthContext,
 	): Promise<{ error: Error } | { invitation: PersistedInvitation }> => {
 		const { organization: organizationId } = parseProjectId(projectId)
 

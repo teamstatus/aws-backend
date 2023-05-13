@@ -1,14 +1,14 @@
 import { GetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { l, type AuthContext, type DbContext } from '../core'
-import type { PersistedProject } from './createProject'
-import { isOrganizationMember } from './getOrganizationMember'
+import { l, type AuthContext, type DbContext } from '../core.js'
+import type { PersistedProject } from './createProject.js'
+import { isOrganizationMember } from './getOrganizationMember.js'
 
 export const listProjects =
 	(dbContext: DbContext) =>
 	async (
 		organizationId: string,
-		{ userId }: AuthContext,
+		{ sub: userId }: AuthContext,
 	): Promise<{ error: Error } | { projects: PersistedProject[] }> => {
 		if (!(await isOrganizationMember(dbContext)(organizationId, userId))) {
 			return {

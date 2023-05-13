@@ -27,7 +27,7 @@ export const updateStatus =
 		statusId: string,
 		message: string,
 		version: number,
-		{ userId }: AuthContext,
+		{ sub: userId }: AuthContext,
 	): Promise<{ error: Error } | { status: PersistedStatus }> => {
 		try {
 			const { db, table } = dbContext

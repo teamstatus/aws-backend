@@ -1,16 +1,16 @@
 import { DeleteItemCommand, GetItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { l, type AuthContext, type DbContext, type Notify } from '../core'
+import { l, type AuthContext, type DbContext, type Notify } from '../core.js'
 import {
 	createProjectMember,
 	type PersistedProjectMember,
-} from './createProjectMember'
+} from './createProjectMember.js'
 
 export const acceptProjectInvitation =
 	(dbContext: DbContext, notify: Notify) =>
 	async (
 		invitationId: string,
-		{ userId }: AuthContext,
+		{ sub: userId }: AuthContext,
 	): Promise<
 		{ projectMembership: PersistedProjectMember } | { error: Error }
 	> => {

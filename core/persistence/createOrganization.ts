@@ -26,7 +26,7 @@ export const createOrganization =
 	(dbContext: DbContext, notify: Notify) =>
 	async (
 		{ id: organizationId, name }: { id: string; name?: string },
-		{ userId }: AuthContext,
+		{ sub: userId }: AuthContext,
 	): Promise<{ error: Error } | { organization: PersistedOrganization }> => {
 		if (!isOrganizationId(organizationId))
 			return {

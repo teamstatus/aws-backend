@@ -19,7 +19,7 @@ export const deleteStatus =
 	(dbContext: DbContext, notify: Notify) =>
 	async (
 		statusId: string,
-		{ userId }: AuthContext,
+		{ sub: userId }: AuthContext,
 	): Promise<{ error: Error } | { deleted: true }> => {
 		try {
 			const { db, table } = dbContext

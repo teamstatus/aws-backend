@@ -72,7 +72,7 @@ export const createReaction =
 	async (
 		statusId: string,
 		reaction: Reaction,
-		{ userId }: AuthContext,
+		{ sub: userId }: AuthContext,
 	): Promise<{ error: Error } | { reaction: PersistedReaction }> => {
 		const { db, table } = dbContext
 		const { Item } = await db.send(

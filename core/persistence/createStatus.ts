@@ -30,7 +30,7 @@ export const createStatus =
 	async (
 		projectId: string,
 		message: string,
-		{ userId }: AuthContext,
+		{ sub: userId }: AuthContext,
 	): Promise<{ error: Error } | { status: PersistedStatus }> => {
 		if (!(await isProjectMember(dbContext)(projectId, userId))) {
 			return {

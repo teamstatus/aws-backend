@@ -179,7 +179,7 @@ describe('core', async () => {
 			const { organization } = (await coreInstance.createOrganization(
 				{ id: '$acme', name: 'ACME Inc.' },
 				{
-					userId: '@alex',
+					sub: '@alex',
 				},
 			)) as { organization: PersistedOrganization }
 			check(organization).is(
@@ -202,7 +202,7 @@ describe('core', async () => {
 			const { error } = (await coreInstance.createOrganization(
 				{ id: '$acme' },
 				{
-					userId: '@alex',
+					sub: '@alex',
 				},
 			)) as { error: Error }
 
@@ -211,7 +211,7 @@ describe('core', async () => {
 
 		it('can list organizations for a user', async () => {
 			const { organizations } = (await coreInstance.listOrganizations({
-				userId: '@alex',
+				sub: '@alex',
 			})) as { organizations: PersistedOrganization[] }
 			check(organizations?.[0]).is(
 				objectMatching({
@@ -232,7 +232,7 @@ describe('core', async () => {
 			const { project } = (await coreInstance.createProject(
 				{ id: '$acme#teamstatus', name: 'Teamstatus', color: '#ff0000' },
 				{
-					userId: '@alex',
+					sub: '@alex',
 				},
 			)) as { project: PersistedProject }
 
@@ -264,7 +264,7 @@ describe('core', async () => {
 			const res = (await coreInstance.createProject(
 				{ id: '$acme#teamstatus' },
 				{
-					userId: '@alex',
+					sub: '@alex',
 				},
 			)) as { error: Error }
 
@@ -276,7 +276,7 @@ describe('core', async () => {
 
 		it('can list projects for a user', async () => {
 			const { projects } = (await coreInstance.listProjects('$acme', {
-				userId: '@alex',
+				sub: '@alex',
 			})) as { projects: PersistedProject[] }
 			check(projects?.[0]).is(
 				objectMatching({
@@ -298,7 +298,7 @@ describe('core', async () => {
 				const { invitation } = (await coreInstance.inviteToProject(
 					'@cameron',
 					'$acme#teamstatus',
-					{ userId: '@alex' },
+					{ sub: '@alex' },
 				)) as { invitation: PersistedInvitation }
 
 				check(invitation).is(
@@ -329,7 +329,7 @@ describe('core', async () => {
 					const { error } = (await coreInstance.createStatus(
 						'$acme#teamstatus',
 						'Should not work',
-						{ userId: '@cameron' },
+						{ sub: '@cameron' },
 					)) as { error: Error }
 					assert.equal(
 						error?.message,
@@ -340,7 +340,7 @@ describe('core', async () => {
 				it('allows users to accept invitations', async () => {
 					const { error } = (await coreInstance.acceptProjectInvitation(
 						invitationId,
-						{ userId: '@cameron' },
+						{ sub: '@cameron' },
 					)) as { error: Error }
 					assert.equal(error, undefined)
 				})
@@ -349,7 +349,7 @@ describe('core', async () => {
 					const { error } = (await coreInstance.createStatus(
 						'$acme#teamstatus',
 						'Should work now!',
-						{ userId: '@cameron' },
+						{ sub: '@cameron' },
 					)) as { error: Error }
 					assert.equal(error, undefined)
 				})
@@ -365,7 +365,7 @@ describe('core', async () => {
 					const { status } = (await coreInstance.createStatus(
 						'$acme#teamstatus',
 						'Implemented ability to persist status updates for projects.',
-						{ userId: '@alex' },
+						{ sub: '@alex' },
 					)) as { status: PersistedStatus }
 
 					check(status).is(
@@ -392,7 +392,7 @@ describe('core', async () => {
 					const { error } = (await coreInstance.createStatus(
 						'$acme#teamstatus',
 						'I am not a member of the $acme organization, so I should not be allowed to create a status.',
-						{ userId: '@blake' },
+						{ sub: '@blake' },
 					)) as { error: Error }
 					assert.equal(
 						error?.message,
@@ -408,7 +408,7 @@ describe('core', async () => {
 					const { status } = (await coreInstance.createStatus(
 						'$acme#teamstatus',
 						'Status with an typo',
-						{ userId: '@alex' },
+						{ sub: '@alex' },
 					)) as { status: PersistedStatus }
 					statusId = status.id
 
@@ -418,7 +418,7 @@ describe('core', async () => {
 						'Status with a typo',
 						1,
 						{
-							userId: '@alex',
+							sub: '@alex',
 						},
 					)) as { status: PersistedStatus }
 					check(updated).is(
@@ -430,7 +430,7 @@ describe('core', async () => {
 					// Fetch
 					const { status: statusList } = (await coreInstance.listStatus(
 						'$acme#teamstatus',
-						{ userId: '@alex' },
+						{ sub: '@alex' },
 					)) as {
 						status: PersistedStatus[]
 					}
@@ -439,7 +439,7 @@ describe('core', async () => {
 
 				it('allows status to be deleted by the author', async () => {
 					const { error } = (await coreInstance.deleteStatus(statusId, {
-						userId: '@alex',
+						sub: '@alex',
 					})) as { error: Error }
 
 					assert.equal(error, undefined)
@@ -450,7 +450,7 @@ describe('core', async () => {
 				it('can list status for a project', async () => {
 					const { status } = (await coreInstance.listStatus(
 						'$acme#teamstatus',
-						{ userId: '@alex' },
+						{ sub: '@alex' },
 					)) as { status: PersistedStatus[] }
 					check(status?.[0]).is(
 						objectMatching({
@@ -465,18 +465,18 @@ describe('core', async () => {
 
 				it('sorts status by creation time', async () => {
 					await coreInstance.createStatus('$acme#teamstatus', 'Status 1', {
-						userId: '@alex',
+						sub: '@alex',
 					})
 					await coreInstance.createStatus('$acme#teamstatus', 'Status 2', {
-						userId: '@alex',
+						sub: '@alex',
 					})
 					await coreInstance.createStatus('$acme#teamstatus', 'Status 3', {
-						userId: '@alex',
+						sub: '@alex',
 					})
 
 					const { status } = (await coreInstance.listStatus(
 						'$acme#teamstatus',
-						{ userId: '@alex' },
+						{ sub: '@alex' },
 					)) as {
 						status: PersistedStatus[]
 					}
@@ -489,7 +489,7 @@ describe('core', async () => {
 
 				it('allows only organization members to list status', async () => {
 					const { error } = (await coreInstance.listStatus('$acme#teamstatus', {
-						userId: '@blake',
+						sub: '@blake',
 					})) as { error: Error }
 					assert.equal(
 						error?.message,
@@ -508,14 +508,14 @@ describe('core', async () => {
 					await coreInstance.createProject(
 						{ id: `$acme${projectId}` },
 						{
-							userId: '@alex',
+							sub: '@alex',
 						},
 					)
 
 					const { status } = (await coreInstance.createStatus(
 						`$acme${projectId}`,
 						`I've released a new version!`,
-						{ userId: '@alex' },
+						{ sub: '@alex' },
 					)) as { status: PersistedStatus }
 
 					statusId = status.id
@@ -523,7 +523,7 @@ describe('core', async () => {
 					const { reaction } = (await coreInstance.createReaction(
 						statusId,
 						newVersionRelease,
-						{ userId: '@alex' },
+						{ sub: '@alex' },
 					)) as { reaction: PersistedReaction }
 
 					check(reaction).is(
@@ -549,18 +549,18 @@ describe('core', async () => {
 						'@blake',
 						`$acme${projectId}`,
 						{
-							userId: '@alex',
+							sub: '@alex',
 						},
 					)) as { invitation: PersistedInvitation }
 					await coreInstance.acceptProjectInvitation(invitation.id, {
-						userId: '@blake',
+						sub: '@blake',
 					})
 
 					const { error } = (await coreInstance.createReaction(
 						statusId,
 						thumbsUp,
 						{
-							userId: '@blake',
+							sub: '@blake',
 						},
 					)) as { error: Error }
 
@@ -570,7 +570,7 @@ describe('core', async () => {
 				it('returns reactions with the status', async () => {
 					const { status } = (await coreInstance.listStatus(
 						`$acme${projectId}`,
-						{ userId: '@alex' },
+						{ sub: '@alex' },
 					)) as { status: PersistedStatus[] }
 
 					check(status[0]?.reactions[0]).is(
