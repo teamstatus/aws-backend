@@ -8,7 +8,10 @@ import {
 	UpdateTimeToLiveCommand,
 } from '@aws-sdk/client-dynamodb'
 
-export const createTable = async (db: DynamoDBClient, table: string) => {
+export const createTable = async (
+	db: DynamoDBClient,
+	table: string,
+): Promise<void> => {
 	await db.send(
 		new CreateTableCommand({
 			TableName: table,
@@ -53,6 +56,10 @@ export const createTable = async (db: DynamoDBClient, table: string) => {
 				},
 				{
 					AttributeName: 'statusReaction__status',
+					AttributeType: ScalarAttributeType.S,
+				},
+				{
+					AttributeName: 'user__email',
 					AttributeType: ScalarAttributeType.S,
 				},
 			],
@@ -124,6 +131,22 @@ export const createTable = async (db: DynamoDBClient, table: string) => {
 					Projection: {
 						ProjectionType: ProjectionType.INCLUDE,
 						NonKeyAttributes: ['author', 'emoji', 'role', 'description'],
+					},
+				},
+				{
+					IndexName: 'emailUser',
+					KeySchema: [
+						{
+							AttributeName: 'user__email',
+							KeyType: KeyType.HASH,
+						},
+						{
+							AttributeName: 'id',
+							KeyType: KeyType.RANGE,
+						},
+					],
+					Projection: {
+						ProjectionType: ProjectionType.KEYS_ONLY,
 					},
 				},
 			],

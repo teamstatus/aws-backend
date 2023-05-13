@@ -4,6 +4,7 @@ import { createOrganization } from './persistence/createOrganization.js'
 import { createProject } from './persistence/createProject.js'
 import { createReaction } from './persistence/createReaction.js'
 import { createStatus } from './persistence/createStatus.js'
+import { createUser } from './persistence/createUser.js'
 import { deleteStatus } from './persistence/deleteStatus.js'
 import { emailLoginRequest } from './persistence/emailLoginRequest.js'
 import { emailPINLogin } from './persistence/emailPINLogin.js'
@@ -12,19 +13,6 @@ import { listOrganizations } from './persistence/listOrganizations.js'
 import { listProjects } from './persistence/listProjects.js'
 import { listStatus } from './persistence/listStatus.js'
 import { updateStatus } from './persistence/updateStatus.js'
-
-// openssl ecparam -name prime256v1 -genkey -noout -out key.pem
-const privateKey = `-----BEGIN EC PRIVATE KEY-----
-MHcCAQEEIC8bVp72+Z17vnIUCCbkps7pNEAFrryzk6Ts4KMq8AIyoAoGCCqGSM49
-AwEHoUQDQgAEU6W9CCt5pzBrMu1yZeAAOEeil6LDjZUXPPY/IGOVh3gXbvMfz4nv
-qpcUn98uvzHNdHqp8w0cEKoQouOf1RDySA==
------END EC PRIVATE KEY-----`
-
-// openssl ec -in key.pem -pubout -out public.pem
-export const publicKey = `-----BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEU6W9CCt5pzBrMu1yZeAAOEeil6LD
-jZUXPPY/IGOVh3gXbvMfz4nvqpcUn98uvzHNdHqp8w0cEKoQouOf1RDySA==
------END PUBLIC KEY-----`
 
 export type AuthContext = {
 	userId: string
@@ -41,6 +29,7 @@ export enum CoreEventType {
 	REACTION_CREATED = 'REACTION_CREATED',
 	EMAIL_LOGIN_REQUESTED = 'EMAIL_LOGIN_REQUESTED',
 	EMAIL_LOGIN_PIN_SUCCESS = 'EMAIL_LOGIN_PIN_SUCCESS',
+	USER_CREATED = 'USER_CREATED',
 }
 export enum Role {
 	OWNER = 'owner',
@@ -51,13 +40,37 @@ export type CoreEvent = {
 	timestamp: Date
 }
 type listenerFn = (event: CoreEvent) => unknown
-export const l = (s: string) => s.toLowerCase()
+export const l = (s: string): string => s.toLowerCase()
 
 export type DbContext = { db: DynamoDBClient; table: string }
 
 export type Notify = (event: CoreEvent) => void
 
-export const core = (dbContext: DbContext) => {
+export const core = (
+	dbContext: DbContext,
+	{
+		privateKey,
+	}: {
+		privateKey: string
+		publicKey: string
+	},
+): {
+	on: (event: CoreEventType | '*', fn: listenerFn) => void
+	createReaction: ReturnType<typeof createReaction>
+	createProject: ReturnType<typeof createProject>
+	createOrganization: ReturnType<typeof createOrganization>
+	createStatus: ReturnType<typeof createStatus>
+	listStatus: ReturnType<typeof listStatus>
+	listOrganizations: ReturnType<typeof listOrganizations>
+	listProjects: ReturnType<typeof listProjects>
+	inviteToProject: ReturnType<typeof inviteToProject>
+	acceptProjectInvitation: ReturnType<typeof acceptProjectInvitation>
+	updateStatus: ReturnType<typeof updateStatus>
+	deleteStatus: ReturnType<typeof deleteStatus>
+	emailLoginRequest: ReturnType<typeof emailLoginRequest>
+	emailPINLogin: ReturnType<typeof emailPINLogin>
+	createUser: ReturnType<typeof createUser>
+} => {
 	const listeners: { event: CoreEventType | '*'; fn: listenerFn }[] = []
 	const notify = (event: CoreEvent) => {
 		for (const { fn } of [
@@ -69,7 +82,7 @@ export const core = (dbContext: DbContext) => {
 	}
 
 	return {
-		on: (event: CoreEventType | '*', fn: listenerFn) => {
+		on: (event, fn) => {
 			listeners.push({ event, fn })
 		},
 		createReaction: createReaction(dbContext, notify),
@@ -85,5 +98,6 @@ export const core = (dbContext: DbContext) => {
 		deleteStatus: deleteStatus(dbContext, notify),
 		emailLoginRequest: emailLoginRequest(dbContext, notify),
 		emailPINLogin: emailPINLogin(dbContext, notify, privateKey),
+		createUser: createUser(dbContext, notify),
 	}
 }

@@ -1,0 +1,13 @@
+{
+  "extends": [
+    "@nordicsemiconductor/eslint-config-asset-tracker-cloud-typescript"
+  ],
+  "overrides": [
+    {
+      "files": ["*.spec.ts"],
+      "rules": {
+        "@typescript-eslint/no-floating-promises": "off"
+      }
+    }
+  ]
+}

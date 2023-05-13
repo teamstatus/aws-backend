@@ -1,10 +1,11 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import jwt from 'jsonwebtoken'
 import assert from 'node:assert/strict'
+import { execSync } from 'node:child_process'
 import { before, describe, test as it } from 'node:test'
 import { check, objectMatching, stringMatching } from 'tsmatchers'
 import { ulid } from 'ulid'
-import { CoreEventType, Role, core, publicKey, type CoreEvent } from './core.js'
+import { CoreEventType, Role, core, type CoreEvent } from './core.js'
 import type { PersistedOrganization } from './persistence/createOrganization.js'
 import type { PersistedProject } from './persistence/createProject.js'
 import {
@@ -14,6 +15,7 @@ import {
 } from './persistence/createReaction.js'
 import type { PersistedStatus } from './persistence/createStatus.js'
 import { createTable } from './persistence/createTable.js'
+import type { PersistedUser } from './persistence/createUser.js'
 import type { EmailLoginRequest } from './persistence/emailLoginRequest.js'
 import type { PersistedInvitation } from './persistence/inviteToProject.js'
 
@@ -23,7 +25,23 @@ describe('core', async () => {
 		endpoint: 'http://localhost:8000/',
 		region: 'eu-west-1',
 	})
-	const coreInstance = core({ db, table })
+	const privateKey = execSync(
+		'openssl ecparam -name prime256v1 -genkey',
+	).toString()
+	const publicKey = execSync('openssl ec -pubout', {
+		input: privateKey,
+	}).toString()
+
+	const coreInstance = core(
+		{
+			db,
+			table,
+		},
+		{
+			privateKey,
+			publicKey,
+		},
+	)
 
 	before(async () => {
 		try {
@@ -61,11 +79,73 @@ describe('core', async () => {
 				pin = p
 			})
 
+			let token: string
+
 			it('logs a user in using a PIN', async () => {
 				const events: CoreEvent[] = []
 				coreInstance.on(CoreEventType.EMAIL_LOGIN_PIN_SUCCESS, (e) =>
 					events.push(e),
 				)
+				const { token: t } = (await coreInstance.emailPINLogin({
+					email: 'alex@example.com',
+					pin,
+				})) as { token: string }
+
+				token = t
+
+				const parsedToken = jwt.verify(token, publicKey)
+				check(parsedToken).is(
+					objectMatching({
+						iat: Math.floor(Date.now() / 1000),
+						exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
+						// It should not have a username associated
+						sub: undefined,
+					}),
+				)
+				check(events[0]).is(
+					objectMatching({
+						type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS,
+						email: 'alex@example.com',
+					}),
+				)
+
+				const payload = jwt.decode(token)
+				check(payload).is(
+					objectMatching({
+						email: 'alex@example.com',
+					}),
+				)
+			})
+
+			it('allows users to claim a user ID', async () => {
+				const events: CoreEvent[] = []
+				coreInstance.on(CoreEventType.USER_CREATED, (e) => events.push(e))
+				const { user } = (await coreInstance.createUser({
+					id: '@alex',
+					name: 'Alex Doe',
+					email: 'alex@example.com',
+				})) as { user: PersistedUser }
+				check(user).is(
+					objectMatching({
+						id: '@alex',
+						name: 'Alex Doe',
+						email: 'alex@example.com',
+					}),
+				)
+				check(events[0]).is(
+					objectMatching({
+						type: CoreEventType.USER_CREATED,
+						id: '@alex',
+						name: 'Alex Doe',
+						email: 'alex@example.com',
+					}),
+				)
+			})
+
+			it(`adds the user's ID to the token after they have claimed a user ID`, async () => {
+				const { pin } = (await coreInstance.emailLoginRequest({
+					email: 'alex@example.com',
+				})) as { loginRequest: EmailLoginRequest; pin: string }
 				const { token } = (await coreInstance.emailPINLogin({
 					email: 'alex@example.com',
 					pin,
@@ -73,15 +153,7 @@ describe('core', async () => {
 				const parsedToken = jwt.verify(token, publicKey)
 				check(parsedToken).is(
 					objectMatching({
-						iat: Math.floor(Date.now() / 1000),
-						exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
-						sub: 'alex@example.com',
-					}),
-				)
-				check(events[0]).is(
-					objectMatching({
-						type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS,
-						email: 'alex@example.com',
+						sub: '@alex',
 					}),
 				)
 			})
@@ -434,17 +506,17 @@ describe('core', async () => {
 						{ userId: '@alex' },
 					)) as { status: PersistedStatus }
 
-					statusId = status.id as string
+					statusId = status.id
 
 					const { reaction } = (await coreInstance.createReaction(
-						status?.id as string,
+						statusId,
 						newVersionRelease,
 						{ userId: '@alex' },
 					)) as { reaction: PersistedReaction }
 
 					check(reaction).is(
 						objectMatching({
-							status: status?.id,
+							status: statusId,
 							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
 							...newVersionRelease,
 						}),
@@ -452,7 +524,7 @@ describe('core', async () => {
 					check(events[0]).is(
 						objectMatching({
 							type: CoreEventType.REACTION_CREATED,
-							status: status?.id as string,
+							status: statusId,
 							author: '@alex',
 							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
 							...newVersionRelease,
