@@ -19,12 +19,25 @@ import type { PersistedUser } from './persistence/createUser.js'
 import type { EmailLoginRequest } from './persistence/emailLoginRequest.js'
 import type { PersistedInvitation } from './persistence/inviteToProject.js'
 
+const isCI = process.env.CI !== undefined
+const testDb = () => {
+	if (isCI) {
+		return {
+			table: process.env.TABLE_NAME ?? '',
+			db: new DynamoDBClient({}),
+		}
+	}
+	return {
+		table: `teamstatus-${ulid()}`,
+		db: new DynamoDBClient({
+			endpoint: 'http://localhost:8000/',
+			region: 'eu-west-1',
+		}),
+	}
+}
+
 describe('core', async () => {
-	const table = `teamstatus-${ulid()}`
-	const db = new DynamoDBClient({
-		endpoint: 'http://localhost:8000/',
-		region: 'eu-west-1',
-	})
+	const { table, db } = testDb()
 	const privateKey = execSync(
 		'openssl ecparam -name prime256v1 -genkey',
 	).toString()
@@ -44,6 +57,10 @@ describe('core', async () => {
 	)
 
 	before(async () => {
+		if (isCI) {
+			console.log(`Using existing table ${table}.`)
+			return
+		}
 		try {
 			await createTable(db, table)
 		} catch (err) {

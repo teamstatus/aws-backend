@@ -17,6 +17,8 @@ jobs:
   test-and-release:
     runs-on: ubuntu-22.04
 
+    environment: ci
+
     steps:
       - uses: actions/checkout@v3
 
@@ -36,16 +38,27 @@ jobs:
       - name: Check TypeScript
         run: npx tsc
 
-      - name: Setup DynamoDB Local
-        uses: rrainn/dynamodb-action@v2.0.1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          sharedDb: true
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-session-name: github-action-public-parameter-registry
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Generate Stack ID
+        run: |
+          RANDOM_STRING=`node -e "const crypto = require('crypto'); process.stdout.write(crypto.randomBytes(Math.ceil(8 * 0.5)).toString('hex').slice(0, 8));"`
+          echo "STACK_NAME_PREFIX=tsci-${RANDOM_STRING}" >> $GITHUB_ENV
+
+      - name: Deploy solution
+        run: npx cdk deploy
+
+      - name: Export settings
+        run: |
+          TABLE_NAME=`aws cloudformation describe-stacks --stack-name ${STACK_NAME_PREFIX:-teamstatus}-backend | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "tableName") | .OutputValue'`
+          echo "TABLE_NAME=${TABLE_NAME}" >> $GITHUB_ENV
 
       - name: Run Tests
-        env:
-          AWS_REGION: eu-west-1
-          AWS_ACCESS_KEY_ID: fakeMyKeyId
-          AWS_SECRET_ACCESS_KEY: fakeSecretAccessKey
         run: npm test
 
       - name: Semantic release
@@ -54,3 +67,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+
+      - name: Destroy solution stack
+        if: always()
+        run: npx cdk destroy -f

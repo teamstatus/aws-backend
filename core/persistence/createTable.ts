@@ -8,6 +8,31 @@ import {
 	UpdateTimeToLiveCommand,
 } from '@aws-sdk/client-dynamodb'
 
+export const indexes: Record<
+	string,
+	{ keys: [hash: string, range: string]; include?: string[] }
+> = {
+	organizationMember: {
+		keys: ['organizationMember__user', 'organizationMember__organization'],
+		include: ['role', 'id'],
+	},
+	projectMember: {
+		keys: ['projectMember__user', 'projectMember__project'],
+		include: ['role', 'id'],
+	},
+	projectStatus: {
+		keys: ['projectStatus__project', 'id'],
+		include: ['author', 'message', 'version', 'deletedAt'],
+	},
+	statusReaction: {
+		keys: ['statusReaction__status', 'id'],
+		include: ['author', 'emoji', 'role', 'description'],
+	},
+	emailUser: {
+		keys: ['user__email', 'id'],
+	},
+}
+
 export const createTable = async (
 	db: DynamoDBClient,
 	table: string,
@@ -26,130 +51,42 @@ export const createTable = async (
 				},
 			],
 			AttributeDefinitions: [
-				{
-					AttributeName: 'id',
-					AttributeType: ScalarAttributeType.S,
-				},
-				{
-					AttributeName: 'type',
-					AttributeType: ScalarAttributeType.S,
-				},
-				{
-					AttributeName: 'organizationMember__organization',
-					AttributeType: ScalarAttributeType.S,
-				},
-				{
-					AttributeName: 'organizationMember__user',
-					AttributeType: ScalarAttributeType.S,
-				},
-				{
-					AttributeName: 'projectMember__project',
-					AttributeType: ScalarAttributeType.S,
-				},
-				{
-					AttributeName: 'projectMember__user',
-					AttributeType: ScalarAttributeType.S,
-				},
-				{
-					AttributeName: 'projectStatus__project',
-					AttributeType: ScalarAttributeType.S,
-				},
-				{
-					AttributeName: 'statusReaction__status',
-					AttributeType: ScalarAttributeType.S,
-				},
-				{
-					AttributeName: 'user__email',
-					AttributeType: ScalarAttributeType.S,
-				},
-			],
+				...new Set([
+					'id',
+					'type',
+					...Object.values(indexes)
+						.map(({ keys }) => keys)
+						.flat(),
+				]),
+			].map((AttributeName) => ({
+				AttributeName,
+				AttributeType: ScalarAttributeType.S,
+			})),
 			BillingMode: BillingMode.PAY_PER_REQUEST,
-			GlobalSecondaryIndexes: [
-				{
-					IndexName: 'organizationMember',
+			GlobalSecondaryIndexes: Object.entries(indexes).map(
+				([IndexName, { keys, include }]) => ({
+					IndexName,
 					KeySchema: [
 						{
-							AttributeName: 'organizationMember__user',
+							AttributeName: keys[0],
 							KeyType: KeyType.HASH,
 						},
 						{
-							AttributeName: 'organizationMember__organization',
+							AttributeName: keys[1],
 							KeyType: KeyType.RANGE,
 						},
 					],
-					Projection: {
-						ProjectionType: ProjectionType.INCLUDE,
-						NonKeyAttributes: ['role', 'id'],
-					},
-				},
-				{
-					IndexName: 'projectMember',
-					KeySchema: [
-						{
-							AttributeName: 'projectMember__user',
-							KeyType: KeyType.HASH,
-						},
-						{
-							AttributeName: 'projectMember__project',
-							KeyType: KeyType.RANGE,
-						},
-					],
-					Projection: {
-						ProjectionType: ProjectionType.INCLUDE,
-						NonKeyAttributes: ['role', 'id'],
-					},
-				},
-				{
-					IndexName: 'projectStatus',
-					KeySchema: [
-						{
-							AttributeName: 'projectStatus__project',
-							KeyType: KeyType.HASH,
-						},
-						{
-							AttributeName: 'id',
-							KeyType: KeyType.RANGE,
-						},
-					],
-					Projection: {
-						ProjectionType: ProjectionType.INCLUDE,
-						NonKeyAttributes: ['author', 'message', 'version', 'deletedAt'],
-					},
-				},
-				{
-					IndexName: 'statusReaction',
-					KeySchema: [
-						{
-							AttributeName: 'statusReaction__status',
-							KeyType: KeyType.HASH,
-						},
-						{
-							AttributeName: 'id',
-							KeyType: KeyType.RANGE,
-						},
-					],
-					Projection: {
-						ProjectionType: ProjectionType.INCLUDE,
-						NonKeyAttributes: ['author', 'emoji', 'role', 'description'],
-					},
-				},
-				{
-					IndexName: 'emailUser',
-					KeySchema: [
-						{
-							AttributeName: 'user__email',
-							KeyType: KeyType.HASH,
-						},
-						{
-							AttributeName: 'id',
-							KeyType: KeyType.RANGE,
-						},
-					],
-					Projection: {
-						ProjectionType: ProjectionType.KEYS_ONLY,
-					},
-				},
-			],
+					Projection:
+						include === undefined
+							? {
+									ProjectionType: ProjectionType.KEYS_ONLY,
+							  }
+							: {
+									ProjectionType: ProjectionType.INCLUDE,
+									NonKeyAttributes: include,
+							  },
+				}),
+			),
 		}),
 	)
 	await db.send(
