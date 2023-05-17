@@ -34,11 +34,14 @@ export const deleteStatus =
 							S: 'projectStatus',
 						},
 					},
-					UpdateExpression: 'SET #deletedAt = :now',
+					UpdateExpression:
+						'SET #projectDeleted = #project, #deletedAt = :now REMOVE #project',
 					ConditionExpression: '#author = :author',
 					ExpressionAttributeNames: {
 						'#author': 'author',
 						'#deletedAt': 'deletedAt',
+						'#project': 'projectStatus__project',
+						'#projectDeleted': 'projectStatus__project__DELETED',
 					},
 					ExpressionAttributeValues: {
 						':author': {

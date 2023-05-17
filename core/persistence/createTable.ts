@@ -22,7 +22,7 @@ export const indexes: Record<
 	},
 	projectStatus: {
 		keys: ['projectStatus__project', 'id'],
-		include: ['author', 'message', 'version', 'deletedAt'],
+		include: ['author', 'message', 'version'],
 	},
 	statusReaction: {
 		keys: ['statusReaction__status', 'id'],

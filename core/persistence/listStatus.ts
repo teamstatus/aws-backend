@@ -35,10 +35,8 @@ export const listStatus =
 				TableName: table,
 				IndexName: 'projectStatus',
 				KeyConditionExpression: '#project = :project',
-				FilterExpression: 'attribute_not_exists(#deletedAt)',
 				ExpressionAttributeNames: {
 					'#project': 'projectStatus__project',
-					'#deletedAt': 'deletedAt',
 				},
 				ExpressionAttributeValues: {
 					':project': {
