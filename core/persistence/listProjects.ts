@@ -1,15 +1,17 @@
 import { GetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { l, type AuthContext, type DbContext } from '../core.js'
+import { l, type DbContext } from '../core.js'
+import type { VerifyTokenUserFn } from '../token.js'
 import type { PersistedProject } from './createProject.js'
 import { isOrganizationMember } from './getOrganizationMember.js'
 
 export const listProjects =
-	(dbContext: DbContext) =>
+	(verifyToken: VerifyTokenUserFn, dbContext: DbContext) =>
 	async (
 		organizationId: string,
-		{ sub: userId }: AuthContext,
+		token: string,
 	): Promise<{ error: Error } | { projects: PersistedProject[] }> => {
+		const { sub: userId } = verifyToken(token)
 		if (!(await isOrganizationMember(dbContext)(organizationId, userId))) {
 			return {
 				error: new Error(

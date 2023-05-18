@@ -4,12 +4,12 @@ import {
 	CoreEventType,
 	Role,
 	l,
-	type AuthContext,
 	type CoreEvent,
 	type DbContext,
-	type Notify,
 } from '../core.js'
 import { parseProjectId } from '../ids.js'
+import type { Notify } from '../notifier.js'
+import type { VerifyTokenUserFn } from '../token.js'
 import { isOrganizationOwner } from './getOrganizationMember.js'
 
 export type MemberInvitedEvent = CoreEvent & {
@@ -25,12 +25,13 @@ export type PersistedInvitation = {
 }
 
 export const inviteToProject =
-	(dbContext: DbContext, notify: Notify) =>
+	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
 	async (
 		invitedUserId: string,
 		projectId: string,
-		{ sub: userId }: AuthContext,
+		token: string,
 	): Promise<{ error: Error } | { invitation: PersistedInvitation }> => {
+		const { sub: userId } = verifyToken(token)
 		const { organization: organizationId } = parseProjectId(projectId)
 
 		if (organizationId === null) {

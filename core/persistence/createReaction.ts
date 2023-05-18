@@ -1,14 +1,9 @@
 import { GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { ulid } from 'ulid'
-import {
-	CoreEventType,
-	l,
-	type AuthContext,
-	type CoreEvent,
-	type DbContext,
-	type Notify,
-} from '../core.js'
+import { CoreEventType, l, type CoreEvent, type DbContext } from '../core.js'
+import type { Notify } from '../notifier.js'
+import type { VerifyTokenUserFn } from '../token.js'
 import { isProjectMember } from './getProjectMember.js'
 
 // Reactions can have special roles
@@ -68,12 +63,13 @@ export type ReactionCreatedEvent = CoreEvent & {
 } & PersistedReaction
 
 export const createReaction =
-	(dbContext: DbContext, notify: Notify) =>
+	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
 	async (
 		statusId: string,
 		reaction: Reaction,
-		{ sub: userId }: AuthContext,
+		token: string,
 	): Promise<{ error: Error } | { reaction: PersistedReaction }> => {
+		const { sub: userId } = verifyToken(token)
 		const { db, table } = dbContext
 		const { Item } = await db.send(
 			new GetItemCommand({

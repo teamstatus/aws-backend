@@ -18,6 +18,7 @@ import { createTable } from './persistence/createTable.js'
 import type { PersistedUser } from './persistence/createUser.js'
 import type { EmailLoginRequest } from './persistence/emailLoginRequest.js'
 import type { PersistedInvitation } from './persistence/inviteToProject.js'
+import { create } from './token.js'
 
 const isCI = process.env.CI !== undefined
 const testDb = () => {
@@ -50,10 +51,10 @@ describe('core', async () => {
 			db,
 			table,
 		},
-		{
-			privateKey,
-		},
+		privateKey,
 	)
+
+	const signToken = create({ signingKey: privateKey })
 
 	before(async () => {
 		if (isCI) {
@@ -111,6 +112,8 @@ describe('core', async () => {
 					events.push(e),
 				)
 				const { token: t } = (await coreInstance.emailPINLogin({
+					signingKey: privateKey,
+				})({
 					email: 'alex@example.com',
 					pin,
 				})) as { token: string }
@@ -145,6 +148,8 @@ describe('core', async () => {
 
 			it('prevents re-using PINs', async () => {
 				const { error } = (await coreInstance.emailPINLogin({
+					signingKey: privateKey,
+				})({
 					email: 'alex@example.com',
 					pin,
 				})) as { error: Error }
@@ -158,7 +163,7 @@ describe('core', async () => {
 				const { user } = (await coreInstance.createUser({
 					id: '@alex',
 					name: 'Alex Doe',
-					email: 'alex@example.com',
+					token: signToken({ email: 'alex@example.com' }),
 				})) as { user: PersistedUser }
 				check(user).is(
 					objectMatching({
@@ -182,6 +187,8 @@ describe('core', async () => {
 					email: 'alex@example.com',
 				})) as { loginRequest: EmailLoginRequest; pin: string }
 				const { token } = (await coreInstance.emailPINLogin({
+					signingKey: privateKey,
+				})({
 					email: 'alex@example.com',
 					pin,
 				})) as { token: string }
@@ -202,9 +209,7 @@ describe('core', async () => {
 			coreInstance.on(CoreEventType.ORGANIZATION_CREATED, (e) => events.push(e))
 			const { organization } = (await coreInstance.createOrganization(
 				{ id: '$acme', name: 'ACME Inc.' },
-				{
-					sub: '@alex',
-				},
+				signToken({ email: 'alex@example.com', subject: '@alex' }),
 			)) as { organization: PersistedOrganization }
 			check(organization).is(
 				objectMatching({
@@ -225,18 +230,16 @@ describe('core', async () => {
 		it('ensures that organizations are unique', async () => {
 			const { error } = (await coreInstance.createOrganization(
 				{ id: '$acme' },
-				{
-					sub: '@alex',
-				},
+				signToken({ email: 'alex@example.com', subject: '@alex' }),
 			)) as { error: Error }
 
 			assert.equal(error?.message, `Organization '$acme' already exists.`)
 		})
 
 		it('can list organizations for a user', async () => {
-			const { organizations } = (await coreInstance.listOrganizations({
-				sub: '@alex',
-			})) as { organizations: PersistedOrganization[] }
+			const { organizations } = (await coreInstance.listOrganizations(
+				signToken({ email: 'alex@example.com', subject: '@alex' }),
+			)) as { organizations: PersistedOrganization[] }
 			check(organizations?.[0]).is(
 				objectMatching({
 					id: '$acme',
@@ -255,9 +258,7 @@ describe('core', async () => {
 
 			const { project } = (await coreInstance.createProject(
 				{ id: '$acme#teamstatus', name: 'Teamstatus', color: '#ff0000' },
-				{
-					sub: '@alex',
-				},
+				signToken({ email: 'alex@example.com', subject: '@alex' }),
 			)) as { project: PersistedProject }
 
 			check(project).is(
@@ -287,9 +288,7 @@ describe('core', async () => {
 		it('ensures that projects are unique', async () => {
 			const res = (await coreInstance.createProject(
 				{ id: '$acme#teamstatus' },
-				{
-					sub: '@alex',
-				},
+				signToken({ email: 'alex@example.com', subject: '@alex' }),
 			)) as { error: Error }
 
 			assert.equal(
@@ -299,9 +298,10 @@ describe('core', async () => {
 		})
 
 		it('can list projects for a user', async () => {
-			const { projects } = (await coreInstance.listProjects('$acme', {
-				sub: '@alex',
-			})) as { projects: PersistedProject[] }
+			const { projects } = (await coreInstance.listProjects(
+				'$acme',
+				signToken({ email: 'alex@example.com', subject: '@alex' }),
+			)) as { projects: PersistedProject[] }
 			check(projects?.[0]).is(
 				objectMatching({
 					id: '$acme#teamstatus',
@@ -322,7 +322,7 @@ describe('core', async () => {
 				const { invitation } = (await coreInstance.inviteToProject(
 					'@cameron',
 					'$acme#teamstatus',
-					{ sub: '@alex' },
+					signToken({ email: 'alex@example.com', subject: '@alex' }),
 				)) as { invitation: PersistedInvitation }
 
 				check(invitation).is(
@@ -353,7 +353,7 @@ describe('core', async () => {
 					const { error } = (await coreInstance.createStatus(
 						'$acme#teamstatus',
 						'Should not work',
-						{ sub: '@cameron' },
+						signToken({ email: 'cameron@example.com', subject: '@cameron' }),
 					)) as { error: Error }
 					assert.equal(
 						error?.message,
@@ -364,7 +364,7 @@ describe('core', async () => {
 				it('allows users to accept invitations', async () => {
 					const { error } = (await coreInstance.acceptProjectInvitation(
 						invitationId,
-						{ sub: '@cameron' },
+						signToken({ email: 'cameron@example.com', subject: '@cameron' }),
 					)) as { error: Error }
 					assert.equal(error, undefined)
 				})
@@ -373,7 +373,7 @@ describe('core', async () => {
 					const { error } = (await coreInstance.createStatus(
 						'$acme#teamstatus',
 						'Should work now!',
-						{ sub: '@cameron' },
+						signToken({ email: 'cameron@example.com', subject: '@cameron' }),
 					)) as { error: Error }
 					assert.equal(error, undefined)
 				})
@@ -389,7 +389,7 @@ describe('core', async () => {
 					const { status } = (await coreInstance.createStatus(
 						'$acme#teamstatus',
 						'Implemented ability to persist status updates for projects.',
-						{ sub: '@alex' },
+						signToken({ email: 'alex@example.com', subject: '@alex' }),
 					)) as { status: PersistedStatus }
 
 					check(status).is(
@@ -416,7 +416,7 @@ describe('core', async () => {
 					const { error } = (await coreInstance.createStatus(
 						'$acme#teamstatus',
 						'I am not a member of the $acme organization, so I should not be allowed to create a status.',
-						{ sub: '@blake' },
+						signToken({ email: 'blake@example.com', subject: '@blake' }),
 					)) as { error: Error }
 					assert.equal(
 						error?.message,
@@ -432,7 +432,7 @@ describe('core', async () => {
 					const { status } = (await coreInstance.createStatus(
 						'$acme#teamstatus',
 						'Status with an typo',
-						{ sub: '@alex' },
+						signToken({ email: 'alex@example.com', subject: '@alex' }),
 					)) as { status: PersistedStatus }
 					statusId = status.id
 
@@ -441,9 +441,7 @@ describe('core', async () => {
 						statusId,
 						'Status with a typo',
 						1,
-						{
-							sub: '@alex',
-						},
+						signToken({ email: 'alex@example.com', subject: '@alex' }),
 					)) as { status: PersistedStatus }
 					check(updated).is(
 						objectMatching({
@@ -454,7 +452,7 @@ describe('core', async () => {
 					// Fetch
 					const { status: statusList } = (await coreInstance.listStatus(
 						'$acme#teamstatus',
-						{ sub: '@alex' },
+						signToken({ email: 'alex@example.com', subject: '@alex' }),
 					)) as {
 						status: PersistedStatus[]
 					}
@@ -462,9 +460,10 @@ describe('core', async () => {
 				})
 
 				it('allows status to be deleted by the author', async () => {
-					const { error } = (await coreInstance.deleteStatus(statusId, {
-						sub: '@alex',
-					})) as { error: Error }
+					const { error } = (await coreInstance.deleteStatus(
+						statusId,
+						signToken({ email: 'alex@example.com', subject: '@alex' }),
+					)) as { error: Error }
 
 					assert.equal(error, undefined)
 				})
@@ -474,7 +473,7 @@ describe('core', async () => {
 				it('can list status for a project', async () => {
 					const { status } = (await coreInstance.listStatus(
 						'$acme#teamstatus',
-						{ sub: '@alex' },
+						signToken({ email: 'alex@example.com', subject: '@alex' }),
 					)) as { status: PersistedStatus[] }
 					check(status?.[0]).is(
 						objectMatching({
@@ -488,19 +487,25 @@ describe('core', async () => {
 				})
 
 				it('sorts status by creation time', async () => {
-					await coreInstance.createStatus('$acme#teamstatus', 'Status 1', {
-						sub: '@alex',
-					})
-					await coreInstance.createStatus('$acme#teamstatus', 'Status 2', {
-						sub: '@alex',
-					})
-					await coreInstance.createStatus('$acme#teamstatus', 'Status 3', {
-						sub: '@alex',
-					})
+					await coreInstance.createStatus(
+						'$acme#teamstatus',
+						'Status 1',
+						signToken({ email: 'alex@example.com', subject: '@alex' }),
+					)
+					await coreInstance.createStatus(
+						'$acme#teamstatus',
+						'Status 2',
+						signToken({ email: 'alex@example.com', subject: '@alex' }),
+					)
+					await coreInstance.createStatus(
+						'$acme#teamstatus',
+						'Status 3',
+						signToken({ email: 'alex@example.com', subject: '@alex' }),
+					)
 
 					const { status } = (await coreInstance.listStatus(
 						'$acme#teamstatus',
-						{ sub: '@alex' },
+						signToken({ email: 'alex@example.com', subject: '@alex' }),
 					)) as {
 						status: PersistedStatus[]
 					}
@@ -512,9 +517,10 @@ describe('core', async () => {
 				})
 
 				it('allows only organization members to list status', async () => {
-					const { error } = (await coreInstance.listStatus('$acme#teamstatus', {
-						sub: '@blake',
-					})) as { error: Error }
+					const { error } = (await coreInstance.listStatus(
+						'$acme#teamstatus',
+						signToken({ email: 'blake@example.com', subject: '@blake' }),
+					)) as { error: Error }
 					assert.equal(
 						error?.message,
 						`Only members of '$acme' are allowed to list status.`,
@@ -531,15 +537,13 @@ describe('core', async () => {
 
 					await coreInstance.createProject(
 						{ id: `$acme${projectId}` },
-						{
-							sub: '@alex',
-						},
+						signToken({ email: 'alex@example.com', subject: '@alex' }),
 					)
 
 					const { status } = (await coreInstance.createStatus(
 						`$acme${projectId}`,
 						`I've released a new version!`,
-						{ sub: '@alex' },
+						signToken({ email: 'alex@example.com', subject: '@alex' }),
 					)) as { status: PersistedStatus }
 
 					statusId = status.id
@@ -547,7 +551,7 @@ describe('core', async () => {
 					const { reaction } = (await coreInstance.createReaction(
 						statusId,
 						newVersionRelease,
-						{ sub: '@alex' },
+						signToken({ email: 'alex@example.com', subject: '@alex' }),
 					)) as { reaction: PersistedReaction }
 
 					check(reaction).is(
@@ -572,20 +576,17 @@ describe('core', async () => {
 					const { invitation } = (await coreInstance.inviteToProject(
 						'@blake',
 						`$acme${projectId}`,
-						{
-							sub: '@alex',
-						},
+						signToken({ email: 'alex@example.com', subject: '@alex' }),
 					)) as { invitation: PersistedInvitation }
-					await coreInstance.acceptProjectInvitation(invitation.id, {
-						sub: '@blake',
-					})
+					await coreInstance.acceptProjectInvitation(
+						invitation.id,
+						signToken({ email: 'blake@example.com', subject: '@blake' }),
+					)
 
 					const { error } = (await coreInstance.createReaction(
 						statusId,
 						thumbsUp,
-						{
-							sub: '@blake',
-						},
+						signToken({ email: 'blake@example.com', subject: '@blake' }),
 					)) as { error: Error }
 
 					assert.equal(error, undefined)
@@ -594,7 +595,7 @@ describe('core', async () => {
 				it('returns reactions with the status', async () => {
 					const { status } = (await coreInstance.listStatus(
 						`$acme${projectId}`,
-						{ sub: '@alex' },
+						signToken({ email: 'alex@example.com', subject: '@alex' }),
 					)) as { status: PersistedStatus[] }
 
 					check(status[0]?.reactions[0]).is(

@@ -7,12 +7,12 @@ import {
 	CoreEventType,
 	Role,
 	l,
-	type AuthContext,
 	type CoreEvent,
 	type DbContext,
-	type Notify,
 } from '../core.js'
 import { isOrganizationId } from '../ids.js'
+import type { Notify } from '../notifier.js'
+import type { VerifyTokenUserFn } from '../token.js'
 
 export type PersistedOrganization = { id: string; name: string | null }
 
@@ -23,11 +23,12 @@ export type OrganizationCreatedEvent = CoreEvent & {
 }
 
 export const createOrganization =
-	(dbContext: DbContext, notify: Notify) =>
+	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
 	async (
 		{ id: organizationId, name }: { id: string; name?: string },
-		{ sub: userId }: AuthContext,
+		token: string,
 	): Promise<{ error: Error } | { organization: PersistedOrganization }> => {
+		const { sub: userId } = verifyToken(token)
 		if (!isOrganizationId(organizationId))
 			return {
 				error: new Error(`Not an organization ID: ${organizationId}`),

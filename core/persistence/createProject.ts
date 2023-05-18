@@ -6,12 +6,12 @@ import {
 	CoreEventType,
 	Role,
 	l,
-	type AuthContext,
 	type CoreEvent,
 	type DbContext,
-	type Notify,
 } from '../core.js'
 import { parseProjectId } from '../ids.js'
+import type { Notify } from '../notifier.js'
+import type { VerifyTokenUserFn } from '../token.js'
 import { createProjectMember } from './createProjectMember.js'
 import { isOrganizationMember } from './getOrganizationMember.js'
 export type ProjectCreatedEvent = CoreEvent & {
@@ -23,15 +23,16 @@ export type PersistedProject = {
 	color: string | null
 }
 export const createProject =
-	(dbContext: DbContext, notify: Notify) =>
+	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
 	async (
 		{
 			id: projectId,
 			name,
 			color,
 		}: { id: string; name?: string; color?: string },
-		{ sub: userId }: AuthContext,
+		token: string,
 	): Promise<{ error: Error } | { project: PersistedProject }> => {
+		const { sub: userId } = verifyToken(token)
 		const { organization: organizationId } = parseProjectId(projectId)
 
 		if (organizationId === null) {

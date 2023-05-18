@@ -1,17 +1,19 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { l, type AuthContext, type DbContext } from '../core.js'
+import { l, type DbContext } from '../core.js'
 import { parseProjectId } from '../ids.js'
+import type { VerifyTokenUserFn } from '../token.js'
 import type { PersistedStatus } from './createStatus.js'
 import { isOrganizationMember } from './getOrganizationMember.js'
 import { getStatusReactions } from './getStatusReactions.js'
 
 export const listStatus =
-	(dbContext: DbContext) =>
+	(verifyToken: VerifyTokenUserFn, dbContext: DbContext) =>
 	async (
 		projectId: string,
-		{ sub: userId }: AuthContext,
+		token: string,
 	): Promise<{ status: PersistedStatus[] } | { error: Error }> => {
+		const { sub: userId } = verifyToken(token)
 		const { organization } = parseProjectId(projectId)
 
 		if (organization === null) {

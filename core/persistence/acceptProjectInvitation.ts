@@ -1,19 +1,22 @@
 import { DeleteItemCommand, GetItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { l, type AuthContext, type DbContext, type Notify } from '../core.js'
+import { l, type DbContext } from '../core.js'
+import type { Notify } from '../notifier.js'
+import type { VerifyTokenUserFn } from '../token.js'
 import {
 	createProjectMember,
 	type PersistedProjectMember,
 } from './createProjectMember.js'
 
 export const acceptProjectInvitation =
-	(dbContext: DbContext, notify: Notify) =>
+	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
 	async (
 		invitationId: string,
-		{ sub: userId }: AuthContext,
+		token: string,
 	): Promise<
 		{ projectMembership: PersistedProjectMember } | { error: Error }
 	> => {
+		const { sub: userId } = verifyToken(token)
 		const { db, table } = dbContext
 		const { Item } = await db.send(
 			new GetItemCommand({

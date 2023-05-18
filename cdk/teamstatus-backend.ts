@@ -49,15 +49,17 @@ class AuthenticationAPI extends Construct {
 					actions: ['ses:SendEmail'],
 					resources: ['*'],
 				}),
+				/*
 				new IAM.PolicyStatement({
 					actions: ['ssm:GetParameter'],
 					resources: [
 						`arn:aws:ssm:${parent.region}:${parent.account}:parameter/${parent.stackName}/privateKey`,
 					],
 				}),
+				*/
 			],
 			environment: {
-				STACK_NAME: parent.stackName,
+				//STACK_NAME: parent.stackName,
 				TABLE_NAME: persistence.table.tableName,
 			},
 		})

@@ -2,12 +2,8 @@ import {
 	ConditionalCheckFailedException,
 	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb'
-import {
-	CoreEventType,
-	type CoreEvent,
-	type DbContext,
-	type Notify,
-} from '../core.js'
+import { CoreEventType, type CoreEvent, type DbContext } from '../core.js'
+import type { Notify } from '../notifier.js'
 import { generatePIN } from './generatePIN.js'
 
 export type EmailLoginRequestedEvent = CoreEvent & {

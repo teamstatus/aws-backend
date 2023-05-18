@@ -3,14 +3,9 @@ import {
 	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import {
-	CoreEventType,
-	l,
-	type AuthContext,
-	type CoreEvent,
-	type DbContext,
-	type Notify,
-} from '../core.js'
+import { CoreEventType, l, type CoreEvent, type DbContext } from '../core.js'
+import type { Notify } from '../notifier.js'
+import type { VerifyTokenUserFn } from '../token.js'
 import type { PersistedStatus } from './createStatus.js'
 
 type StatusUpdatedEvent = CoreEvent & {
@@ -21,14 +16,15 @@ type StatusUpdatedEvent = CoreEvent & {
 }
 
 export const updateStatus =
-	(dbContext: DbContext, notify: Notify) =>
+	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
 	async (
 		statusId: string,
 		message: string,
 		version: number,
-		{ sub: userId }: AuthContext,
+		token: string,
 	): Promise<{ error: Error } | { status: PersistedStatus }> => {
 		try {
+			const { sub: userId } = verifyToken(token)
 			const { db, table } = dbContext
 			const { Attributes } = await db.send(
 				new UpdateItemCommand({

@@ -4,14 +4,9 @@ import {
 	QueryCommand,
 } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import type { SignOptions } from 'jsonwebtoken'
-import jwt from 'jsonwebtoken'
-import {
-	CoreEventType,
-	type CoreEvent,
-	type DbContext,
-	type Notify,
-} from '../core.js'
+import { CoreEventType, type CoreEvent, type DbContext } from '../core.js'
+import type { Notify } from '../notifier.js'
+import { create } from '../token.js'
 
 export type LoggedInWithEmailAndPin = CoreEvent & {
 	type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS
@@ -19,7 +14,8 @@ export type LoggedInWithEmailAndPin = CoreEvent & {
 }
 
 export const emailPINLogin =
-	(dbContext: DbContext, notify: Notify, signingKey: string) =>
+	(dbContext: DbContext, notify: Notify) =>
+	({ signingKey }: { signingKey: string }) =>
 	async ({
 		email,
 		pin,
@@ -80,23 +76,13 @@ export const emailPINLogin =
 				timestamp: new Date(),
 			}
 			notify(event)
-			const options: SignOptions = {
-				algorithm: 'ES256',
-				allowInsecureKeySizes: false,
-				expiresIn: 24 * 60 * 60, // seconds
-			}
-			if (Items?.[0] !== undefined) {
-				const user = unmarshall(Items[0])
-				options.subject = user.id
-			}
+			const userId =
+				Items?.[0] !== undefined ? unmarshall(Items[0]).id : undefined
 			return {
-				token: jwt.sign(
-					{
-						email,
-					},
-					signingKey,
-					options,
-				),
+				token: create({ signingKey })({
+					email,
+					subject: userId,
+				}),
 			}
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)

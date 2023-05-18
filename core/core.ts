@@ -1,4 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+import { notifier, type onFn } from './notifier.js'
 import { acceptProjectInvitation } from './persistence/acceptProjectInvitation.js'
 import { createOrganization } from './persistence/createOrganization.js'
 import { createProject } from './persistence/createProject.js'
@@ -13,10 +14,7 @@ import { listOrganizations } from './persistence/listOrganizations.js'
 import { listProjects } from './persistence/listProjects.js'
 import { listStatus } from './persistence/listStatus.js'
 import { updateStatus } from './persistence/updateStatus.js'
-
-export type AuthContext = {
-	sub: string
-}
+import { verifyToken, verifyUserToken } from './token.js'
 
 export enum CoreEventType {
 	ORGANIZATION_CREATED = 'ORGANIZATION_CREATED',
@@ -39,22 +37,15 @@ export type CoreEvent = {
 	type: CoreEventType
 	timestamp: Date
 }
-type listenerFn = (event: CoreEvent) => unknown
 export const l = (s: string): string => s.toLowerCase()
 
 export type DbContext = { db: DynamoDBClient; table: string }
 
-export type Notify = (event: CoreEvent) => void
-
 export const core = (
 	dbContext: DbContext,
-	{
-		privateKey,
-	}: {
-		privateKey: string
-	},
+	publicKey: string,
 ): {
-	on: (event: CoreEventType | '*', fn: listenerFn) => void
+	on: onFn
 	createReaction: ReturnType<typeof createReaction>
 	createProject: ReturnType<typeof createProject>
 	createOrganization: ReturnType<typeof createOrganization>
@@ -70,33 +61,30 @@ export const core = (
 	emailPINLogin: ReturnType<typeof emailPINLogin>
 	createUser: ReturnType<typeof createUser>
 } => {
-	const listeners: { event: CoreEventType | '*'; fn: listenerFn }[] = []
-	const notify = (event: CoreEvent) => {
-		for (const { fn } of [
-			...listeners.filter(({ event }) => event === '*'),
-			...listeners.filter(({ event: e }) => e === event.type),
-		]) {
-			fn(event)
-		}
-	}
+	const userTokenVerify = verifyUserToken({ verificationKey: publicKey })
+	const authTokenVerify = verifyToken({ verificationKey: publicKey })
+
+	const { on, notify } = notifier()
 
 	return {
-		on: (event, fn) => {
-			listeners.push({ event, fn })
-		},
-		createReaction: createReaction(dbContext, notify),
-		createProject: createProject(dbContext, notify),
-		createOrganization: createOrganization(dbContext, notify),
-		createStatus: createStatus(dbContext, notify),
-		listStatus: listStatus(dbContext),
-		listOrganizations: listOrganizations(dbContext),
-		listProjects: listProjects(dbContext),
-		inviteToProject: inviteToProject(dbContext, notify),
-		acceptProjectInvitation: acceptProjectInvitation(dbContext, notify),
-		updateStatus: updateStatus(dbContext, notify),
-		deleteStatus: deleteStatus(dbContext, notify),
+		on,
+		createReaction: createReaction(userTokenVerify, dbContext, notify),
+		createProject: createProject(userTokenVerify, dbContext, notify),
+		createOrganization: createOrganization(userTokenVerify, dbContext, notify),
+		createStatus: createStatus(userTokenVerify, dbContext, notify),
+		listStatus: listStatus(userTokenVerify, dbContext),
+		listOrganizations: listOrganizations(userTokenVerify, dbContext),
+		listProjects: listProjects(userTokenVerify, dbContext),
+		inviteToProject: inviteToProject(userTokenVerify, dbContext, notify),
+		acceptProjectInvitation: acceptProjectInvitation(
+			userTokenVerify,
+			dbContext,
+			notify,
+		),
+		updateStatus: updateStatus(userTokenVerify, dbContext, notify),
+		deleteStatus: deleteStatus(userTokenVerify, dbContext, notify),
 		emailLoginRequest: emailLoginRequest(dbContext, notify),
-		emailPINLogin: emailPINLogin(dbContext, notify, privateKey),
-		createUser: createUser(dbContext, notify),
+		emailPINLogin: emailPINLogin(dbContext, notify),
+		createUser: createUser(authTokenVerify, dbContext, notify),
 	}
 }

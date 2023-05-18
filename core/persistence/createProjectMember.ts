@@ -6,8 +6,8 @@ import {
 	l,
 	type CoreEvent,
 	type DbContext,
-	type Notify,
 } from '../core.js'
+import type { Notify } from '../notifier.js'
 
 export type ProjectMemberCreatedEvent = CoreEvent & {
 	type: CoreEventType.PROJECT_MEMBER_CREATED

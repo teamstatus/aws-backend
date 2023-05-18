@@ -2,13 +2,9 @@ import {
 	ConditionalCheckFailedException,
 	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb'
-import {
-	CoreEventType,
-	type AuthContext,
-	type CoreEvent,
-	type DbContext,
-	type Notify,
-} from '../core.js'
+import { CoreEventType, type CoreEvent, type DbContext } from '../core.js'
+import type { Notify } from '../notifier.js'
+import type { VerifyTokenUserFn } from '../token.js'
 
 type StatusDeletedEvent = CoreEvent & {
 	type: CoreEventType.STATUS_DELETED
@@ -16,12 +12,13 @@ type StatusDeletedEvent = CoreEvent & {
 }
 
 export const deleteStatus =
-	(dbContext: DbContext, notify: Notify) =>
+	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
 	async (
 		statusId: string,
-		{ sub: userId }: AuthContext,
+		token: string,
 	): Promise<{ error: Error } | { deleted: true }> => {
 		try {
+			const { sub: userId } = verifyToken(token)
 			const { db, table } = dbContext
 			await db.send(
 				new UpdateItemCommand({

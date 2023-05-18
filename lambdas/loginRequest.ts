@@ -1,12 +1,12 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
-import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm'
 import { fromEnv } from '@nordicsemiconductor/from-env'
 import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
-import { core } from '../core/core.js'
+import { notifier } from '../core/notifier.js'
+import { emailLoginRequest } from '../core/persistence/emailLoginRequest.js'
 import { checksum } from './checksum.js'
 
 // These email addresses (lowercase) are allowed to request logins
@@ -25,37 +25,21 @@ const allowedDomains = [
 		: '',
 ]
 
-const { stackName, tableName } = fromEnv({
-	stackName: 'STACK_NAME',
+const { tableName } = fromEnv({
 	tableName: 'TABLE_NAME',
 })(process.env)
 
 const ses = new SESClient({})
-const ssm = new SSMClient({})
 const db = new DynamoDBClient({})
-const coreInstance = (async () => {
-	const { Parameter } = await ssm.send(
-		new GetParameterCommand({
-			Name: `/${stackName}/privateKey`,
-			WithDecryption: true,
-		}),
-	)
-	const privateKey = Parameter?.Value
-	if (privateKey === undefined)
-		throw new Error(`${stackName} is not configured!`)
-	const coreInstance = core(
-		{
-			db,
-			table: tableName,
-		},
-		{
-			privateKey,
-		},
-	)
-	coreInstance.on('*', console.log)
 
-	return coreInstance
-})()
+const { notify } = notifier()
+const loginRequest = emailLoginRequest(
+	{
+		db,
+		table: tableName,
+	},
+	notify,
+)
 
 export const handler = async (
 	event: APIGatewayProxyEventV2,
@@ -77,8 +61,7 @@ export const handler = async (
 				}),
 			}
 
-		const c = await coreInstance
-		const r = await c.emailLoginRequest({ email })
+		const r = await loginRequest({ email })
 
 		if ('error' in r) {
 			console.error(JSON.stringify(r.error))
