@@ -2,16 +2,14 @@ import {
 	ConditionalCheckFailedException,
 	PutItemCommand,
 } from '@aws-sdk/client-dynamodb'
-import {
-	CoreEventType,
-	Role,
-	l,
-	type CoreEvent,
-	type DbContext,
-} from '../core.js'
+import { type CoreEvent } from '../CoreEvent.js'
+import { CoreEventType } from '../CoreEventType.js'
+import { Role } from '../Role.js'
 import { isOrganizationId } from '../ids.js'
 import type { Notify } from '../notifier.js'
 import type { VerifyTokenUserFn } from '../token.js'
+import { type DbContext } from './DbContext.js'
+import { l } from './l.js'
 
 export type PersistedOrganization = { id: string; name: string | null }
 

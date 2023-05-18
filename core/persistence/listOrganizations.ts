@@ -1,8 +1,9 @@
 import { GetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { l, type DbContext } from '../core.js'
 import type { VerifyTokenUserFn } from '../token.js'
+import { type DbContext } from './DbContext.js'
 import type { PersistedOrganization } from './createOrganization'
+import { l } from './l.js'
 
 export const listOrganizations =
 	(verifyToken: VerifyTokenUserFn, dbContext: DbContext) =>

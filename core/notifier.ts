@@ -1,4 +1,5 @@
-import type { CoreEvent, CoreEventType } from './core'
+import type { CoreEvent } from './CoreEvent'
+import type { CoreEventType } from './CoreEventType'
 
 export type listenerFn = (event: CoreEvent) => unknown
 

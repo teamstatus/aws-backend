@@ -1,12 +1,13 @@
 import { DeleteItemCommand, GetItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { l, type DbContext } from '../core.js'
 import type { Notify } from '../notifier.js'
 import type { VerifyTokenUserFn } from '../token.js'
+import { type DbContext } from './DbContext.js'
 import {
 	createProjectMember,
 	type PersistedProjectMember,
 } from './createProjectMember.js'
+import { l } from './l.js'
 
 export const acceptProjectInvitation =
 	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>

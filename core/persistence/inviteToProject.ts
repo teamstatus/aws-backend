@@ -1,15 +1,13 @@
 import { PutItemCommand } from '@aws-sdk/client-dynamodb'
-import {
-	CoreEventType,
-	Role,
-	l,
-	type CoreEvent,
-	type DbContext,
-} from '../core.js'
+import { type CoreEvent } from '../CoreEvent.js'
+import { CoreEventType } from '../CoreEventType.js'
+import { Role } from '../Role.js'
 import { parseProjectId } from '../ids.js'
 import type { Notify } from '../notifier.js'
 import type { VerifyTokenUserFn } from '../token.js'
+import { type DbContext } from './DbContext.js'
 import { isOrganizationOwner } from './getOrganizationMember.js'
+import { l } from './l.js'
 
 export type MemberInvitedEvent = CoreEvent & {
 	type: CoreEventType.PROJECT_MEMBER_INVITED

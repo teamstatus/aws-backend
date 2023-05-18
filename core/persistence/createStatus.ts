@@ -1,10 +1,13 @@
 import { PutItemCommand } from '@aws-sdk/client-dynamodb'
-import { CoreEventType, l, type CoreEvent, type DbContext } from '../core.js'
+import { type CoreEvent } from '../CoreEvent.js'
+import { CoreEventType } from '../CoreEventType.js'
 import type { Notify } from '../notifier.js'
 import type { VerifyTokenUserFn } from '../token.js'
 import { verifyULID } from '../verifyULID.js'
+import { type DbContext } from './DbContext.js'
 import type { PersistedReaction } from './createReaction.js'
 import { isProjectMember } from './getProjectMember.js'
+import { l } from './l.js'
 
 type StatusCreatedEvent = CoreEvent & {
 	type: CoreEventType.STATUS_CREATED

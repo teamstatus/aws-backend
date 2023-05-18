@@ -1,7 +1,9 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { Role, l, type DbContext } from '../core.js'
+import { Role } from '../Role.js'
 import { isOrganizationId, isUserId } from '../ids.js'
+import { type DbContext } from './DbContext.js'
+import { l } from './l.js'
 
 export const getOrganizationMember =
 	({ db, table }: DbContext) =>
@@ -63,11 +65,13 @@ export const getOrganizationMember =
 	}
 
 export const isOrganizationMember =
-	(dbContext: DbContext) => async (organizationId: string, userId: string) =>
+	(dbContext: DbContext) =>
+	async (organizationId: string, userId: string): Promise<boolean> =>
 		(await getOrganizationMember(dbContext)(organizationId, userId)) !== null
 
 export const isOrganizationOwner =
-	(dbContext: DbContext) => async (organizationId: string, userId: string) => {
+	(dbContext: DbContext) =>
+	async (organizationId: string, userId: string): Promise<boolean> => {
 		const member = await getOrganizationMember(dbContext)(
 			organizationId,
 			userId,

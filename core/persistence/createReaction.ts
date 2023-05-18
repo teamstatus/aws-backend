@@ -1,10 +1,13 @@
 import { GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { CoreEventType, l, type CoreEvent, type DbContext } from '../core.js'
+import { type CoreEvent } from '../CoreEvent.js'
+import { CoreEventType } from '../CoreEventType.js'
 import type { Notify } from '../notifier.js'
 import type { VerifyTokenUserFn } from '../token.js'
 import { verifyULID } from '../verifyULID.js'
+import { type DbContext } from './DbContext.js'
 import { isProjectMember } from './getProjectMember.js'
+import { l } from './l.js'
 
 // Reactions can have special roles
 export enum ReactionRole {

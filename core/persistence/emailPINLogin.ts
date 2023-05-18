@@ -4,9 +4,11 @@ import {
 	QueryCommand,
 } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { CoreEventType, type CoreEvent, type DbContext } from '../core.js'
+import { type CoreEvent } from '../CoreEvent.js'
+import { CoreEventType } from '../CoreEventType.js'
 import type { Notify } from '../notifier.js'
 import { create } from '../token.js'
+import { type DbContext } from './DbContext.js'
 
 export type LoggedInWithEmailAndPin = CoreEvent & {
 	type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS

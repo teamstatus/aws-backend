@@ -3,10 +3,13 @@ import {
 	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { CoreEventType, l, type CoreEvent, type DbContext } from '../core.js'
+import { type CoreEvent } from '../CoreEvent.js'
+import { CoreEventType } from '../CoreEventType.js'
 import type { Notify } from '../notifier.js'
 import type { VerifyTokenUserFn } from '../token.js'
+import { type DbContext } from './DbContext.js'
 import type { PersistedStatus } from './createStatus.js'
+import { l } from './l.js'
 
 type StatusUpdatedEvent = CoreEvent & {
 	type: CoreEventType.STATUS_UPDATED
