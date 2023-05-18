@@ -95,6 +95,14 @@ describe('core', async () => {
 				pin = p
 			})
 
+			it('prevents spamming log-in requests', async () => {
+				const { error } = (await coreInstance.emailLoginRequest({
+					email: 'alex@example.com',
+				})) as { error: Error }
+
+				check(error).is(definedValue)
+			})
+
 			let token: string
 
 			it('logs a user in using a PIN', async () => {

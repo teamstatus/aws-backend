@@ -1,4 +1,7 @@
-import { PutItemCommand } from '@aws-sdk/client-dynamodb'
+import {
+	ConditionalCheckFailedException,
+	UpdateItemCommand,
+} from '@aws-sdk/client-dynamodb'
 import {
 	CoreEventType,
 	type CoreEvent,
@@ -27,38 +30,57 @@ export const emailLoginRequest =
 	}): Promise<
 		{ error: Error } | { loginRequest: EmailLoginRequest; pin: string }
 	> => {
-		const { db, table } = dbContext
-		const pin = generatePIN()
-		const expires = new Date(Date.now() + 60 * 1000)
-		await db.send(
-			new PutItemCommand({
-				TableName: table,
-				Item: {
-					id: {
-						S: email,
+		try {
+			const { db, table } = dbContext
+			const pin = generatePIN()
+			const expires = new Date(Date.now() + 60 * 1000)
+			await db.send(
+				new UpdateItemCommand({
+					TableName: table,
+					Key: {
+						id: {
+							S: email,
+						},
+						type: {
+							S: 'emailLoginRequest',
+						},
 					},
-					type: {
-						S: 'emailLoginRequest',
+					UpdateExpression: 'SET #pin = :pin, #ttl = :ttl',
+					ConditionExpression: 'attribute_not_exists(id) OR #ttl < :now',
+					ExpressionAttributeNames: {
+						'#pin': 'pin',
+						'#ttl': 'ttl',
 					},
-					pin: {
-						S: pin,
+					ExpressionAttributeValues: {
+						':pin': {
+							S: pin,
+						},
+						':ttl': {
+							N: `${Math.floor(expires.getTime() / 1000)}`,
+						},
+						':now': {
+							N: `${Math.floor(Date.now() / 1000)}`,
+						},
 					},
-					ttl: {
-						N: `${Math.floor(expires.getTime() / 1000)}`,
-					},
-				},
-			}),
-		)
-		const loginRequest: EmailLoginRequest = {
-			email,
-			expires,
+				}),
+			)
+			const loginRequest: EmailLoginRequest = {
+				email,
+				expires,
+			}
+			const event: EmailLoginRequestedEvent = {
+				type: CoreEventType.EMAIL_LOGIN_REQUESTED,
+				...loginRequest,
+				pin,
+				timestamp: new Date(),
+			}
+			notify(event)
+			return { loginRequest, pin }
+		} catch (error) {
+			if ((error as Error).name === ConditionalCheckFailedException.name)
+				return {
+					error: new Error(`Login requests for '${email}' already exists.`),
+				}
+			return { error: error as Error }
 		}
-		const event: EmailLoginRequestedEvent = {
-			type: CoreEventType.EMAIL_LOGIN_REQUESTED,
-			...loginRequest,
-			pin,
-			timestamp: new Date(),
-		}
-		notify(event)
-		return { loginRequest, pin }
 	}

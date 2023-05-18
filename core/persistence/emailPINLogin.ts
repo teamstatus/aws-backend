@@ -1,7 +1,7 @@
 import {
 	ConditionalCheckFailedException,
+	DeleteItemCommand,
 	QueryCommand,
-	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import type { SignOptions } from 'jsonwebtoken'
@@ -30,7 +30,7 @@ export const emailPINLogin =
 		try {
 			const { db, table } = dbContext
 			await db.send(
-				new UpdateItemCommand({
+				new DeleteItemCommand({
 					TableName: table,
 					Key: {
 						id: {
@@ -40,13 +40,10 @@ export const emailPINLogin =
 							S: 'emailLoginRequest',
 						},
 					},
-					UpdateExpression: 'SET #ttl = :now, #deletedAt = :deletedAt',
-					ConditionExpression:
-						'attribute_not_exists(#deletedAt) AND #ttl > :now AND #pin = :pin',
+					ConditionExpression: '#ttl > :now AND #pin = :pin',
 					ExpressionAttributeNames: {
 						'#ttl': 'ttl',
 						'#pin': 'pin',
-						'#deletedAt': 'deletedAt',
 					},
 					ExpressionAttributeValues: {
 						':now': {
@@ -54,9 +51,6 @@ export const emailPINLogin =
 						},
 						':pin': {
 							S: pin,
-						},
-						':deletedAt': {
-							S: new Date().toISOString(),
 						},
 					},
 					ReturnValues: 'NONE',
