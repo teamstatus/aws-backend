@@ -1,7 +1,6 @@
 import {
 	ConditionalCheckFailedException,
 	QueryCommand,
-	ReturnValue,
 	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
@@ -60,7 +59,7 @@ export const emailPINLogin =
 							S: new Date().toISOString(),
 						},
 					},
-					ReturnValues: ReturnValue.NONE,
+					ReturnValues: 'NONE',
 				}),
 			)
 

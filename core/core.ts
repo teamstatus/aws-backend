@@ -52,7 +52,6 @@ export const core = (
 		privateKey,
 	}: {
 		privateKey: string
-		publicKey: string
 	},
 ): {
 	on: (event: CoreEventType | '*', fn: listenerFn) => void

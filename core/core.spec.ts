@@ -52,7 +52,6 @@ describe('core', async () => {
 		},
 		{
 			privateKey,
-			publicKey,
 		},
 	)
 

@@ -1,6 +1,5 @@
 import {
 	ConditionalCheckFailedException,
-	ReturnValue,
 	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
@@ -63,7 +62,7 @@ export const updateStatus =
 							S: l(userId),
 						},
 					},
-					ReturnValues: ReturnValue.ALL_NEW,
+					ReturnValues: 'ALL_NEW',
 				}),
 			)
 			if (Attributes === undefined)

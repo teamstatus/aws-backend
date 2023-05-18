@@ -17,6 +17,7 @@ export type EmailLoginRequest = {
 	expires: Date
 }
 
+// FIXME: do not allow to request multiple
 export const emailLoginRequest =
 	(dbContext: DbContext, notify: Notify) =>
 	async ({
