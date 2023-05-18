@@ -1,6 +1,7 @@
 import { PutItemCommand } from '@aws-sdk/client-dynamodb'
 import { type CoreEvent } from '../CoreEvent.js'
 import { CoreEventType } from '../CoreEventType.js'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import { Role } from '../Role.js'
 import { parseProjectId } from '../ids.js'
 import type { Notify } from '../notifier.js'
@@ -27,19 +28,21 @@ export const inviteToProject =
 		invitedUserId: string,
 		projectId: string,
 		token: string,
-	): Promise<{ error: Error } | { invitation: PersistedInvitation }> => {
+	): Promise<
+		{ error: ProblemDetail } | { invitation: PersistedInvitation }
+	> => {
 		const { sub: userId } = verifyToken(token)
 		const { organization: organizationId } = parseProjectId(projectId)
 
 		if (organizationId === null) {
 			return {
-				error: new Error(`Not a valid project ID: ${projectId}`),
+				error: BadRequestError(`Not a valid project ID: ${projectId}`),
 			}
 		}
 
 		if (!(await isOrganizationOwner(dbContext)(organizationId, userId))) {
 			return {
-				error: new Error(
+				error: BadRequestError(
 					`Only members of ${organizationId} can view projects.`,
 				),
 			}

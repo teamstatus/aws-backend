@@ -1,6 +1,7 @@
 import { PutItemCommand } from '@aws-sdk/client-dynamodb'
 import { type CoreEvent } from '../CoreEvent.js'
 import { CoreEventType } from '../CoreEventType.js'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import type { Notify } from '../notifier.js'
 import type { VerifyTokenUserFn } from '../token.js'
 import { verifyULID } from '../verifyULID.js'
@@ -30,11 +31,11 @@ export const createStatus =
 		projectId: string,
 		message: string,
 		token: string,
-	): Promise<{ error: Error } | { status: PersistedStatus }> => {
+	): Promise<{ error: ProblemDetail } | { status: PersistedStatus }> => {
 		const { sub: userId } = verifyToken(token)
 		if (!(await isProjectMember(dbContext)(projectId, userId))) {
 			return {
-				error: new Error(
+				error: BadRequestError(
 					`Only members of '${projectId}' are allowed to create status.`,
 				),
 			}

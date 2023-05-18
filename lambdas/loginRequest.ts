@@ -5,6 +5,7 @@ import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
+import { BadRequestError, StatusCode } from '../core/ProblemDetail.js'
 import { notifier } from '../core/notifier.js'
 import { emailLoginRequest } from '../core/persistence/emailLoginRequest.js'
 import { checksum } from './checksum.js'
@@ -55,10 +56,16 @@ export const handler = async (
 			!allowedEmails.includes(emailChecksum)
 		)
 			return {
-				statusCode: 403,
-				body: JSON.stringify({
-					error: `Checksum for email ${email} (${emailChecksum}) or domain ${domain} (${domainChecksum}) not in allowed list.`,
-				}),
+				statusCode: StatusCode.BAD_REQUEST,
+				headers: {
+					'Content-Type': 'application/problem+json',
+					'Content-Language': 'en',
+				},
+				body: JSON.stringify(
+					BadRequestError(
+						`Checksum for email ${email} (${emailChecksum}) or domain ${domain} (${domainChecksum}) not in allowed list.`,
+					),
+				),
 			}
 
 		const r = await loginRequest({ email })
@@ -66,7 +73,11 @@ export const handler = async (
 		if ('error' in r) {
 			console.error(JSON.stringify(r.error))
 			return {
-				statusCode: 500,
+				statusCode: r.error.status,
+				headers: {
+					'Content-Type': 'application/problem+json',
+					'Content-Language': 'en',
+				},
 			}
 		}
 
@@ -93,7 +104,12 @@ export const handler = async (
 	} catch (error) {
 		console.error(error)
 		return {
-			statusCode: 400,
+			statusCode: StatusCode.BAD_REQUEST,
+			headers: {
+				'Content-Type': 'application/problem+json',
+				'Content-Language': 'en',
+			},
+			body: JSON.stringify(BadRequestError('Failed to parse JSON.')),
 		}
 	}
 }

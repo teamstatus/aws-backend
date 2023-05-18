@@ -1,5 +1,6 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import { parseProjectId } from '../ids.js'
 import type { VerifyTokenUserFn } from '../token.js'
 import { type DbContext } from './DbContext.js'
@@ -13,19 +14,19 @@ export const listStatus =
 	async (
 		projectId: string,
 		token: string,
-	): Promise<{ status: PersistedStatus[] } | { error: Error }> => {
+	): Promise<{ status: PersistedStatus[] } | { error: ProblemDetail }> => {
 		const { sub: userId } = verifyToken(token)
 		const { organization } = parseProjectId(projectId)
 
 		if (organization === null) {
 			return {
-				error: new Error(`Not a valid project ID: ${projectId}`),
+				error: BadRequestError(`Not a valid project ID: ${projectId}`),
 			}
 		}
 
 		if (!(await isOrganizationMember(dbContext)(organization, userId))) {
 			return {
-				error: new Error(
+				error: BadRequestError(
 					`Only members of '${organization}' are allowed to list status.`,
 				),
 			}

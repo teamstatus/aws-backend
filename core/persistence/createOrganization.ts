@@ -4,6 +4,11 @@ import {
 } from '@aws-sdk/client-dynamodb'
 import { type CoreEvent } from '../CoreEvent.js'
 import { CoreEventType } from '../CoreEventType.js'
+import {
+	BadRequestError,
+	InternalError,
+	type ProblemDetail,
+} from '../ProblemDetail.js'
 import { Role } from '../Role.js'
 import { isOrganizationId } from '../ids.js'
 import type { Notify } from '../notifier.js'
@@ -24,11 +29,13 @@ export const createOrganization =
 	async (
 		{ id: organizationId, name }: { id: string; name?: string },
 		token: string,
-	): Promise<{ error: Error } | { organization: PersistedOrganization }> => {
+	): Promise<
+		{ error: ProblemDetail } | { organization: PersistedOrganization }
+	> => {
 		const { sub: userId } = verifyToken(token)
 		if (!isOrganizationId(organizationId))
 			return {
-				error: new Error(`Not an organization ID: ${organizationId}`),
+				error: BadRequestError(`Not an organization ID: ${organizationId}`),
 			}
 		try {
 			const { db, table } = dbContext
@@ -89,8 +96,10 @@ export const createOrganization =
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)
 				return {
-					error: new Error(`Organization '${organizationId}' already exists.`),
+					error: BadRequestError(
+						`Organization '${organizationId}' already exists.`,
+					),
 				}
-			return { error: error as Error }
+			return { error: InternalError(error) }
 		}
 	}

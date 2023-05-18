@@ -1,5 +1,6 @@
 import { GetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import type { VerifyTokenUserFn } from '../token.js'
 import { type DbContext } from './DbContext.js'
 import type { PersistedProject } from './createProject.js'
@@ -11,11 +12,11 @@ export const listProjects =
 	async (
 		organizationId: string,
 		token: string,
-	): Promise<{ error: Error } | { projects: PersistedProject[] }> => {
+	): Promise<{ error: ProblemDetail } | { projects: PersistedProject[] }> => {
 		const { sub: userId } = verifyToken(token)
 		if (!(await isOrganizationMember(dbContext)(organizationId, userId))) {
 			return {
-				error: new Error(
+				error: BadRequestError(
 					`Only members of ${organizationId} can view projects.`,
 				),
 			}

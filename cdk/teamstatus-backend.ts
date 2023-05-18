@@ -20,6 +20,7 @@ import { packLayer } from './lambdas/packLayer.js'
 
 class AuthenticationAPI extends Construct {
 	public readonly loginRequestURL: Lambda.IFunctionUrl
+	public readonly pinLoginURL: Lambda.IFunctionUrl
 	constructor(
 		parent: Stack,
 		{
@@ -49,17 +50,8 @@ class AuthenticationAPI extends Construct {
 					actions: ['ses:SendEmail'],
 					resources: ['*'],
 				}),
-				/*
-				new IAM.PolicyStatement({
-					actions: ['ssm:GetParameter'],
-					resources: [
-						`arn:aws:ssm:${parent.region}:${parent.account}:parameter/${parent.stackName}/privateKey`,
-					],
-				}),
-				*/
 			],
 			environment: {
-				//STACK_NAME: parent.stackName,
 				TABLE_NAME: persistence.table.tableName,
 			},
 		})
@@ -73,7 +65,41 @@ class AuthenticationAPI extends Construct {
 				allowedOrigins: ['http://localhost:8080', 'http://teamstatus.space'],
 			},
 		})
+		persistence.table.grantFullAccess(loginRequest)
 
+		const pinLogin = new Lambda.Function(this, 'pinLogin', {
+			description: 'Handle logins with PINs',
+			handler: lambdaSources.pinLogin.handler,
+			architecture: Lambda.Architecture.ARM_64,
+			runtime: Lambda.Runtime.NODEJS_18_X,
+			timeout: Duration.seconds(1),
+			memorySize: 1792,
+			code: Lambda.Code.fromAsset(lambdaSources.pinLogin.zipFile),
+			layers: [layer],
+			logRetention: Logs.RetentionDays.ONE_WEEK,
+			initialPolicy: [
+				new IAM.PolicyStatement({
+					actions: ['ssm:GetParameter'],
+					resources: [
+						`arn:aws:ssm:${parent.region}:${parent.account}:parameter/${parent.stackName}/privateKey`,
+					],
+				}),
+			],
+			environment: {
+				STACK_NAME: parent.stackName,
+				TABLE_NAME: persistence.table.tableName,
+			},
+		})
+		this.pinLoginURL = pinLogin.addFunctionUrl({
+			authType: Lambda.FunctionUrlAuthType.NONE,
+			cors: {
+				allowCredentials: false,
+				allowedMethods: [Lambda.HttpMethod.POST],
+				maxAge: Duration.seconds(60),
+				exposedHeaders: ['Content-Type', 'Content-Length'],
+				allowedOrigins: ['http://localhost:8080', 'http://teamstatus.space'],
+			},
+		})
 		persistence.table.grantFullAccess(loginRequest)
 	}
 }
@@ -138,6 +164,12 @@ class TeamStatusBackendStack extends Stack {
 			exportName: `${this.stackName}:loginRequestAPI`,
 			description: 'The API endpoint for login requests',
 			value: api.loginRequestURL.url,
+		})
+
+		new CfnOutput(this, 'pinLoginAPI', {
+			exportName: `${this.stackName}:pinLoginAPI`,
+			description: 'The API endpoint for PIN logins',
+			value: api.pinLoginURL.url,
 		})
 	}
 }

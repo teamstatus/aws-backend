@@ -1,5 +1,6 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import { Role } from '../Role.js'
 import { isOrganizationId, isUserId } from '../ids.js'
 import { type DbContext } from './DbContext.js'
@@ -11,7 +12,7 @@ export const getOrganizationMember =
 		organizationId: string,
 		userId: string,
 	): Promise<
-		| { error: Error }
+		| { error: ProblemDetail }
 		| null
 		| {
 				role: Role
@@ -21,13 +22,15 @@ export const getOrganizationMember =
 	> => {
 		if (!isUserId(userId)) {
 			return {
-				error: new Error(`Not a valid user ID: ${userId}`),
+				error: BadRequestError(`Not a valid user ID: ${userId}`),
 			}
 		}
 		const userIdKey = l(userId)
 		if (!isOrganizationId(organizationId)) {
 			return {
-				error: new Error(`Not a valid organization ID: ${organizationId}`),
+				error: BadRequestError(
+					`Not a valid organization ID: ${organizationId}`,
+				),
 			}
 		}
 		const organizationIdKey = l(organizationId)

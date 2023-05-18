@@ -4,6 +4,12 @@ import {
 } from '@aws-sdk/client-dynamodb'
 import { type CoreEvent } from '../CoreEvent.js'
 import { CoreEventType } from '../CoreEventType.js'
+import {
+	BadRequestError,
+	ConflictError,
+	InternalError,
+	type ProblemDetail,
+} from '../ProblemDetail.js'
 import { Role } from '../Role.js'
 import { parseProjectId } from '../ids.js'
 import type { Notify } from '../notifier.js'
@@ -29,19 +35,19 @@ export const createProject =
 			color,
 		}: { id: string; name?: string; color?: string },
 		token: string,
-	): Promise<{ error: Error } | { project: PersistedProject }> => {
+	): Promise<{ error: ProblemDetail } | { project: PersistedProject }> => {
 		const { sub: userId } = verifyToken(token)
 		const { organization: organizationId } = parseProjectId(projectId)
 
 		if (organizationId === null) {
 			return {
-				error: new Error(`Not a valid project ID: ${projectId}`),
+				error: BadRequestError(`Not a valid project ID: ${projectId}`),
 			}
 		}
 
 		if (!(await isOrganizationMember(dbContext)(organizationId, userId))) {
 			return {
-				error: new Error(
+				error: BadRequestError(
 					`Only members of ${organizationId} can create new projects.`,
 				),
 			}
@@ -99,8 +105,8 @@ export const createProject =
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)
 				return {
-					error: new Error(`Project '${projectId}' already exists.`),
+					error: ConflictError(`Project '${projectId}' already exists.`),
 				}
-			return { error: error as Error }
+			return { error: InternalError(error) }
 		}
 	}

@@ -19,3 +19,23 @@ export const privateKeyPromise = async ({
 
 	return privateKey
 }
+
+export const publicKeyPromise = async ({
+	ssm,
+	stackName,
+}: {
+	ssm: SSMClient
+	stackName: string
+}): Promise<string> => {
+	const { Parameter } = await ssm.send(
+		new GetParameterCommand({
+			Name: `/${stackName}/publicKey`,
+			WithDecryption: true,
+		}),
+	)
+	const publicKey = Parameter?.Value
+	if (publicKey === undefined)
+		throw new Error(`${stackName} is not configured!`)
+
+	return publicKey
+}

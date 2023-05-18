@@ -4,6 +4,12 @@ import {
 } from '@aws-sdk/client-dynamodb'
 import { type CoreEvent } from '../CoreEvent.js'
 import { CoreEventType } from '../CoreEventType.js'
+import {
+	BadRequestError,
+	ConflictError,
+	InternalError,
+	type ProblemDetail,
+} from '../ProblemDetail.js'
 import { isUserId } from '../ids.js'
 import type { Notify } from '../notifier.js'
 import type { VerifyTokenFn } from '../token.js'
@@ -28,11 +34,11 @@ export const createUser =
 		id: string
 		name?: string
 		token: string
-	}): Promise<{ error: Error } | { user: PersistedUser }> => {
+	}): Promise<{ error: ProblemDetail } | { user: PersistedUser }> => {
 		const { email } = verifyToken(token)
 		if (!isUserId(userId))
 			return {
-				error: new Error(`Not an user ID: ${userId}`),
+				error: BadRequestError(`Not an user ID: ${userId}`),
 			}
 		try {
 			const { db, table } = dbContext
@@ -72,8 +78,8 @@ export const createUser =
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)
 				return {
-					error: new Error(`User '${userId}' already exists.`),
+					error: ConflictError(`User '${userId}' already exists.`),
 				}
-			return { error: error as Error }
+			return { error: InternalError(error) }
 		}
 	}

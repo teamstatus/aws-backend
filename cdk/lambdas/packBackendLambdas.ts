@@ -2,6 +2,7 @@ import { packLambdaFromPath, type PackedLambda } from './packLambdaFromPath.js'
 
 export type BackendLambdas = {
 	loginRequest: PackedLambda
+	pinLogin: PackedLambda
 }
 
 export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
@@ -9,4 +10,5 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 		'loginRequest',
 		'lambdas/loginRequest.ts',
 	),
+	pinLogin: await packLambdaFromPath('pinLogin', 'lambdas/pinLogin.ts'),
 })

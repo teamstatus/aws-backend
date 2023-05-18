@@ -5,6 +5,11 @@ import {
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { type CoreEvent } from '../CoreEvent.js'
 import { CoreEventType } from '../CoreEventType.js'
+import {
+	ConflictError,
+	InternalError,
+	type ProblemDetail,
+} from '../ProblemDetail.js'
 import type { Notify } from '../notifier.js'
 import type { VerifyTokenUserFn } from '../token.js'
 import { type DbContext } from './DbContext.js'
@@ -25,7 +30,7 @@ export const updateStatus =
 		message: string,
 		version: number,
 		token: string,
-	): Promise<{ error: Error } | { status: PersistedStatus }> => {
+	): Promise<{ error: ProblemDetail } | { status: PersistedStatus }> => {
 		try {
 			const { sub: userId } = verifyToken(token)
 			const { db, table } = dbContext
@@ -65,7 +70,7 @@ export const updateStatus =
 				}),
 			)
 			if (Attributes === undefined)
-				return { error: new Error(`Update failed.`) }
+				return { error: ConflictError('Update failed.') }
 			const updated = unmarshall(Attributes)
 			const status: PersistedStatus = {
 				message,
@@ -87,8 +92,8 @@ export const updateStatus =
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)
 				return {
-					error: new Error(`Failed to update status.`),
+					error: ConflictError(`Failed to update status.`),
 				}
-			return { error: error as Error }
+			return { error: InternalError(error) }
 		}
 	}

@@ -1,5 +1,10 @@
 import { DeleteItemCommand, GetItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import {
+	BadRequestError,
+	NotFoundError,
+	type ProblemDetail,
+} from '../ProblemDetail.js'
 import type { Notify } from '../notifier.js'
 import type { VerifyTokenUserFn } from '../token.js'
 import { type DbContext } from './DbContext.js'
@@ -15,7 +20,7 @@ export const acceptProjectInvitation =
 		invitationId: string,
 		token: string,
 	): Promise<
-		{ projectMembership: PersistedProjectMember } | { error: Error }
+		{ projectMembership: PersistedProjectMember } | { error: ProblemDetail }
 	> => {
 		const { sub: userId } = verifyToken(token)
 		const { db, table } = dbContext
@@ -35,14 +40,14 @@ export const acceptProjectInvitation =
 
 		if (Item === undefined)
 			return {
-				error: new Error(`Invitation '${invitationId}' not found!`),
+				error: NotFoundError(`Invitation '${invitationId}' not found!`),
 			}
 
 		const invitation = unmarshall(Item)
 
 		if (invitation.invitee !== l(userId)) {
 			return {
-				error: new Error(`Invitation '${invitationId}' is not for you!`),
+				error: BadRequestError(`Invitation '${invitationId}' is not for you!`),
 			}
 		}
 

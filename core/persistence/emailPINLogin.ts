@@ -6,6 +6,11 @@ import {
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { type CoreEvent } from '../CoreEvent.js'
 import { CoreEventType } from '../CoreEventType.js'
+import {
+	ConflictError,
+	InternalError,
+	type ProblemDetail,
+} from '../ProblemDetail.js'
 import type { Notify } from '../notifier.js'
 import { create } from '../token.js'
 import { type DbContext } from './DbContext.js'
@@ -16,15 +21,14 @@ export type LoggedInWithEmailAndPin = CoreEvent & {
 }
 
 export const emailPINLogin =
-	(dbContext: DbContext, notify: Notify) =>
-	({ signingKey }: { signingKey: string }) =>
+	(dbContext: DbContext, notify: Notify, signingKey: string) =>
 	async ({
 		email,
 		pin,
 	}: {
 		email: string
 		pin: string
-	}): Promise<{ error: Error } | { token: string }> => {
+	}): Promise<{ error: ProblemDetail } | { token: string }> => {
 		try {
 			const { db, table } = dbContext
 			await db.send(
@@ -89,8 +93,8 @@ export const emailPINLogin =
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)
 				return {
-					error: new Error(`Login failed.`),
+					error: ConflictError(`Login failed.`),
 				}
-			return { error: error as Error }
+			return { error: InternalError(error) }
 		}
 	}

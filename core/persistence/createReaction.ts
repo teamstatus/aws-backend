@@ -2,6 +2,11 @@ import { GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { type CoreEvent } from '../CoreEvent.js'
 import { CoreEventType } from '../CoreEventType.js'
+import {
+	BadRequestError,
+	NotFoundError,
+	type ProblemDetail,
+} from '../ProblemDetail.js'
 import type { Notify } from '../notifier.js'
 import type { VerifyTokenUserFn } from '../token.js'
 import { verifyULID } from '../verifyULID.js'
@@ -72,7 +77,7 @@ export const createReaction =
 		statusId: string,
 		reaction: Reaction,
 		token: string,
-	): Promise<{ error: Error } | { reaction: PersistedReaction }> => {
+	): Promise<{ error: ProblemDetail } | { reaction: PersistedReaction }> => {
 		const { sub: userId } = verifyToken(token)
 		const { db, table } = dbContext
 		const { Item } = await db.send(
@@ -91,7 +96,7 @@ export const createReaction =
 
 		if (Item === undefined)
 			return {
-				error: new Error(`Status '${statusId}' not found!`),
+				error: NotFoundError(`Status '${statusId}' not found!`),
 			}
 
 		const status = unmarshall(Item)
@@ -100,7 +105,7 @@ export const createReaction =
 			!(await isProjectMember(dbContext)(status.projectStatus__project, userId))
 		) {
 			return {
-				error: new Error(`Only project members can create reactions!`),
+				error: BadRequestError(`Only project members can create reactions!`),
 			}
 		}
 

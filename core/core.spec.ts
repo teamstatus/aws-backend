@@ -13,6 +13,7 @@ import {
 import { ulid } from 'ulid'
 import { type CoreEvent } from './CoreEvent.js'
 import { CoreEventType } from './CoreEventType.js'
+import type { ProblemDetail } from './ProblemDetail.js'
 import { Role } from './Role.js'
 import { notifier } from './notifier.js'
 import type { DbContext } from './persistence/DbContext.js'
@@ -140,7 +141,7 @@ describe('core', async () => {
 					notify,
 				)({
 					email: 'alex@example.com',
-				})) as { error: Error }
+				})) as { error: ProblemDetail }
 
 				check(error).is(definedValue)
 			})
@@ -153,9 +154,8 @@ describe('core', async () => {
 				const { token: t } = (await emailPINLogin(
 					dbContext,
 					notify,
+					privateKey,
 				)({
-					signingKey: privateKey,
-				})({
 					email: 'alex@example.com',
 					pin,
 				})) as { token: string }
@@ -192,12 +192,11 @@ describe('core', async () => {
 				const { error } = (await emailPINLogin(
 					dbContext,
 					notify,
+					privateKey,
 				)({
-					signingKey: privateKey,
-				})({
 					email: 'alex@example.com',
 					pin,
-				})) as { error: Error }
+				})) as { error: ProblemDetail }
 
 				check(error).is(definedValue)
 			})
@@ -241,9 +240,8 @@ describe('core', async () => {
 				const { token } = (await emailPINLogin(
 					dbContext,
 					notify,
+					privateKey,
 				)({
-					signingKey: privateKey,
-				})({
 					email: 'alex@example.com',
 					pin,
 				})) as { token: string }
@@ -294,9 +292,9 @@ describe('core', async () => {
 			)(
 				{ id: '$acme' },
 				signToken({ email: 'alex@example.com', subject: '@alex' }),
-			)) as { error: Error }
+			)) as { error: ProblemDetail }
 
-			assert.equal(error?.message, `Organization '$acme' already exists.`)
+			assert.equal(error?.title, `Organization '$acme' already exists.`)
 		})
 
 		it('can list organizations for a user', async () => {
@@ -361,10 +359,10 @@ describe('core', async () => {
 			)(
 				{ id: '$acme#teamstatus' },
 				signToken({ email: 'alex@example.com', subject: '@alex' }),
-			)) as { error: Error }
+			)) as { error: ProblemDetail }
 
 			assert.equal(
-				res.error?.message,
+				res.error?.title,
 				`Project '$acme#teamstatus' already exists.`,
 			)
 		})
@@ -433,9 +431,9 @@ describe('core', async () => {
 						'$acme#teamstatus',
 						'Should not work',
 						signToken({ email: 'cameron@example.com', subject: '@cameron' }),
-					)) as { error: Error }
+					)) as { error: ProblemDetail }
 					assert.equal(
-						error?.message,
+						error?.title,
 						`Only members of '$acme#teamstatus' are allowed to create status.`,
 					)
 				})
@@ -448,7 +446,7 @@ describe('core', async () => {
 					)(
 						invitationId,
 						signToken({ email: 'cameron@example.com', subject: '@cameron' }),
-					)) as { error: Error }
+					)) as { error: ProblemDetail }
 					assert.equal(error, undefined)
 				})
 
@@ -462,7 +460,7 @@ describe('core', async () => {
 						'$acme#teamstatus',
 						'Should work now!',
 						signToken({ email: 'cameron@example.com', subject: '@cameron' }),
-					)) as { error: Error }
+					)) as { error: ProblemDetail }
 					assert.equal(error, undefined)
 				})
 			})
@@ -516,9 +514,9 @@ describe('core', async () => {
 						'$acme#teamstatus',
 						'I am not a member of the $acme organization, so I should not be allowed to create a status.',
 						signToken({ email: 'blake@example.com', subject: '@blake' }),
-					)) as { error: Error }
+					)) as { error: ProblemDetail }
 					assert.equal(
-						error?.message,
+						error?.title,
 						`Only members of '$acme#teamstatus' are allowed to create status.`,
 					)
 				})
@@ -578,7 +576,7 @@ describe('core', async () => {
 					)(
 						statusId,
 						signToken({ email: 'alex@example.com', subject: '@alex' }),
-					)) as { error: Error }
+					)) as { error: ProblemDetail }
 
 					assert.equal(error, undefined)
 				})
@@ -638,9 +636,9 @@ describe('core', async () => {
 					const { error } = (await listStatus(userTokenVerify, dbContext)(
 						'$acme#teamstatus',
 						signToken({ email: 'blake@example.com', subject: '@blake' }),
-					)) as { error: Error }
+					)) as { error: ProblemDetail }
 					assert.equal(
-						error?.message,
+						error?.title,
 						`Only members of '$acme' are allowed to list status.`,
 					)
 				})
@@ -734,7 +732,7 @@ describe('core', async () => {
 						statusId,
 						thumbsUp,
 						signToken({ email: 'blake@example.com', subject: '@blake' }),
-					)) as { error: Error }
+					)) as { error: ProblemDetail }
 
 					assert.equal(error, undefined)
 				})
