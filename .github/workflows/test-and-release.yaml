@@ -51,7 +51,7 @@ jobs:
           echo "STACK_NAME_PREFIX=tsci-${RANDOM_STRING}" >> $GITHUB_ENV
 
       - name: Deploy solution
-        run: npx cdk deploy
+        run: npx cdk deploy --require-approval never
 
       - name: Export settings
         run: |
