@@ -54,6 +54,7 @@
     "tsmatchers": "4.0.12",
     "tsx": "3.12.7",
     "typescript": "5.0.4",
+    "ulid": "2.3.0",
     "yazl": "2.5.1"
   },
   "lint-staged": {
@@ -89,7 +90,6 @@
   "prettier": "@nordicsemiconductor/asset-tracker-cloud-code-style/.prettierrc",
   "dependencies": {
     "@nordicsemiconductor/from-env": "2.0.0",
-    "jsonwebtoken": "9.0.0",
-    "ulid": "2.3.0"
+    "jsonwebtoken": "9.0.0"
   }
 }

@@ -3,7 +3,13 @@ import jwt from 'jsonwebtoken'
 import assert from 'node:assert/strict'
 import { execSync } from 'node:child_process'
 import { before, describe, test as it } from 'node:test'
-import { check, definedValue, objectMatching, stringMatching } from 'tsmatchers'
+import {
+	aString,
+	check,
+	definedValue,
+	objectMatching,
+	stringMatching,
+} from 'tsmatchers'
 import { ulid } from 'ulid'
 import { CoreEventType, Role, core, type CoreEvent } from './core.js'
 import type { PersistedOrganization } from './persistence/createOrganization.js'
@@ -19,6 +25,8 @@ import type { PersistedUser } from './persistence/createUser.js'
 import type { EmailLoginRequest } from './persistence/emailLoginRequest.js'
 import type { PersistedInvitation } from './persistence/inviteToProject.js'
 import { create } from './token.js'
+
+const aUlid = () => stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any
 
 const isCI = process.env.CI !== undefined
 const testDb = () => {
@@ -331,7 +339,7 @@ describe('core', async () => {
 						invitee: '@cameron',
 						inviter: '@alex',
 						role: Role.MEMBER,
-						id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+						id: aString,
 					}),
 				)
 				check(events[0]).is(
@@ -341,7 +349,7 @@ describe('core', async () => {
 						invitee: '@cameron',
 						inviter: '@alex',
 						role: Role.MEMBER,
-						id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+						id: aString,
 					}),
 				)
 
@@ -351,6 +359,7 @@ describe('core', async () => {
 			describe('invited member', async () => {
 				it('should not allow an uninvited user to post a status to a project', async () => {
 					const { error } = (await coreInstance.createStatus(
+						ulid(),
 						'$acme#teamstatus',
 						'Should not work',
 						signToken({ email: 'cameron@example.com', subject: '@cameron' }),
@@ -371,6 +380,7 @@ describe('core', async () => {
 
 				it('should allow user after accepting their invitation to post a status to a project', async () => {
 					const { error } = (await coreInstance.createStatus(
+						ulid(),
 						'$acme#teamstatus',
 						'Should work now!',
 						signToken({ email: 'cameron@example.com', subject: '@cameron' }),
@@ -386,7 +396,9 @@ describe('core', async () => {
 					const events: CoreEvent[] = []
 					coreInstance.on(CoreEventType.STATUS_CREATED, (e) => events.push(e))
 
+					const id = ulid()
 					const { status } = (await coreInstance.createStatus(
+						id,
 						'$acme#teamstatus',
 						'Implemented ability to persist status updates for projects.',
 						signToken({ email: 'alex@example.com', subject: '@alex' }),
@@ -397,7 +409,7 @@ describe('core', async () => {
 							project: '$acme#teamstatus',
 							message:
 								'Implemented ability to persist status updates for projects.',
-							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+							id,
 						}),
 					)
 					check(events[0]).is(
@@ -407,13 +419,14 @@ describe('core', async () => {
 							message:
 								'Implemented ability to persist status updates for projects.',
 							author: '@alex',
-							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+							id,
 						}),
 					)
 				})
 
 				it('allows posting status only for organization members', async () => {
 					const { error } = (await coreInstance.createStatus(
+						ulid(),
 						'$acme#teamstatus',
 						'I am not a member of the $acme organization, so I should not be allowed to create a status.',
 						signToken({ email: 'blake@example.com', subject: '@blake' }),
@@ -430,6 +443,7 @@ describe('core', async () => {
 				it('allows status to be edited by the author', async () => {
 					// Create the status
 					const { status } = (await coreInstance.createStatus(
+						ulid(),
 						'$acme#teamstatus',
 						'Status with an typo',
 						signToken({ email: 'alex@example.com', subject: '@alex' }),
@@ -477,7 +491,7 @@ describe('core', async () => {
 					)) as { status: PersistedStatus[] }
 					check(status?.[0]).is(
 						objectMatching({
-							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+							id: aString,
 							message:
 								'Implemented ability to persist status updates for projects.',
 							author: '@alex',
@@ -488,16 +502,19 @@ describe('core', async () => {
 
 				it('sorts status by creation time', async () => {
 					await coreInstance.createStatus(
+						ulid(),
 						'$acme#teamstatus',
 						'Status 1',
 						signToken({ email: 'alex@example.com', subject: '@alex' }),
 					)
 					await coreInstance.createStatus(
+						ulid(),
 						'$acme#teamstatus',
 						'Status 2',
 						signToken({ email: 'alex@example.com', subject: '@alex' }),
 					)
 					await coreInstance.createStatus(
+						ulid(),
 						'$acme#teamstatus',
 						'Status 3',
 						signToken({ email: 'alex@example.com', subject: '@alex' }),
@@ -541,6 +558,7 @@ describe('core', async () => {
 					)
 
 					const { status } = (await coreInstance.createStatus(
+						ulid(),
 						`$acme${projectId}`,
 						`I've released a new version!`,
 						signToken({ email: 'alex@example.com', subject: '@alex' }),
@@ -548,7 +566,10 @@ describe('core', async () => {
 
 					statusId = status.id
 
+					const id = ulid()
+
 					const { reaction } = (await coreInstance.createReaction(
+						id,
 						statusId,
 						newVersionRelease,
 						signToken({ email: 'alex@example.com', subject: '@alex' }),
@@ -557,7 +578,7 @@ describe('core', async () => {
 					check(reaction).is(
 						objectMatching({
 							status: statusId,
-							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+							id,
 							...newVersionRelease,
 						}),
 					)
@@ -566,7 +587,7 @@ describe('core', async () => {
 							type: CoreEventType.REACTION_CREATED,
 							status: statusId,
 							author: '@alex',
-							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+							id,
 							...newVersionRelease,
 						}),
 					)
@@ -584,6 +605,7 @@ describe('core', async () => {
 					)
 
 					const { error } = (await coreInstance.createReaction(
+						ulid(),
 						statusId,
 						thumbsUp,
 						signToken({ email: 'blake@example.com', subject: '@blake' }),
@@ -598,10 +620,12 @@ describe('core', async () => {
 						signToken({ email: 'alex@example.com', subject: '@alex' }),
 					)) as { status: PersistedStatus[] }
 
+					console.log(status[0]?.reactions[0])
+
 					check(status[0]?.reactions[0]).is(
 						objectMatching({
 							author: '@alex',
-							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+							id: aUlid(),
 							...newVersionRelease,
 						}),
 					)
@@ -609,7 +633,7 @@ describe('core', async () => {
 					check(status[0]?.reactions[1]).is(
 						objectMatching({
 							author: '@blake',
-							id: stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any,
+							id: aUlid(),
 							...thumbsUp,
 						}),
 					)

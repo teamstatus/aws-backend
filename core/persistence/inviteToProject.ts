@@ -1,5 +1,4 @@
 import { PutItemCommand } from '@aws-sdk/client-dynamodb'
-import { ulid } from 'ulid'
 import {
 	CoreEventType,
 	Role,
@@ -48,8 +47,7 @@ export const inviteToProject =
 			}
 		}
 
-		const id = ulid()
-
+		const id = `${l(projectId)}:${l(invitedUserId)}`
 		const { db, table } = dbContext
 		await db.send(
 			new PutItemCommand({

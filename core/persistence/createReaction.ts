@@ -1,9 +1,9 @@
 import { GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { ulid } from 'ulid'
 import { CoreEventType, l, type CoreEvent, type DbContext } from '../core.js'
 import type { Notify } from '../notifier.js'
 import type { VerifyTokenUserFn } from '../token.js'
+import { verifyULID } from '../verifyULID.js'
 import { isProjectMember } from './getProjectMember.js'
 
 // Reactions can have special roles
@@ -65,6 +65,7 @@ export type ReactionCreatedEvent = CoreEvent & {
 export const createReaction =
 	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
 	async (
+		id: string,
 		statusId: string,
 		reaction: Reaction,
 		token: string,
@@ -100,14 +101,12 @@ export const createReaction =
 			}
 		}
 
-		const id = ulid()
-
 		await db.send(
 			new PutItemCommand({
 				TableName: table,
 				Item: {
 					id: {
-						S: id,
+						S: verifyULID(id),
 					},
 					type: {
 						S: 'statusReaction',

@@ -1,8 +1,8 @@
 import { PutItemCommand } from '@aws-sdk/client-dynamodb'
-import { ulid } from 'ulid'
 import { CoreEventType, l, type CoreEvent, type DbContext } from '../core.js'
 import type { Notify } from '../notifier.js'
 import type { VerifyTokenUserFn } from '../token.js'
+import { verifyULID } from '../verifyULID.js'
 import type { PersistedReaction } from './createReaction.js'
 import { isProjectMember } from './getProjectMember.js'
 
@@ -23,6 +23,7 @@ export type PersistedStatus = {
 export const createStatus =
 	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
 	async (
+		id: string,
 		projectId: string,
 		message: string,
 		token: string,
@@ -36,15 +37,13 @@ export const createStatus =
 			}
 		}
 
-		const id = ulid()
-
 		const { db, table } = dbContext
 		await db.send(
 			new PutItemCommand({
 				TableName: table,
 				Item: {
 					id: {
-						S: id,
+						S: verifyULID(id),
 					},
 					type: {
 						S: 'projectStatus',

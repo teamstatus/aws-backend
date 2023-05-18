@@ -192,6 +192,6 @@ new TeamStatusBackendApp({
 	lambdaSources: await packBackendLambdas(),
 	layer: await packLayer({
 		id: 'backendLayer',
-		dependencies: ['@nordicsemiconductor/from-env', 'ulid', 'jsonwebtoken'],
+		dependencies: ['@nordicsemiconductor/from-env', 'jsonwebtoken'],
 	}),
 })

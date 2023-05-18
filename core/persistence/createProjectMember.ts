@@ -1,5 +1,4 @@
 import { PutItemCommand } from '@aws-sdk/client-dynamodb'
-import { ulid } from 'ulid'
 import {
 	CoreEventType,
 	Role,
@@ -27,7 +26,7 @@ export const createProjectMember =
 		userId: string,
 		role: Role,
 	): Promise<PersistedProjectMember> => {
-		const id = ulid()
+		const id = `${l(projectId)}:${l(userId)}`
 		await db.send(
 			new PutItemCommand({
 				TableName: table,

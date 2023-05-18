@@ -2,7 +2,6 @@ import {
 	ConditionalCheckFailedException,
 	PutItemCommand,
 } from '@aws-sdk/client-dynamodb'
-import { ulid } from 'ulid'
 import {
 	CoreEventType,
 	Role,
@@ -60,7 +59,7 @@ export const createOrganization =
 					TableName: table,
 					Item: {
 						id: {
-							S: ulid(),
+							S: `${l(organizationId)}:${l(userId)}`,
 						},
 						type: {
 							S: 'organizationMember',
