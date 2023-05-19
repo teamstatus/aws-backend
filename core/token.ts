@@ -3,14 +3,14 @@ import jwt from 'jsonwebtoken'
 
 export const create =
 	({ signingKey }: { signingKey: string }) =>
-	({ email, subject }: { email: string; subject?: string }): string => {
+	({ email, sub }: { email: string; sub?: string }): string => {
 		const options: SignOptions = {
 			algorithm: 'ES256',
 			allowInsecureKeySizes: false,
 			expiresIn: 24 * 60 * 60, // seconds
 		}
-		if (subject !== undefined) {
-			options.subject = subject
+		if (sub !== undefined) {
+			options.subject = sub
 		}
 		return jwt.sign(
 			{

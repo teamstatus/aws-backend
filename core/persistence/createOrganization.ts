@@ -100,6 +100,7 @@ export const createOrganization =
 						`Organization '${organizationId}' already exists.`,
 					),
 				}
-			return { error: InternalError(error) }
+			console.error((error as Error).message)
+			return { error: InternalError() }
 		}
 	}

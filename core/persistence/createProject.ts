@@ -107,6 +107,7 @@ export const createProject =
 				return {
 					error: ConflictError(`Project '${projectId}' already exists.`),
 				}
-			return { error: InternalError(error) }
+			console.error((error as Error).message)
+			return { error: InternalError() }
 		}
 	}

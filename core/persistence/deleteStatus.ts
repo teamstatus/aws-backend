@@ -69,6 +69,7 @@ export const deleteStatus =
 				return {
 					error: ConflictError(`Failed to delete status.`),
 				}
-			return { error: InternalError(error) }
+			console.error((error as Error).message)
+			return { error: InternalError() }
 		}
 	}

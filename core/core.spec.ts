@@ -37,6 +37,7 @@ import {
 	type PersistedStatus,
 } from './persistence/createStatus.js'
 import { createTable } from './persistence/createTable.js'
+import { createToken } from './persistence/createToken.js'
 import { createUser, type PersistedUser } from './persistence/createUser.js'
 import { deleteStatus } from './persistence/deleteStatus.js'
 import {
@@ -253,6 +254,26 @@ describe('core', async () => {
 					}),
 				)
 			})
+
+			it('allows users to request a new token', async () => {
+				const { token: newToken } = (await createToken(
+					authTokenVerify,
+					dbContext,
+					privateKey,
+				)({ token })) as { token: string }
+				const parsedToken = jwt.verify(newToken, publicKey)
+				check(parsedToken).is(
+					objectMatching({
+						sub: '@alex',
+					}),
+				)
+				const payload = jwt.decode(newToken)
+				check(payload).is(
+					objectMatching({
+						email: 'alex@example.com',
+					}),
+				)
+			})
 		})
 	})
 
@@ -266,7 +287,7 @@ describe('core', async () => {
 				notify,
 			)(
 				{ id: '$acme', name: 'ACME Inc.' },
-				signToken({ email: 'alex@example.com', subject: '@alex' }),
+				signToken({ email: 'alex@example.com', sub: '@alex' }),
 			)) as { organization: PersistedOrganization }
 			check(organization).is(
 				objectMatching({
@@ -291,7 +312,7 @@ describe('core', async () => {
 				notify,
 			)(
 				{ id: '$acme' },
-				signToken({ email: 'alex@example.com', subject: '@alex' }),
+				signToken({ email: 'alex@example.com', sub: '@alex' }),
 			)) as { error: ProblemDetail }
 
 			assert.equal(error?.title, `Organization '$acme' already exists.`)
@@ -301,7 +322,7 @@ describe('core', async () => {
 			const { organizations } = (await listOrganizations(
 				userTokenVerify,
 				dbContext,
-			)(signToken({ email: 'alex@example.com', subject: '@alex' }))) as {
+			)(signToken({ email: 'alex@example.com', sub: '@alex' }))) as {
 				organizations: PersistedOrganization[]
 			}
 			check(organizations?.[0]).is(
@@ -324,7 +345,7 @@ describe('core', async () => {
 				notify,
 			)(
 				{ id: '$acme#teamstatus', name: 'Teamstatus', color: '#ff0000' },
-				signToken({ email: 'alex@example.com', subject: '@alex' }),
+				signToken({ email: 'alex@example.com', sub: '@alex' }),
 			)) as { project: PersistedProject }
 
 			check(project).is(
@@ -358,7 +379,7 @@ describe('core', async () => {
 				notify,
 			)(
 				{ id: '$acme#teamstatus' },
-				signToken({ email: 'alex@example.com', subject: '@alex' }),
+				signToken({ email: 'alex@example.com', sub: '@alex' }),
 			)) as { error: ProblemDetail }
 
 			assert.equal(
@@ -370,7 +391,7 @@ describe('core', async () => {
 		it('can list projects for a user', async () => {
 			const { projects } = (await listProjects(userTokenVerify, dbContext)(
 				'$acme',
-				signToken({ email: 'alex@example.com', subject: '@alex' }),
+				signToken({ email: 'alex@example.com', sub: '@alex' }),
 			)) as { projects: PersistedProject[] }
 			check(projects?.[0]).is(
 				objectMatching({
@@ -394,7 +415,7 @@ describe('core', async () => {
 				)(
 					'@cameron',
 					'$acme#teamstatus',
-					signToken({ email: 'alex@example.com', subject: '@alex' }),
+					signToken({ email: 'alex@example.com', sub: '@alex' }),
 				)) as { invitation: PersistedInvitation }
 
 				check(invitation).is(
@@ -430,7 +451,7 @@ describe('core', async () => {
 						ulid(),
 						'$acme#teamstatus',
 						'Should not work',
-						signToken({ email: 'cameron@example.com', subject: '@cameron' }),
+						signToken({ email: 'cameron@example.com', sub: '@cameron' }),
 					)) as { error: ProblemDetail }
 					assert.equal(
 						error?.title,
@@ -445,7 +466,7 @@ describe('core', async () => {
 						notify,
 					)(
 						invitationId,
-						signToken({ email: 'cameron@example.com', subject: '@cameron' }),
+						signToken({ email: 'cameron@example.com', sub: '@cameron' }),
 					)) as { error: ProblemDetail }
 					assert.equal(error, undefined)
 				})
@@ -459,7 +480,7 @@ describe('core', async () => {
 						ulid(),
 						'$acme#teamstatus',
 						'Should work now!',
-						signToken({ email: 'cameron@example.com', subject: '@cameron' }),
+						signToken({ email: 'cameron@example.com', sub: '@cameron' }),
 					)) as { error: ProblemDetail }
 					assert.equal(error, undefined)
 				})
@@ -481,7 +502,7 @@ describe('core', async () => {
 						id,
 						'$acme#teamstatus',
 						'Implemented ability to persist status updates for projects.',
-						signToken({ email: 'alex@example.com', subject: '@alex' }),
+						signToken({ email: 'alex@example.com', sub: '@alex' }),
 					)) as { status: PersistedStatus }
 
 					check(status).is(
@@ -513,7 +534,7 @@ describe('core', async () => {
 						ulid(),
 						'$acme#teamstatus',
 						'I am not a member of the $acme organization, so I should not be allowed to create a status.',
-						signToken({ email: 'blake@example.com', subject: '@blake' }),
+						signToken({ email: 'blake@example.com', sub: '@blake' }),
 					)) as { error: ProblemDetail }
 					assert.equal(
 						error?.title,
@@ -534,7 +555,7 @@ describe('core', async () => {
 						ulid(),
 						'$acme#teamstatus',
 						'Status with an typo',
-						signToken({ email: 'alex@example.com', subject: '@alex' }),
+						signToken({ email: 'alex@example.com', sub: '@alex' }),
 					)) as { status: PersistedStatus }
 					statusId = status.id
 
@@ -547,7 +568,7 @@ describe('core', async () => {
 						statusId,
 						'Status with a typo',
 						1,
-						signToken({ email: 'alex@example.com', subject: '@alex' }),
+						signToken({ email: 'alex@example.com', sub: '@alex' }),
 					)) as { status: PersistedStatus }
 					check(updated).is(
 						objectMatching({
@@ -561,7 +582,7 @@ describe('core', async () => {
 						dbContext,
 					)(
 						'$acme#teamstatus',
-						signToken({ email: 'alex@example.com', subject: '@alex' }),
+						signToken({ email: 'alex@example.com', sub: '@alex' }),
 					)) as {
 						status: PersistedStatus[]
 					}
@@ -575,7 +596,7 @@ describe('core', async () => {
 						notify,
 					)(
 						statusId,
-						signToken({ email: 'alex@example.com', subject: '@alex' }),
+						signToken({ email: 'alex@example.com', sub: '@alex' }),
 					)) as { error: ProblemDetail }
 
 					assert.equal(error, undefined)
@@ -586,7 +607,7 @@ describe('core', async () => {
 				it('can list status for a project', async () => {
 					const { status } = (await listStatus(userTokenVerify, dbContext)(
 						'$acme#teamstatus',
-						signToken({ email: 'alex@example.com', subject: '@alex' }),
+						signToken({ email: 'alex@example.com', sub: '@alex' }),
 					)) as { status: PersistedStatus[] }
 					check(status?.[0]).is(
 						objectMatching({
@@ -604,24 +625,24 @@ describe('core', async () => {
 						ulid(),
 						'$acme#teamstatus',
 						'Status 1',
-						signToken({ email: 'alex@example.com', subject: '@alex' }),
+						signToken({ email: 'alex@example.com', sub: '@alex' }),
 					)
 					await createStatus(userTokenVerify, dbContext, notify)(
 						ulid(),
 						'$acme#teamstatus',
 						'Status 2',
-						signToken({ email: 'alex@example.com', subject: '@alex' }),
+						signToken({ email: 'alex@example.com', sub: '@alex' }),
 					)
 					await createStatus(userTokenVerify, dbContext, notify)(
 						ulid(),
 						'$acme#teamstatus',
 						'Status 3',
-						signToken({ email: 'alex@example.com', subject: '@alex' }),
+						signToken({ email: 'alex@example.com', sub: '@alex' }),
 					)
 
 					const { status } = (await listStatus(userTokenVerify, dbContext)(
 						'$acme#teamstatus',
-						signToken({ email: 'alex@example.com', subject: '@alex' }),
+						signToken({ email: 'alex@example.com', sub: '@alex' }),
 					)) as {
 						status: PersistedStatus[]
 					}
@@ -635,7 +656,7 @@ describe('core', async () => {
 				it('allows only organization members to list status', async () => {
 					const { error } = (await listStatus(userTokenVerify, dbContext)(
 						'$acme#teamstatus',
-						signToken({ email: 'blake@example.com', subject: '@blake' }),
+						signToken({ email: 'blake@example.com', sub: '@blake' }),
 					)) as { error: ProblemDetail }
 					assert.equal(
 						error?.title,
@@ -657,7 +678,7 @@ describe('core', async () => {
 						notify,
 					)(
 						{ id: `$acme${projectId}` },
-						signToken({ email: 'alex@example.com', subject: '@alex' }),
+						signToken({ email: 'alex@example.com', sub: '@alex' }),
 					)
 
 					const { status } = (await createStatus(
@@ -668,7 +689,7 @@ describe('core', async () => {
 						ulid(),
 						`$acme${projectId}`,
 						`I've released a new version!`,
-						signToken({ email: 'alex@example.com', subject: '@alex' }),
+						signToken({ email: 'alex@example.com', sub: '@alex' }),
 					)) as { status: PersistedStatus }
 
 					statusId = status.id
@@ -683,7 +704,7 @@ describe('core', async () => {
 						id,
 						statusId,
 						newVersionRelease,
-						signToken({ email: 'alex@example.com', subject: '@alex' }),
+						signToken({ email: 'alex@example.com', sub: '@alex' }),
 					)) as { reaction: PersistedReaction }
 
 					check(reaction).is(
@@ -712,7 +733,7 @@ describe('core', async () => {
 					)(
 						'@blake',
 						`$acme${projectId}`,
-						signToken({ email: 'alex@example.com', subject: '@alex' }),
+						signToken({ email: 'alex@example.com', sub: '@alex' }),
 					)) as { invitation: PersistedInvitation }
 					await acceptProjectInvitation(
 						userTokenVerify,
@@ -720,7 +741,7 @@ describe('core', async () => {
 						notify,
 					)(
 						invitation.id,
-						signToken({ email: 'blake@example.com', subject: '@blake' }),
+						signToken({ email: 'blake@example.com', sub: '@blake' }),
 					)
 
 					const { error } = (await createReaction(
@@ -731,7 +752,7 @@ describe('core', async () => {
 						ulid(),
 						statusId,
 						thumbsUp,
-						signToken({ email: 'blake@example.com', subject: '@blake' }),
+						signToken({ email: 'blake@example.com', sub: '@blake' }),
 					)) as { error: ProblemDetail }
 
 					assert.equal(error, undefined)
@@ -740,7 +761,7 @@ describe('core', async () => {
 				it('returns reactions with the status', async () => {
 					const { status } = (await listStatus(userTokenVerify, dbContext)(
 						`$acme${projectId}`,
-						signToken({ email: 'alex@example.com', subject: '@alex' }),
+						signToken({ email: 'alex@example.com', sub: '@alex' }),
 					)) as { status: PersistedStatus[] }
 
 					console.log(status[0]?.reactions[0])

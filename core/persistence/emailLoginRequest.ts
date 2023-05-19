@@ -36,7 +36,10 @@ export const emailLoginRequest =
 		try {
 			const { db, table } = dbContext
 			const pin = generatePIN()
-			const expires = new Date(Date.now() + 60 * 1000)
+			// Expires in 5 Minutes
+			const expires = new Date(Date.now() + 5 * 60 * 1000)
+			// Rerequest after 1 Minute
+			const rerequestAfter = new Date(Date.now() + 1 * 60 * 1000)
 			await db.send(
 				new UpdateItemCommand({
 					TableName: table,
@@ -48,11 +51,14 @@ export const emailLoginRequest =
 							S: 'emailLoginRequest',
 						},
 					},
-					UpdateExpression: 'SET #pin = :pin, #ttl = :ttl',
-					ConditionExpression: 'attribute_not_exists(id) OR #ttl < :now',
+					UpdateExpression:
+						'SET #pin = :pin, #ttl = :ttl, #rerequestAfter = :rerequestAfter',
+					ConditionExpression:
+						'attribute_not_exists(id) OR #ttl < :now OR #rerequestAfter < :now',
 					ExpressionAttributeNames: {
 						'#pin': 'pin',
 						'#ttl': 'ttl',
+						'#rerequestAfter': 'rerequestAfter',
 					},
 					ExpressionAttributeValues: {
 						':pin': {
@@ -60,6 +66,9 @@ export const emailLoginRequest =
 						},
 						':ttl': {
 							N: `${Math.floor(expires.getTime() / 1000)}`,
+						},
+						':rerequestAfter': {
+							N: `${Math.floor(rerequestAfter.getTime() / 1000)}`,
 						},
 						':now': {
 							N: `${Math.floor(Date.now() / 1000)}`,
@@ -84,6 +93,7 @@ export const emailLoginRequest =
 				return {
 					error: ConflictError(`Login requests for '${email}' already exists.`),
 				}
-			return { error: InternalError(error) }
+			console.error((error as Error).message)
+			return { error: InternalError() }
 		}
 	}

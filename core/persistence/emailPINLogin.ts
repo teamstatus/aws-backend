@@ -87,7 +87,7 @@ export const emailPINLogin =
 			return {
 				token: create({ signingKey })({
 					email,
-					subject: userId,
+					sub: userId,
 				}),
 			}
 		} catch (error) {
@@ -95,6 +95,7 @@ export const emailPINLogin =
 				return {
 					error: ConflictError(`Login failed.`),
 				}
-			return { error: InternalError(error) }
+			console.error((error as Error).message)
+			return { error: InternalError() }
 		}
 	}

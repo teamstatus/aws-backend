@@ -80,6 +80,7 @@ export const createUser =
 				return {
 					error: ConflictError(`User '${userId}' already exists.`),
 				}
-			return { error: InternalError(error) }
+			console.error((error as Error).message)
+			return { error: InternalError() }
 		}
 	}

@@ -47,10 +47,10 @@ export const ConflictError = (title: string): ProblemDetail => ({
 	title,
 })
 
-export const InternalError = (error: unknown): ProblemDetail => ({
+export const InternalError = (message?: string): ProblemDetail => ({
 	type: new URL(`https://teamstatus.space/error/InternalError`),
 	status: StatusCode.INTERNAL_SERVER_ERROR,
-	title: (error as Error).message ?? 'No message given.',
+	title: message ?? 'An internal error occurred.',
 })
 
 export const NotFoundError = (title: string): ProblemDetail => ({
