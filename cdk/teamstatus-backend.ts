@@ -123,6 +123,35 @@ class API extends Construct {
 			autoDeploy: true,
 		})
 
+		const httpApiLogGroup = new Logs.LogGroup(this, `HttpApiLogGroup`, {
+			removalPolicy: RemovalPolicy.DESTROY,
+			logGroupName: `/${parent.stackName}/apiAccessLogs`,
+			retention:
+				this.node.tryGetContext('isTest') === '1'
+					? Logs.RetentionDays.ONE_DAY
+					: Logs.RetentionDays.ONE_WEEK,
+		})
+		this.stage.accessLogSettings = {
+			destinationArn: httpApiLogGroup.logGroupArn,
+			format: JSON.stringify({
+				requestId: '$context.requestId',
+				awsEndpointRequestId: '$context.awsEndpointRequestId',
+				requestTime: '$context.requestTime',
+				ip: '$context.identity.sourceIp',
+				protocol: '$context.protocol',
+				routeKey: '$context.routeKey',
+				status: '$context.status',
+				responseLength: '$context.responseLength',
+				integrationLatency: '$context.integrationLatency',
+				integrationStatus: '$context.integrationStatus',
+				integrationErrorMessage: '$context.integrationErrorMessage',
+				integration: {
+					status: '$context.integration.status',
+				},
+			}),
+		}
+		this.stage.node.addDependency(httpApiLogGroup)
+
 		/*const authorizer = */ new HttpApi.CfnAuthorizer(this, 'apiAuthorizer', {
 			apiId: this.api.ref,
 			authorizerType: 'REQUEST',
