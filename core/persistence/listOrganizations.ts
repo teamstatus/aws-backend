@@ -1,19 +1,19 @@
 import { GetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import type { ProblemDetail } from '../ProblemDetail.js'
-import type { VerifyTokenUserFn } from '../token.js'
+import type { UserAuthContext } from '../auth.js'
 import { type DbContext } from './DbContext.js'
 import type { PersistedOrganization } from './createOrganization'
 import { l } from './l.js'
 
 export const listOrganizations =
-	(verifyToken: VerifyTokenUserFn, dbContext: DbContext) =>
+	(dbContext: DbContext) =>
 	async (
-		token: string,
+		authContext: UserAuthContext,
 	): Promise<
 		{ error: ProblemDetail } | { organizations: PersistedOrganization[] }
 	> => {
-		const { sub: userId } = verifyToken(token)
+		const { sub: userId } = authContext
 		const { db, table } = dbContext
 		const res = await db.send(
 			new QueryCommand({

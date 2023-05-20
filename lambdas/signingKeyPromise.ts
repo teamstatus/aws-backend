@@ -1,6 +1,6 @@
 import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm'
 
-export const privateKeyPromise = async ({
+export const getPrivateKey = async ({
 	ssm,
 	stackName,
 }: {
@@ -20,7 +20,7 @@ export const privateKeyPromise = async ({
 	return privateKey
 }
 
-export const publicKeyPromise = async ({
+export const getPublicKey = async ({
 	ssm,
 	stackName,
 }: {

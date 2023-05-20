@@ -3,9 +3,9 @@ import { type CoreEvent } from '../CoreEvent.js'
 import { CoreEventType } from '../CoreEventType.js'
 import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import { Role } from '../Role.js'
+import type { UserAuthContext } from '../auth.js'
 import { parseProjectId } from '../ids.js'
 import type { Notify } from '../notifier.js'
-import type { VerifyTokenUserFn } from '../token.js'
 import { type DbContext } from './DbContext.js'
 import { isOrganizationOwner } from './getOrganizationMember.js'
 import { l } from './l.js'
@@ -23,15 +23,15 @@ export type PersistedInvitation = {
 }
 
 export const inviteToProject =
-	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
+	(dbContext: DbContext, notify: Notify) =>
 	async (
 		invitedUserId: string,
 		projectId: string,
-		token: string,
+		authContext: UserAuthContext,
 	): Promise<
 		{ error: ProblemDetail } | { invitation: PersistedInvitation }
 	> => {
-		const { sub: userId } = verifyToken(token)
+		const { sub: userId } = authContext
 		const { organization: organizationId } = parseProjectId(projectId)
 
 		if (organizationId === null) {

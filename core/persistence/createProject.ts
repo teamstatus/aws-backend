@@ -11,9 +11,9 @@ import {
 	type ProblemDetail,
 } from '../ProblemDetail.js'
 import { Role } from '../Role.js'
+import type { UserAuthContext } from '../auth.js'
 import { parseProjectId } from '../ids.js'
 import type { Notify } from '../notifier.js'
-import type { VerifyTokenUserFn } from '../token.js'
 import { type DbContext } from './DbContext.js'
 import { createProjectMember } from './createProjectMember.js'
 import { isOrganizationMember } from './getOrganizationMember.js'
@@ -27,16 +27,16 @@ export type PersistedProject = {
 	color: string | null
 }
 export const createProject =
-	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
+	(dbContext: DbContext, notify: Notify) =>
 	async (
 		{
 			id: projectId,
 			name,
 			color,
 		}: { id: string; name?: string; color?: string },
-		token: string,
+		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | { project: PersistedProject }> => {
-		const { sub: userId } = verifyToken(token)
+		const { sub: userId } = authContext
 		const { organization: organizationId } = parseProjectId(projectId)
 
 		if (organizationId === null) {

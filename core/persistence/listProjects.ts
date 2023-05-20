@@ -1,19 +1,19 @@
 import { GetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
-import type { VerifyTokenUserFn } from '../token.js'
+import type { UserAuthContext } from '../auth.js'
 import { type DbContext } from './DbContext.js'
 import type { PersistedProject } from './createProject.js'
 import { isOrganizationMember } from './getOrganizationMember.js'
 import { l } from './l.js'
 
 export const listProjects =
-	(verifyToken: VerifyTokenUserFn, dbContext: DbContext) =>
+	(dbContext: DbContext) =>
 	async (
 		organizationId: string,
-		token: string,
+		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | { projects: PersistedProject[] }> => {
-		const { sub: userId } = verifyToken(token)
+		const { sub: userId } = authContext
 		if (!(await isOrganizationMember(dbContext)(organizationId, userId))) {
 			return {
 				error: BadRequestError(

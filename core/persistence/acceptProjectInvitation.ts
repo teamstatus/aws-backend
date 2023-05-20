@@ -5,8 +5,8 @@ import {
 	NotFoundError,
 	type ProblemDetail,
 } from '../ProblemDetail.js'
+import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
-import type { VerifyTokenUserFn } from '../token.js'
 import { type DbContext } from './DbContext.js'
 import {
 	createProjectMember,
@@ -15,14 +15,14 @@ import {
 import { l } from './l.js'
 
 export const acceptProjectInvitation =
-	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
+	(dbContext: DbContext, notify: Notify) =>
 	async (
 		invitationId: string,
-		token: string,
+		authContext: UserAuthContext,
 	): Promise<
 		{ projectMembership: PersistedProjectMember } | { error: ProblemDetail }
 	> => {
-		const { sub: userId } = verifyToken(token)
+		const { sub: userId } = authContext
 		const { db, table } = dbContext
 		const { Item } = await db.send(
 			new GetItemCommand({

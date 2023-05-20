@@ -7,8 +7,8 @@ import {
 	NotFoundError,
 	type ProblemDetail,
 } from '../ProblemDetail.js'
+import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
-import type { VerifyTokenUserFn } from '../token.js'
 import { verifyULID } from '../verifyULID.js'
 import { type DbContext } from './DbContext.js'
 import { isProjectMember } from './getProjectMember.js'
@@ -71,14 +71,14 @@ export type ReactionCreatedEvent = CoreEvent & {
 } & PersistedReaction
 
 export const createReaction =
-	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
+	(dbContext: DbContext, notify: Notify) =>
 	async (
 		id: string,
 		statusId: string,
 		reaction: Reaction,
-		token: string,
+		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | { reaction: PersistedReaction }> => {
-		const { sub: userId } = verifyToken(token)
+		const { sub: userId } = authContext
 		const { db, table } = dbContext
 		const { Item } = await db.send(
 			new GetItemCommand({

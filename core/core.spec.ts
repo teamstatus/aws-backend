@@ -1,7 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import jwt from 'jsonwebtoken'
 import assert from 'node:assert/strict'
-import { execSync } from 'node:child_process'
 import { before, describe, test as it } from 'node:test'
 import {
 	aString,
@@ -9,12 +7,14 @@ import {
 	definedValue,
 	objectMatching,
 	stringMatching,
+	undefinedValue,
 } from 'tsmatchers'
 import { ulid } from 'ulid'
 import { type CoreEvent } from './CoreEvent.js'
 import { CoreEventType } from './CoreEventType.js'
 import type { ProblemDetail } from './ProblemDetail.js'
 import { Role } from './Role.js'
+import { type EmailAuthContext, type UserAuthContext } from './auth.js'
 import { notifier } from './notifier.js'
 import type { DbContext } from './persistence/DbContext.js'
 import { acceptProjectInvitation } from './persistence/acceptProjectInvitation.js'
@@ -37,7 +37,6 @@ import {
 	type PersistedStatus,
 } from './persistence/createStatus.js'
 import { createTable } from './persistence/createTable.js'
-import { createToken } from './persistence/createToken.js'
 import { createUser, type PersistedUser } from './persistence/createUser.js'
 import { deleteStatus } from './persistence/deleteStatus.js'
 import {
@@ -53,7 +52,6 @@ import { listOrganizations } from './persistence/listOrganizations.js'
 import { listProjects } from './persistence/listProjects.js'
 import { listStatus } from './persistence/listStatus.js'
 import { updateStatus } from './persistence/updateStatus.js'
-import { create, verifyToken, verifyUserToken } from './token.js'
 
 const aUlid = () => stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any
 
@@ -76,12 +74,6 @@ const testDb = () => {
 
 describe('core', async () => {
 	const { table, db } = testDb()
-	const privateKey = execSync(
-		'openssl ecparam -name prime256v1 -genkey',
-	).toString()
-	const publicKey = execSync('openssl ec -pubout', {
-		input: privateKey,
-	}).toString()
 
 	const dbContext: DbContext = {
 		db,
@@ -89,11 +81,6 @@ describe('core', async () => {
 	}
 
 	const { on, notify } = notifier()
-
-	const signToken = create({ signingKey: privateKey })
-
-	const userTokenVerify = verifyUserToken({ verificationKey: publicKey })
-	const authTokenVerify = verifyToken({ verificationKey: publicKey })
 
 	before(async () => {
 		if (isCI) {
@@ -147,33 +134,17 @@ describe('core', async () => {
 				check(error).is(definedValue)
 			})
 
-			let token: string
-
 			it('logs a user in using a PIN', async () => {
 				const events: CoreEvent[] = []
 				on(CoreEventType.EMAIL_LOGIN_PIN_SUCCESS, (e) => events.push(e))
-				const { token: t } = (await emailPINLogin(
+				const { authContext } = (await emailPINLogin(
 					dbContext,
 					notify,
-					privateKey,
 				)({
 					email: 'alex@example.com',
 					pin,
-				})) as { token: string }
+				})) as { authContext: EmailAuthContext }
 
-				token = t
-
-				check(token).is(definedValue)
-
-				const parsedToken = jwt.verify(token, publicKey)
-				check(parsedToken).is(
-					objectMatching({
-						iat: Math.floor(Date.now() / 1000),
-						exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
-						// It should not have a username associated
-						sub: undefined,
-					}),
-				)
 				check(events[0]).is(
 					objectMatching({
 						type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS,
@@ -181,10 +152,10 @@ describe('core', async () => {
 					}),
 				)
 
-				const payload = jwt.decode(token)
-				check(payload).is(
+				check(authContext).is(
 					objectMatching({
 						email: 'alex@example.com',
+						sub: undefinedValue,
 					}),
 				)
 			})
@@ -193,7 +164,6 @@ describe('core', async () => {
 				const { error } = (await emailPINLogin(
 					dbContext,
 					notify,
-					privateKey,
 				)({
 					email: 'alex@example.com',
 					pin,
@@ -206,13 +176,12 @@ describe('core', async () => {
 				const events: CoreEvent[] = []
 				on(CoreEventType.USER_CREATED, (e) => events.push(e))
 				const { user } = (await createUser(
-					authTokenVerify,
 					dbContext,
 					notify,
 				)({
 					id: '@alex',
 					name: 'Alex Doe',
-					token: signToken({ email: 'alex@example.com' }),
+					authContext: { email: 'alex@example.com' },
 				})) as { user: PersistedUser }
 				check(user).is(
 					objectMatching({
@@ -238,39 +207,17 @@ describe('core', async () => {
 				)({
 					email: 'alex@example.com',
 				})) as { loginRequest: EmailLoginRequest; pin: string }
-				const { token } = (await emailPINLogin(
+				const { authContext } = (await emailPINLogin(
 					dbContext,
 					notify,
-					privateKey,
 				)({
 					email: 'alex@example.com',
 					pin,
-				})) as { token: string }
-				check(token).is(definedValue)
-				const parsedToken = jwt.verify(token, publicKey)
-				check(parsedToken).is(
-					objectMatching({
-						sub: '@alex',
-					}),
-				)
-			})
-
-			it('allows users to request a new token', async () => {
-				const { token: newToken } = (await createToken(
-					authTokenVerify,
-					dbContext,
-					privateKey,
-				)({ token })) as { token: string }
-				const parsedToken = jwt.verify(newToken, publicKey)
-				check(parsedToken).is(
-					objectMatching({
-						sub: '@alex',
-					}),
-				)
-				const payload = jwt.decode(newToken)
-				check(payload).is(
+				})) as { authContext: UserAuthContext }
+				check(authContext).is(
 					objectMatching({
 						email: 'alex@example.com',
+						sub: '@alex',
 					}),
 				)
 			})
@@ -281,13 +228,9 @@ describe('core', async () => {
 		it('can create a new organization', async () => {
 			const events: CoreEvent[] = []
 			on(CoreEventType.ORGANIZATION_CREATED, (e) => events.push(e))
-			const { organization } = (await createOrganization(
-				userTokenVerify,
-				dbContext,
-				notify,
-			)(
+			const { organization } = (await createOrganization(dbContext, notify)(
 				{ id: '$acme', name: 'ACME Inc.' },
-				signToken({ email: 'alex@example.com', sub: '@alex' }),
+				{ email: 'alex@example.com', sub: '@alex' },
 			)) as { organization: PersistedOrganization }
 			check(organization).is(
 				objectMatching({
@@ -306,23 +249,19 @@ describe('core', async () => {
 		})
 
 		it('ensures that organizations are unique', async () => {
-			const { error } = (await createOrganization(
-				userTokenVerify,
-				dbContext,
-				notify,
-			)(
+			const { error } = (await createOrganization(dbContext, notify)(
 				{ id: '$acme' },
-				signToken({ email: 'alex@example.com', sub: '@alex' }),
+				{ email: 'alex@example.com', sub: '@alex' },
 			)) as { error: ProblemDetail }
 
 			assert.equal(error?.title, `Organization '$acme' already exists.`)
 		})
 
 		it('can list organizations for a user', async () => {
-			const { organizations } = (await listOrganizations(
-				userTokenVerify,
-				dbContext,
-			)(signToken({ email: 'alex@example.com', sub: '@alex' }))) as {
+			const { organizations } = (await listOrganizations(dbContext)({
+				email: 'alex@example.com',
+				sub: '@alex',
+			})) as {
 				organizations: PersistedOrganization[]
 			}
 			check(organizations?.[0]).is(
@@ -339,13 +278,9 @@ describe('core', async () => {
 			on(CoreEventType.PROJECT_CREATED, (e) => events.push(e))
 			on(CoreEventType.PROJECT_MEMBER_CREATED, (e) => events.push(e))
 
-			const { project } = (await createProject(
-				userTokenVerify,
-				dbContext,
-				notify,
-			)(
+			const { project } = (await createProject(dbContext, notify)(
 				{ id: '$acme#teamstatus', name: 'Teamstatus', color: '#ff0000' },
-				signToken({ email: 'alex@example.com', sub: '@alex' }),
+				{ email: 'alex@example.com', sub: '@alex' },
 			)) as { project: PersistedProject }
 
 			check(project).is(
@@ -373,13 +308,9 @@ describe('core', async () => {
 		})
 
 		it('ensures that projects are unique', async () => {
-			const res = (await createProject(
-				userTokenVerify,
-				dbContext,
-				notify,
-			)(
+			const res = (await createProject(dbContext, notify)(
 				{ id: '$acme#teamstatus' },
-				signToken({ email: 'alex@example.com', sub: '@alex' }),
+				{ email: 'alex@example.com', sub: '@alex' },
 			)) as { error: ProblemDetail }
 
 			assert.equal(
@@ -389,10 +320,10 @@ describe('core', async () => {
 		})
 
 		it('can list projects for a user', async () => {
-			const { projects } = (await listProjects(userTokenVerify, dbContext)(
-				'$acme',
-				signToken({ email: 'alex@example.com', sub: '@alex' }),
-			)) as { projects: PersistedProject[] }
+			const { projects } = (await listProjects(dbContext)('$acme', {
+				email: 'alex@example.com',
+				sub: '@alex',
+			})) as { projects: PersistedProject[] }
 			check(projects?.[0]).is(
 				objectMatching({
 					id: '$acme#teamstatus',
@@ -408,14 +339,10 @@ describe('core', async () => {
 				const events: CoreEvent[] = []
 				on(CoreEventType.PROJECT_MEMBER_INVITED, (e) => events.push(e))
 
-				const { invitation } = (await inviteToProject(
-					userTokenVerify,
-					dbContext,
-					notify,
-				)(
+				const { invitation } = (await inviteToProject(dbContext, notify)(
 					'@cameron',
 					'$acme#teamstatus',
-					signToken({ email: 'alex@example.com', sub: '@alex' }),
+					{ email: 'alex@example.com', sub: '@alex' },
 				)) as { invitation: PersistedInvitation }
 
 				check(invitation).is(
@@ -443,15 +370,11 @@ describe('core', async () => {
 
 			describe('invited member', async () => {
 				it('should not allow an uninvited user to post a status to a project', async () => {
-					const { error } = (await createStatus(
-						userTokenVerify,
-						dbContext,
-						notify,
-					)(
+					const { error } = (await createStatus(dbContext, notify)(
 						ulid(),
 						'$acme#teamstatus',
 						'Should not work',
-						signToken({ email: 'cameron@example.com', sub: '@cameron' }),
+						{ email: 'cameron@example.com', sub: '@cameron' },
 					)) as { error: ProblemDetail }
 					assert.equal(
 						error?.title,
@@ -460,27 +383,19 @@ describe('core', async () => {
 				})
 
 				it('allows users to accept invitations', async () => {
-					const { error } = (await acceptProjectInvitation(
-						userTokenVerify,
-						dbContext,
-						notify,
-					)(
+					const { error } = (await acceptProjectInvitation(dbContext, notify)(
 						invitationId,
-						signToken({ email: 'cameron@example.com', sub: '@cameron' }),
+						{ email: 'cameron@example.com', sub: '@cameron' },
 					)) as { error: ProblemDetail }
 					assert.equal(error, undefined)
 				})
 
 				it('should allow user after accepting their invitation to post a status to a project', async () => {
-					const { error } = (await createStatus(
-						userTokenVerify,
-						dbContext,
-						notify,
-					)(
+					const { error } = (await createStatus(dbContext, notify)(
 						ulid(),
 						'$acme#teamstatus',
 						'Should work now!',
-						signToken({ email: 'cameron@example.com', sub: '@cameron' }),
+						{ email: 'cameron@example.com', sub: '@cameron' },
 					)) as { error: ProblemDetail }
 					assert.equal(error, undefined)
 				})
@@ -494,15 +409,11 @@ describe('core', async () => {
 					on(CoreEventType.STATUS_CREATED, (e) => events.push(e))
 
 					const id = ulid()
-					const { status } = (await createStatus(
-						userTokenVerify,
-						dbContext,
-						notify,
-					)(
+					const { status } = (await createStatus(dbContext, notify)(
 						id,
 						'$acme#teamstatus',
 						'Implemented ability to persist status updates for projects.',
-						signToken({ email: 'alex@example.com', sub: '@alex' }),
+						{ email: 'alex@example.com', sub: '@alex' },
 					)) as { status: PersistedStatus }
 
 					check(status).is(
@@ -526,15 +437,11 @@ describe('core', async () => {
 				})
 
 				it('allows posting status only for organization members', async () => {
-					const { error } = (await createStatus(
-						userTokenVerify,
-						dbContext,
-						notify,
-					)(
+					const { error } = (await createStatus(dbContext, notify)(
 						ulid(),
 						'$acme#teamstatus',
 						'I am not a member of the $acme organization, so I should not be allowed to create a status.',
-						signToken({ email: 'blake@example.com', sub: '@blake' }),
+						{ email: 'blake@example.com', sub: '@blake' },
 					)) as { error: ProblemDetail }
 					assert.equal(
 						error?.title,
@@ -547,28 +454,20 @@ describe('core', async () => {
 				let statusId: string
 				it('allows status to be edited by the author', async () => {
 					// Create the status
-					const { status } = (await createStatus(
-						userTokenVerify,
-						dbContext,
-						notify,
-					)(
+					const { status } = (await createStatus(dbContext, notify)(
 						ulid(),
 						'$acme#teamstatus',
 						'Status with an typo',
-						signToken({ email: 'alex@example.com', sub: '@alex' }),
+						{ email: 'alex@example.com', sub: '@alex' },
 					)) as { status: PersistedStatus }
 					statusId = status.id
 
 					// Updated
-					const { status: updated } = (await updateStatus(
-						userTokenVerify,
-						dbContext,
-						notify,
-					)(
+					const { status: updated } = (await updateStatus(dbContext, notify)(
 						statusId,
 						'Status with a typo',
 						1,
-						signToken({ email: 'alex@example.com', sub: '@alex' }),
+						{ email: 'alex@example.com', sub: '@alex' },
 					)) as { status: PersistedStatus }
 					check(updated).is(
 						objectMatching({
@@ -577,12 +476,9 @@ describe('core', async () => {
 					)
 
 					// Fetch
-					const { status: statusList } = (await listStatus(
-						userTokenVerify,
-						dbContext,
-					)(
+					const { status: statusList } = (await listStatus(dbContext)(
 						'$acme#teamstatus',
-						signToken({ email: 'alex@example.com', sub: '@alex' }),
+						{ email: 'alex@example.com', sub: '@alex' },
 					)) as {
 						status: PersistedStatus[]
 					}
@@ -590,14 +486,10 @@ describe('core', async () => {
 				})
 
 				it('allows status to be deleted by the author', async () => {
-					const { error } = (await deleteStatus(
-						userTokenVerify,
-						dbContext,
-						notify,
-					)(
-						statusId,
-						signToken({ email: 'alex@example.com', sub: '@alex' }),
-					)) as { error: ProblemDetail }
+					const { error } = (await deleteStatus(dbContext, notify)(statusId, {
+						email: 'alex@example.com',
+						sub: '@alex',
+					})) as { error: ProblemDetail }
 
 					assert.equal(error, undefined)
 				})
@@ -605,10 +497,10 @@ describe('core', async () => {
 
 			describe('list', async () => {
 				it('can list status for a project', async () => {
-					const { status } = (await listStatus(userTokenVerify, dbContext)(
-						'$acme#teamstatus',
-						signToken({ email: 'alex@example.com', sub: '@alex' }),
-					)) as { status: PersistedStatus[] }
+					const { status } = (await listStatus(dbContext)('$acme#teamstatus', {
+						email: 'alex@example.com',
+						sub: '@alex',
+					})) as { status: PersistedStatus[] }
 					check(status?.[0]).is(
 						objectMatching({
 							id: aString,
@@ -621,29 +513,29 @@ describe('core', async () => {
 				})
 
 				it('sorts status by creation time', async () => {
-					await createStatus(userTokenVerify, dbContext, notify)(
+					await createStatus(dbContext, notify)(
 						ulid(),
 						'$acme#teamstatus',
 						'Status 1',
-						signToken({ email: 'alex@example.com', sub: '@alex' }),
+						{ email: 'alex@example.com', sub: '@alex' },
 					)
-					await createStatus(userTokenVerify, dbContext, notify)(
+					await createStatus(dbContext, notify)(
 						ulid(),
 						'$acme#teamstatus',
 						'Status 2',
-						signToken({ email: 'alex@example.com', sub: '@alex' }),
+						{ email: 'alex@example.com', sub: '@alex' },
 					)
-					await createStatus(userTokenVerify, dbContext, notify)(
+					await createStatus(dbContext, notify)(
 						ulid(),
 						'$acme#teamstatus',
 						'Status 3',
-						signToken({ email: 'alex@example.com', sub: '@alex' }),
+						{ email: 'alex@example.com', sub: '@alex' },
 					)
 
-					const { status } = (await listStatus(userTokenVerify, dbContext)(
-						'$acme#teamstatus',
-						signToken({ email: 'alex@example.com', sub: '@alex' }),
-					)) as {
+					const { status } = (await listStatus(dbContext)('$acme#teamstatus', {
+						email: 'alex@example.com',
+						sub: '@alex',
+					})) as {
 						status: PersistedStatus[]
 					}
 
@@ -654,10 +546,10 @@ describe('core', async () => {
 				})
 
 				it('allows only organization members to list status', async () => {
-					const { error } = (await listStatus(userTokenVerify, dbContext)(
-						'$acme#teamstatus',
-						signToken({ email: 'blake@example.com', sub: '@blake' }),
-					)) as { error: ProblemDetail }
+					const { error } = (await listStatus(dbContext)('$acme#teamstatus', {
+						email: 'blake@example.com',
+						sub: '@blake',
+					})) as { error: ProblemDetail }
 					assert.equal(
 						error?.title,
 						`Only members of '$acme' are allowed to list status.`,
@@ -672,39 +564,27 @@ describe('core', async () => {
 					const events: CoreEvent[] = []
 					on(CoreEventType.REACTION_CREATED, (e) => events.push(e))
 
-					await createProject(
-						userTokenVerify,
-						dbContext,
-						notify,
-					)(
+					await createProject(dbContext, notify)(
 						{ id: `$acme${projectId}` },
-						signToken({ email: 'alex@example.com', sub: '@alex' }),
+						{ email: 'alex@example.com', sub: '@alex' },
 					)
 
-					const { status } = (await createStatus(
-						userTokenVerify,
-						dbContext,
-						notify,
-					)(
+					const { status } = (await createStatus(dbContext, notify)(
 						ulid(),
 						`$acme${projectId}`,
 						`I've released a new version!`,
-						signToken({ email: 'alex@example.com', sub: '@alex' }),
+						{ email: 'alex@example.com', sub: '@alex' },
 					)) as { status: PersistedStatus }
 
 					statusId = status.id
 
 					const id = ulid()
 
-					const { reaction } = (await createReaction(
-						userTokenVerify,
-						dbContext,
-						notify,
-					)(
+					const { reaction } = (await createReaction(dbContext, notify)(
 						id,
 						statusId,
 						newVersionRelease,
-						signToken({ email: 'alex@example.com', sub: '@alex' }),
+						{ email: 'alex@example.com', sub: '@alex' },
 					)) as { reaction: PersistedReaction }
 
 					check(reaction).is(
@@ -726,43 +606,31 @@ describe('core', async () => {
 				})
 
 				it('allows project members to attach a reaction', async () => {
-					const { invitation } = (await inviteToProject(
-						userTokenVerify,
-						dbContext,
-						notify,
-					)(
+					const { invitation } = (await inviteToProject(dbContext, notify)(
 						'@blake',
 						`$acme${projectId}`,
-						signToken({ email: 'alex@example.com', sub: '@alex' }),
+						{ email: 'alex@example.com', sub: '@alex' },
 					)) as { invitation: PersistedInvitation }
-					await acceptProjectInvitation(
-						userTokenVerify,
-						dbContext,
-						notify,
-					)(
-						invitation.id,
-						signToken({ email: 'blake@example.com', sub: '@blake' }),
-					)
+					await acceptProjectInvitation(dbContext, notify)(invitation.id, {
+						email: 'blake@example.com',
+						sub: '@blake',
+					})
 
-					const { error } = (await createReaction(
-						userTokenVerify,
-						dbContext,
-						notify,
-					)(
+					const { error } = (await createReaction(dbContext, notify)(
 						ulid(),
 						statusId,
 						thumbsUp,
-						signToken({ email: 'blake@example.com', sub: '@blake' }),
+						{ email: 'blake@example.com', sub: '@blake' },
 					)) as { error: ProblemDetail }
 
 					assert.equal(error, undefined)
 				})
 
 				it('returns reactions with the status', async () => {
-					const { status } = (await listStatus(userTokenVerify, dbContext)(
-						`$acme${projectId}`,
-						signToken({ email: 'alex@example.com', sub: '@alex' }),
-					)) as { status: PersistedStatus[] }
+					const { status } = (await listStatus(dbContext)(`$acme${projectId}`, {
+						email: 'alex@example.com',
+						sub: '@alex',
+					})) as { status: PersistedStatus[] }
 
 					console.log(status[0]?.reactions[0])
 

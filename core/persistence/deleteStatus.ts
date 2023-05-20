@@ -9,8 +9,8 @@ import {
 	InternalError,
 	type ProblemDetail,
 } from '../ProblemDetail.js'
+import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
-import type { VerifyTokenUserFn } from '../token.js'
 import { type DbContext } from './DbContext.js'
 
 type StatusDeletedEvent = CoreEvent & {
@@ -19,13 +19,13 @@ type StatusDeletedEvent = CoreEvent & {
 }
 
 export const deleteStatus =
-	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
+	(dbContext: DbContext, notify: Notify) =>
 	async (
 		statusId: string,
-		token: string,
+		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | { deleted: true }> => {
 		try {
-			const { sub: userId } = verifyToken(token)
+			const { sub: userId } = authContext
 			const { db, table } = dbContext
 			await db.send(
 				new UpdateItemCommand({

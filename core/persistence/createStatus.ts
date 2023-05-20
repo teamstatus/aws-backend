@@ -2,8 +2,8 @@ import { PutItemCommand } from '@aws-sdk/client-dynamodb'
 import { type CoreEvent } from '../CoreEvent.js'
 import { CoreEventType } from '../CoreEventType.js'
 import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
+import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
-import type { VerifyTokenUserFn } from '../token.js'
 import { verifyULID } from '../verifyULID.js'
 import { type DbContext } from './DbContext.js'
 import type { PersistedReaction } from './createReaction.js'
@@ -25,14 +25,14 @@ export type PersistedStatus = {
 }
 
 export const createStatus =
-	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
+	(dbContext: DbContext, notify: Notify) =>
 	async (
 		id: string,
 		projectId: string,
 		message: string,
-		token: string,
+		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | { status: PersistedStatus }> => {
-		const { sub: userId } = verifyToken(token)
+		const { sub: userId } = authContext
 		if (!(await isProjectMember(dbContext)(projectId, userId))) {
 			return {
 				error: BadRequestError(

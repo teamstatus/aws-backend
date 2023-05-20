@@ -11,8 +11,8 @@ import {
 	InternalError,
 	type ProblemDetail,
 } from '../ProblemDetail.js'
+import { type EmailAuthContext, type UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
-import { create } from '../token.js'
 import { type DbContext } from './DbContext.js'
 
 export type LoggedInWithEmailAndPin = CoreEvent & {
@@ -21,14 +21,17 @@ export type LoggedInWithEmailAndPin = CoreEvent & {
 }
 
 export const emailPINLogin =
-	(dbContext: DbContext, notify: Notify, signingKey: string) =>
+	(dbContext: DbContext, notify: Notify) =>
 	async ({
 		email,
 		pin,
 	}: {
 		email: string
 		pin: string
-	}): Promise<{ error: ProblemDetail } | { token: string }> => {
+	}): Promise<
+		| { error: ProblemDetail }
+		| { authContext: EmailAuthContext | UserAuthContext }
+	> => {
 		try {
 			const { db, table } = dbContext
 			await db.send(
@@ -85,10 +88,10 @@ export const emailPINLogin =
 			const userId =
 				Items?.[0] !== undefined ? unmarshall(Items[0]).id : undefined
 			return {
-				token: create({ signingKey })({
+				authContext: {
 					email,
 					sub: userId,
-				}),
+				},
 			}
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)

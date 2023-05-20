@@ -10,8 +10,8 @@ import {
 	InternalError,
 	type ProblemDetail,
 } from '../ProblemDetail.js'
+import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
-import type { VerifyTokenUserFn } from '../token.js'
 import { type DbContext } from './DbContext.js'
 import type { PersistedStatus } from './createStatus.js'
 import { l } from './l.js'
@@ -24,15 +24,15 @@ type StatusUpdatedEvent = CoreEvent & {
 }
 
 export const updateStatus =
-	(verifyToken: VerifyTokenUserFn, dbContext: DbContext, notify: Notify) =>
+	(dbContext: DbContext, notify: Notify) =>
 	async (
 		statusId: string,
 		message: string,
 		version: number,
-		token: string,
+		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | { status: PersistedStatus }> => {
 		try {
-			const { sub: userId } = verifyToken(token)
+			const { sub: userId } = authContext
 			const { db, table } = dbContext
 			const { Attributes } = await db.send(
 				new UpdateItemCommand({

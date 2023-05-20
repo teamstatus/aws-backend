@@ -10,9 +10,9 @@ import {
 	InternalError,
 	type ProblemDetail,
 } from '../ProblemDetail.js'
+import type { EmailAuthContext } from '../auth.js'
 import { isUserId } from '../ids.js'
 import type { Notify } from '../notifier.js'
-import type { VerifyTokenFn } from '../token.js'
 import { type DbContext } from './DbContext.js'
 import { l } from './l.js'
 
@@ -25,17 +25,17 @@ export type UserCreatedEvent = CoreEvent & {
 }
 
 export const createUser =
-	(verifyToken: VerifyTokenFn, dbContext: DbContext, notify: Notify) =>
+	(dbContext: DbContext, notify: Notify) =>
 	async ({
 		id: userId,
 		name,
-		token,
+		authContext,
 	}: {
 		id: string
 		name?: string
-		token: string
+		authContext: EmailAuthContext
 	}): Promise<{ error: ProblemDetail } | { user: PersistedUser }> => {
-		const { email } = verifyToken(token)
+		const { email } = authContext
 		if (!isUserId(userId))
 			return {
 				error: BadRequestError(`Not an user ID: ${userId}`),

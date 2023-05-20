@@ -1,25 +1,18 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { type CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
 import { InternalError, type ProblemDetail } from '../ProblemDetail.js'
-import { create, type VerifyTokenFn } from '../token.js'
+import { create, type UserAuthContext } from '../auth.js'
 import type { DbContext } from './DbContext.js'
 
-export type LoggedInWithEmailAndPin = CoreEvent & {
-	type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS
-	email: string
-}
-
 export const createToken =
-	(verifyToken: VerifyTokenFn, { db, table }: DbContext, signingKey: string) =>
+	({ db, table }: DbContext, signingKey: string) =>
 	async ({
-		token,
+		authContext,
 	}: {
-		token: string
+		authContext: UserAuthContext
 	}): Promise<{ error: ProblemDetail } | { token: string }> => {
 		try {
-			const { email } = verifyToken(token)
+			const { email } = authContext
 
 			const { Items } = await db.send(
 				new QueryCommand({
