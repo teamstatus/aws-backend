@@ -46,7 +46,7 @@
     "cdk": "2.72.1",
     "chalk": "5.2.0",
     "check-node-version": "4.2.1",
-    "constructs": "10.2.28",
+    "constructs": "10.2.29",
     "eslint-plugin-unicorn": "47.0.0",
     "glob": "10.2.5",
     "husky": "8.0.3",
