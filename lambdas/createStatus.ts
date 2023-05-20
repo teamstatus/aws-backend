@@ -1,26 +1,22 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import { SSMClient } from '@aws-sdk/client-ssm'
 import { fromEnv } from '@nordicsemiconductor/from-env'
 import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
 import { BadRequestError, StatusCode } from '../core/ProblemDetail.js'
+import type { UserAuthContext } from '../core/auth.js'
 import { notifier } from '../core/notifier.js'
-import { emailPINLogin } from '../core/persistence/emailPINLogin.js'
-import { getPrivateKey } from './signingKeyPromise.js'
-import { tokenCookie } from './tokenCookie.js'
+import { createStatus } from '../core/persistence/createStatus.js'
 
-const { tableName, stackName } = fromEnv({
+const { tableName } = fromEnv({
 	tableName: 'TABLE_NAME',
-	stackName: 'STACK_NAME',
 })(process.env)
 
-const ssm = new SSMClient({})
 const db = new DynamoDBClient({})
 
 const { notify } = notifier()
-const login = emailPINLogin(
+const create = createStatus(
 	{
 		db,
 		table: tableName,
@@ -28,15 +24,24 @@ const login = emailPINLogin(
 	notify,
 )
 
-const privateKeyPromise = getPrivateKey({ ssm, stackName })
-
 export const handler = async (
-	event: APIGatewayProxyEventV2,
+	event: APIGatewayProxyEventV2 & {
+		requestContext: APIGatewayProxyEventV2['requestContext'] & {
+			authorizer: {
+				lambda: UserAuthContext
+			}
+		}
+	},
 ): Promise<APIGatewayProxyResultV2> => {
 	try {
-		const { email, pin } = JSON.parse(event.body ?? '')
+		const { id, message } = JSON.parse(event.body ?? '')
 
-		const r = await login({ email, pin })
+		const r = await create(
+			id,
+			event.pathParameters?.projectId as string,
+			message,
+			event.requestContext.authorizer.lambda,
+		)
 
 		if ('error' in r) {
 			console.error(JSON.stringify(r.error))
@@ -51,13 +56,11 @@ export const handler = async (
 		}
 
 		return {
-			statusCode: 200,
-			cookies: [
-				await tokenCookie({
-					signingKey: await privateKeyPromise,
-					authContext: r.authContext,
-				}),
-			],
+			statusCode: 201,
+			headers: {
+				'Content-type': 'application/json; charset=utf-8',
+			},
+			body: JSON.stringify(r.status),
 		}
 	} catch (error) {
 		console.error(error)

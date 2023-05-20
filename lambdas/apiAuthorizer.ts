@@ -1,7 +1,7 @@
 import { SSMClient } from '@aws-sdk/client-ssm'
 import { fromEnv } from '@nordicsemiconductor/from-env'
 import type { APIGatewayProxyEventV2 } from 'aws-lambda'
-import { verifyUserToken } from '../core/auth.js'
+import { verifyToken } from '../core/auth.js'
 import { getPublicKey } from './signingKeyPromise.js'
 
 const { stackName } = fromEnv({
@@ -12,6 +12,8 @@ const ssm = new SSMClient({})
 
 const publicKeyPromise = getPublicKey({ ssm, stackName })
 
+const requireSub = process.env.REQUIRE_SUB !== undefined
+
 export const handler = async (
 	event: APIGatewayProxyEventV2,
 ): Promise<{
@@ -20,11 +22,26 @@ export const handler = async (
 }> => {
 	console.log(JSON.stringify({ event }))
 
-	console.log(
-		verifyUserToken({
-			verificationKey: await publicKeyPromise,
-		})(event.requestContext.authentication as unknown as any),
-	)
+	const [, token] =
+		event.cookies
+			?.map((s) => s.split('='))
+			.find(([name]) => name === 'token') ?? []
 
-	return { isAuthorized: true, context: {} }
+	console.log(JSON.stringify({ token }))
+
+	if (token === undefined) {
+		console.log(`No token found.`)
+		return { isAuthorized: false, context: {} }
+	}
+
+	const verified = verifyToken({
+		verificationKey: await publicKeyPromise,
+	})(token)
+
+	if (requireSub && !('sub' in verified)) {
+		console.log(`Sub required.`)
+		return { isAuthorized: false, context: {} }
+	}
+
+	return { isAuthorized: true, context: verified }
 }

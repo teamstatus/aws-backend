@@ -4,6 +4,12 @@ export type BackendLambdas = {
 	loginRequest: PackedLambda
 	pinLogin: PackedLambda
 	apiAuthorizer: PackedLambda
+	me: PackedLambda
+	createUser: PackedLambda
+	listOrganizations: PackedLambda
+	createOrganization: PackedLambda
+	createProject: PackedLambda
+	createStatus: PackedLambda
 }
 
 export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
@@ -15,5 +21,23 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	apiAuthorizer: await packLambdaFromPath(
 		'apiAuthorizer',
 		'lambdas/apiAuthorizer.ts',
+	),
+	me: await packLambdaFromPath('me', 'lambdas/me.ts'),
+	createUser: await packLambdaFromPath('createUser', 'lambdas/createUser.ts'),
+	listOrganizations: await packLambdaFromPath(
+		'listOrganizations',
+		'lambdas/listOrganizations.ts',
+	),
+	createOrganization: await packLambdaFromPath(
+		'createOrganization',
+		'lambdas/createOrganization.ts',
+	),
+	createProject: await packLambdaFromPath(
+		'createProject',
+		'lambdas/createProject.ts',
+	),
+	createStatus: await packLambdaFromPath(
+		'createStatus',
+		'lambdas/createStatus.ts',
 	),
 })

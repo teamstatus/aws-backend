@@ -21,24 +21,13 @@ export const create =
 		)
 	}
 
-export const verifyUserToken =
-	({ verificationKey }: { verificationKey: string }): VerifyTokenUserFn =>
-	(token: string): UserAuthContext => {
-		const { sub } = jwt.verify(token, verificationKey) as JwtPayload
-		if (sub === undefined)
-			throw new Error(`Token not authorized (missing subject)!`)
-		const { email } = jwt.decode(token) as { email: string }
-		if (email === undefined) throw new Error(`Token is missing email payload!`)
-		return { sub, email }
-	}
-
 export const verifyToken =
 	({ verificationKey }: { verificationKey: string }): VerifyTokenFn =>
-	(token: string): EmailAuthContext => {
-		jwt.verify(token, verificationKey)
+	(token: string): EmailAuthContext | UserAuthContext => {
 		const { email } = jwt.decode(token) as { email: string }
 		if (email === undefined) throw new Error(`Token is missing email payload!`)
-		return { email }
+		const { sub } = jwt.verify(token, verificationKey) as JwtPayload
+		return { sub, email }
 	}
 
 export type UserAuthContext = {
@@ -49,5 +38,6 @@ export type EmailAuthContext = {
 	email: string
 }
 
-export type VerifyTokenUserFn = (token: string) => UserAuthContext
-export type VerifyTokenFn = (token: string) => EmailAuthContext
+export type VerifyTokenFn = (
+	token: string,
+) => EmailAuthContext | UserAuthContext

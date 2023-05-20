@@ -16,8 +16,17 @@ import {
 	packBackendLambdas,
 	type BackendLambdas,
 } from './lambdas/packBackendLambdas.js'
+import type { PackedLambda } from './lambdas/packLambdaFromPath.js'
 import type { PackedLayer } from './lambdas/packLayer.js'
 import { packLayer } from './lambdas/packLayer.js'
+
+const readKeyPolicy = (stack: Stack, type: 'privateKey' | 'publicKey') =>
+	new IAM.PolicyStatement({
+		actions: ['ssm:GetParameter'],
+		resources: [
+			`arn:aws:ssm:${stack.region}:${stack.account}:parameter/${stack.stackName}/${type}`,
+		],
+	})
 
 class API extends Construct {
 	public readonly api: HttpApi.CfnApi
@@ -68,14 +77,7 @@ class API extends Construct {
 			code: Lambda.Code.fromAsset(lambdaSources.pinLogin.zipFile),
 			layers: [layer],
 			logRetention: Logs.RetentionDays.ONE_WEEK,
-			initialPolicy: [
-				new IAM.PolicyStatement({
-					actions: ['ssm:GetParameter'],
-					resources: [
-						`arn:aws:ssm:${parent.region}:${parent.account}:parameter/${parent.stackName}/privateKey`,
-					],
-				}),
-			],
+			initialPolicy: [readKeyPolicy(parent, 'privateKey')],
 			environment: {
 				STACK_NAME: parent.stackName,
 				TABLE_NAME: persistence.table.tableName,
@@ -83,7 +85,79 @@ class API extends Construct {
 		})
 		persistence.table.grantFullAccess(pinLogin)
 
-		const apiAuthorizer = new Lambda.Function(this, 'authorizerFunction', {
+		// Authorized lambdas
+		const coreFunctions: Record<
+			string,
+			{
+				routeKey: string
+				description: string
+				source: PackedLambda
+				authContext: 'email' | 'user'
+			}
+		> = {
+			me: {
+				routeKey: 'GET /me',
+				source: lambdaSources.me,
+				description: 'Returns information about the authenticated user',
+				authContext: 'email',
+			},
+			createUser: {
+				routeKey: 'PUT /me/user',
+				source: lambdaSources.createUser,
+				description: 'Creates a user account for the authenticated identity',
+				authContext: 'email',
+			},
+			listOrganizations: {
+				routeKey: 'GET /organizations',
+				source: lambdaSources.listOrganizations,
+				description: 'Lists organizations accessible by the user',
+				authContext: 'user',
+			},
+			createOrganization: {
+				routeKey: 'POST /organizations',
+				source: lambdaSources.createOrganization,
+				description: 'Creates a new organization',
+				authContext: 'user',
+			},
+			createProject: {
+				routeKey: 'POST /projects',
+				source: lambdaSources.createProject,
+				description: 'Creates a new project',
+				authContext: 'user',
+			},
+			createStatus: {
+				routeKey: 'POST /project/{projectId}/status',
+				source: lambdaSources.createStatus,
+				description: 'Creates a new status',
+				authContext: 'user',
+			},
+		}
+
+		const coreLambdas: {
+			routeId: string
+			fn: Lambda.IFunction
+			routeKey: string
+			authContext: 'email' | 'user'
+		}[] = []
+		for (const [
+			id,
+			{ source, description, routeKey, authContext },
+		] of Object.entries(coreFunctions)) {
+			coreLambdas.push({
+				routeId: `${id}Route`,
+				fn: new CoreLambda(this, id, {
+					stack: parent,
+					description,
+					layer,
+					persistence,
+					source,
+				}).lambda,
+				routeKey,
+				authContext,
+			})
+		}
+
+		const apiAuthorizerProps: Lambda.FunctionProps = {
 			description: 'Authorize API requests',
 			handler: lambdaSources.apiAuthorizer.handler,
 			architecture: Lambda.Architecture.ARM_64,
@@ -93,18 +167,28 @@ class API extends Construct {
 			code: Lambda.Code.fromAsset(lambdaSources.apiAuthorizer.zipFile),
 			layers: [layer],
 			logRetention: Logs.RetentionDays.ONE_WEEK,
-			initialPolicy: [
-				new IAM.PolicyStatement({
-					actions: ['ssm:GetParameter'],
-					resources: [
-						`arn:aws:ssm:${parent.region}:${parent.account}:parameter/${parent.stackName}/privateKey`,
-					],
-				}),
-			],
+			initialPolicy: [readKeyPolicy(parent, 'publicKey')],
 			environment: {
 				STACK_NAME: parent.stackName,
 			},
-		})
+		}
+		const apiEmailAuthorizer = new Lambda.Function(
+			this,
+			'apiEmailAuthorizerFunction',
+			apiAuthorizerProps,
+		)
+		const apiUserAuthorizer = new Lambda.Function(
+			this,
+			'apiUserAuthorizerFunction',
+			{
+				...apiAuthorizerProps,
+				description: 'Authorize API requests for active users',
+				environment: {
+					...apiAuthorizerProps.environment,
+					REQUIRE_SUB: '1',
+				},
+			},
+		)
 
 		this.api = new HttpApi.CfnApi(this, 'api', {
 			name: 'Teamstatus.space API',
@@ -152,17 +236,39 @@ class API extends Construct {
 		}
 		this.stage.node.addDependency(httpApiLogGroup)
 
-		/*const authorizer = */ new HttpApi.CfnAuthorizer(this, 'apiAuthorizer', {
-			apiId: this.api.ref,
-			authorizerType: 'REQUEST',
-			name: 'JwtCookieAuthorizer',
-			authorizerPayloadFormatVersion: '2.0',
-			authorizerUri: integrationUri(parent, apiAuthorizer),
-			enableSimpleResponses: true,
-			// Cannot use `authorizerResultTtlInSeconds` with Cookies, because they are not available in `identitySource`
-			// authorizerResultTtlInSeconds: 300,
+		// Authorizer used for actions that only need a logged in user
+		const emailAuthorizer = new HttpApi.CfnAuthorizer(
+			this,
+			'apiEmailAuthorizer',
+			{
+				apiId: this.api.ref,
+				authorizerType: 'REQUEST',
+				name: 'JwtCookieEmailAuthorizer',
+				authorizerPayloadFormatVersion: '2.0',
+				authorizerUri: integrationUri(parent, apiEmailAuthorizer),
+				enableSimpleResponses: true,
+				// Cannot use `authorizerResultTtlInSeconds` with Cookies, because they are not available in `identitySource`
+				// authorizerResultTtlInSeconds: 300,
+			},
+		)
+		apiEmailAuthorizer.addPermission('invokeByHttpApi', {
+			principal: new IAM.ServicePrincipal('apigateway.amazonaws.com'),
 		})
-		apiAuthorizer.addPermission('invokeByHttpApi', {
+
+		// Authorizer used for actions that need a user account
+		const userAuthorizer = new HttpApi.CfnAuthorizer(
+			this,
+			'apiUserAuthorizer',
+			{
+				apiId: this.api.ref,
+				authorizerType: 'REQUEST',
+				name: 'JwtUserCookieAuthorizer',
+				authorizerPayloadFormatVersion: '2.0',
+				authorizerUri: integrationUri(parent, apiUserAuthorizer),
+				enableSimpleResponses: true,
+			},
+		)
+		apiUserAuthorizer.addPermission('invokeByHttpApi', {
 			principal: new IAM.ServicePrincipal('apigateway.amazonaws.com'),
 		})
 
@@ -173,11 +279,12 @@ class API extends Construct {
 		deployment.node.addDependency(this.stage)
 
 		const addRoute = (
+			id: string,
 			route: string,
 			fn: Lambda.IFunction,
 			authorizer?: HttpApi.CfnAuthorizer,
 		) =>
-			new ApiRoute(this, `${fn.node.id}Route`, {
+			new ApiRoute(this, id, {
 				api: this.api,
 				function: fn,
 				method: route.split(' ')[0] as Lambda.HttpMethod,
@@ -188,11 +295,64 @@ class API extends Construct {
 			})
 
 		const routes = [
-			addRoute('POST /login/email', loginRequest),
-			addRoute('POST /login/email/pin', pinLogin),
+			addRoute('loginRequestRoute', 'POST /login/email', loginRequest),
+			addRoute('pinLoginRoute', 'POST /login/email/pin', pinLogin),
+			...coreLambdas.map(({ routeId: id, fn, routeKey, authContext }) =>
+				addRoute(
+					id,
+					routeKey,
+					fn,
+					authContext === 'email' ? emailAuthorizer : userAuthorizer,
+				),
+			),
 		]
 
 		routes.map((r) => deployment.node.addDependency(r))
+	}
+}
+
+class CoreLambda extends Construct {
+	public readonly lambda: Lambda.Function
+	constructor(
+		parent: Construct,
+		id: string,
+		{
+			stack,
+			description,
+			source,
+			layer,
+			persistence,
+		}: {
+			stack: Stack
+			description: string
+			source: PackedLambda
+			layer: Lambda.ILayerVersion
+			persistence: Persistence
+			environment?: Record<string, string>
+		},
+	) {
+		super(parent, id)
+
+		this.lambda = new Lambda.Function(this, 'FN', {
+			description,
+			handler: source.handler,
+			architecture: Lambda.Architecture.ARM_64,
+			runtime: Lambda.Runtime.NODEJS_18_X,
+			timeout: Duration.seconds(1),
+			memorySize: 1792,
+			code: Lambda.Code.fromAsset(source.zipFile),
+			layers: [layer],
+			logRetention: Logs.RetentionDays.ONE_WEEK,
+			initialPolicy: [
+				readKeyPolicy(stack, 'privateKey'),
+				readKeyPolicy(stack, 'publicKey'),
+			],
+			environment: {
+				TABLE_NAME: persistence.table.tableName,
+				STACK_NAME: stack.stackName,
+			},
+		})
+		persistence.table.grantFullAccess(this.lambda)
 	}
 }
 
@@ -224,22 +384,18 @@ class ApiRoute extends Construct {
 	) {
 		super(parent, id)
 
-		const loginRequestIntegration = new HttpApi.CfnIntegration(
-			this,
-			'loginRequestIntegration',
-			{
-				apiId: api.ref,
-				integrationType: 'AWS_PROXY',
-				integrationUri: integrationUri(stack, fn),
-				integrationMethod: method,
-				payloadFormatVersion: '2.0',
-			},
-		)
+		const integration = new HttpApi.CfnIntegration(this, 'Integration', {
+			apiId: api.ref,
+			integrationType: 'AWS_PROXY',
+			integrationUri: integrationUri(stack, fn),
+			integrationMethod: 'POST',
+			payloadFormatVersion: '2.0',
+		})
 
-		this.route = new HttpApi.CfnRoute(this, 'loginRequestRoute', {
+		this.route = new HttpApi.CfnRoute(this, `Route`, {
 			apiId: api.ref,
 			routeKey: `${method} ${route}`,
-			target: `integrations/${loginRequestIntegration.ref}`,
+			target: `integrations/${integration.ref}`,
 			authorizationType: authorizer !== undefined ? 'CUSTOM' : 'NONE',
 			authorizerId: authorizer?.ref,
 		})
@@ -365,9 +521,6 @@ new TeamStatusBackendApp({
 	lambdaSources: await packBackendLambdas(),
 	layer: await packLayer({
 		id: 'backendLayer',
-		dependencies: [
-			'@nordicsemiconductor/from-env',
-			'jsonwebtoken',
-		],
+		dependencies: ['@nordicsemiconductor/from-env', 'jsonwebtoken', 'ulid'],
 	}),
 })
