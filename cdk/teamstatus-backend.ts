@@ -368,7 +368,6 @@ new TeamStatusBackendApp({
 		dependencies: [
 			'@nordicsemiconductor/from-env',
 			'jsonwebtoken',
-			'js-cookie',
 		],
 	}),
 })
