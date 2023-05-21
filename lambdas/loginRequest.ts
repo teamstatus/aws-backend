@@ -5,10 +5,12 @@ import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
-import { BadRequestError, StatusCode } from '../core/ProblemDetail.js'
+import { BadRequestError } from '../core/ProblemDetail.js'
+import { StatusCode } from '../core/StatusCode.js'
 import { notifier } from '../core/notifier.js'
 import { emailLoginRequest } from '../core/persistence/emailLoginRequest.js'
 import { checksum } from './checksum.js'
+import { problem, result } from './response.js'
 
 // These email addresses (lowercase) are allowed to request logins
 const allowedEmails = [
@@ -55,30 +57,16 @@ export const handler = async (
 			!allowedDomains.includes(domainChecksum) &&
 			!allowedEmails.includes(emailChecksum)
 		)
-			return {
-				statusCode: StatusCode.BAD_REQUEST,
-				headers: {
-					'Content-Type': 'application/problem+json',
-					'Content-Language': 'en',
-				},
-				body: JSON.stringify(
-					BadRequestError(
-						`Checksum for email ${email} (${emailChecksum}) or domain ${domain} (${domainChecksum}) not in allowed list.`,
-					),
+			return problem(
+				BadRequestError(
+					`Checksum for email ${email} (${emailChecksum}) or domain ${domain} (${domainChecksum}) not in allowed list.`,
 				),
-			}
+			)
 
 		const r = await loginRequest({ email })
 
 		if ('error' in r) {
-			console.error(JSON.stringify(r.error))
-			return {
-				statusCode: r.error.status,
-				headers: {
-					'Content-Type': 'application/problem+json',
-					'Content-Language': 'en',
-				},
-			}
+			return problem(r.error)
 		}
 
 		await ses.send(
@@ -98,18 +86,8 @@ export const handler = async (
 			}),
 		)
 
-		return {
-			statusCode: 202,
-		}
+		return result(StatusCode.ACCEPTED)
 	} catch (error) {
-		console.error(error)
-		return {
-			statusCode: StatusCode.BAD_REQUEST,
-			headers: {
-				'Content-Type': 'application/problem+json',
-				'Content-Language': 'en',
-			},
-			body: JSON.stringify(BadRequestError('Failed to parse JSON.')),
-		}
+		return problem(BadRequestError('Failed to parse JSON.'))
 	}
 }

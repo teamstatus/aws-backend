@@ -3,16 +3,14 @@ import { unmarshall } from '@aws-sdk/util-dynamodb'
 import type { ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
 import { type DbContext } from './DbContext.js'
-import type { PersistedOrganization } from './createOrganization'
+import type { Organization } from './createOrganization'
 import { l } from './l.js'
 
 export const listOrganizations =
 	(dbContext: DbContext) =>
 	async (
 		authContext: UserAuthContext,
-	): Promise<
-		{ error: ProblemDetail } | { organizations: PersistedOrganization[] }
-	> => {
+	): Promise<{ error: ProblemDetail } | { organizations: Organization[] }> => {
 		const { sub: userId } = authContext
 		const { db, table } = dbContext
 		const res = await db.send(
@@ -30,7 +28,7 @@ export const listOrganizations =
 				},
 			}),
 		)
-		const organizations: PersistedOrganization[] = []
+		const organizations: Organization[] = []
 
 		for (const item of res.Items ?? []) {
 			const d = unmarshall(item)
@@ -46,7 +44,7 @@ export const listOrganizations =
 
 const getOrganization =
 	({ db, table }: DbContext) =>
-	async (organizationId: string): Promise<PersistedOrganization | null> => {
+	async (organizationId: string): Promise<Organization | null> => {
 		const { Item } = await db.send(
 			new GetItemCommand({
 				TableName: table,

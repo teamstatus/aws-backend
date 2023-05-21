@@ -4,7 +4,7 @@ import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
 import { parseProjectId } from '../ids.js'
 import { type DbContext } from './DbContext.js'
-import type { PersistedStatus } from './createStatus.js'
+import type { Status } from './createStatus.js'
 import { isOrganizationMember } from './getOrganizationMember.js'
 import { getStatusReactions } from './getStatusReactions.js'
 import { l } from './l.js'
@@ -14,7 +14,7 @@ export const listStatus =
 	async (
 		projectId: string,
 		authContext: UserAuthContext,
-	): Promise<{ status: PersistedStatus[] } | { error: ProblemDetail }> => {
+	): Promise<{ status: Status[] } | { error: ProblemDetail }> => {
 		const { sub: userId } = authContext
 		const { organization } = parseProjectId(projectId)
 

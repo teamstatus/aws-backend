@@ -12,10 +12,9 @@ import { l } from './l.js'
 
 export type MemberInvitedEvent = CoreEvent & {
 	type: CoreEventType.PROJECT_MEMBER_INVITED
-} & PersistedInvitation
+} & Invitation
 
-export type PersistedInvitation = {
-	id: string
+export type Invitation = {
 	project: string
 	invitee: string
 	inviter: string
@@ -28,9 +27,7 @@ export const inviteToProject =
 		invitedUserId: string,
 		projectId: string,
 		authContext: UserAuthContext,
-	): Promise<
-		{ error: ProblemDetail } | { invitation: PersistedInvitation }
-	> => {
+	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { sub: userId } = authContext
 		const { organization: organizationId } = parseProjectId(projectId)
 
@@ -75,18 +72,15 @@ export const inviteToProject =
 				},
 			}),
 		)
-		const invitation: PersistedInvitation = {
-			id,
+		const event: MemberInvitedEvent = {
+			type: CoreEventType.PROJECT_MEMBER_INVITED,
 			project: projectId,
 			invitee: invitedUserId,
 			inviter: userId,
 			role: Role.MEMBER,
-		}
-		const event: MemberInvitedEvent = {
-			type: CoreEventType.PROJECT_MEMBER_INVITED,
-			...invitation,
 			timestamp: new Date(),
 		}
 		notify(event)
-		return { invitation }
+
+		return {}
 	}

@@ -16,12 +16,13 @@ import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
 import { l } from './l.js'
 
-export type PersistedOrganization = { id: string; name: string | null }
+export type Organization = { id: string; name?: string }
 
 export type OrganizationCreatedEvent = CoreEvent & {
 	type: CoreEventType.ORGANIZATION_CREATED
 	id: string
 	owner: string
+	name?: string
 }
 
 export const createOrganization =
@@ -29,9 +30,7 @@ export const createOrganization =
 	async (
 		{ id: organizationId, name }: { id: string; name?: string },
 		authContext: UserAuthContext,
-	): Promise<
-		{ error: ProblemDetail } | { organization: PersistedOrganization }
-	> => {
+	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { sub: userId } = authContext
 		if (!isOrganizationId(organizationId))
 			return {
@@ -81,18 +80,15 @@ export const createOrganization =
 					},
 				}),
 			)
-			const org: PersistedOrganization = {
-				id: organizationId,
-				name: name ?? null,
-			}
 			const event: OrganizationCreatedEvent = {
 				type: CoreEventType.ORGANIZATION_CREATED,
 				owner: userId,
-				...org,
+				id: organizationId,
+				name,
 				timestamp: new Date(),
 			}
 			notify(event)
-			return { organization: org }
+			return {}
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)
 				return {

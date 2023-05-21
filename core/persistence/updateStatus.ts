@@ -13,7 +13,7 @@ import {
 import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
-import type { PersistedStatus } from './createStatus.js'
+import type { Status } from './createStatus.js'
 import { l } from './l.js'
 
 type StatusUpdatedEvent = CoreEvent & {
@@ -30,7 +30,7 @@ export const updateStatus =
 		message: string,
 		version: number,
 		authContext: UserAuthContext,
-	): Promise<{ error: ProblemDetail } | { status: PersistedStatus }> => {
+	): Promise<{ error: ProblemDetail } | { status: Status }> => {
 		try {
 			const { sub: userId } = authContext
 			const { db, table } = dbContext
@@ -72,7 +72,7 @@ export const updateStatus =
 			if (Attributes === undefined)
 				return { error: ConflictError('Update failed.') }
 			const updated = unmarshall(Attributes)
-			const status: PersistedStatus = {
+			const status: Status = {
 				message,
 				author: userId,
 				id: statusId,

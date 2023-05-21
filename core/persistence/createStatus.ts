@@ -6,22 +6,22 @@ import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
 import { verifyULID } from '../verifyULID.js'
 import { type DbContext } from './DbContext.js'
-import type { PersistedReaction } from './createReaction.js'
+import type { Reaction } from './createReaction.js'
 import { isProjectMember } from './getProjectMember.js'
 import { l } from './l.js'
 
 type StatusCreatedEvent = CoreEvent & {
 	type: CoreEventType.STATUS_CREATED
-} & PersistedStatus
+} & Status
 
-export type PersistedStatus = {
+export type Status = {
 	project: string
 	author: string
 	message: string
 	id: string
 	version: number
 	updatedAt?: Date
-	reactions: PersistedReaction[]
+	reactions: Reaction[]
 }
 
 export const createStatus =
@@ -31,7 +31,7 @@ export const createStatus =
 		projectId: string,
 		message: string,
 		authContext: UserAuthContext,
-	): Promise<{ error: ProblemDetail } | { status: PersistedStatus }> => {
+	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { sub: userId } = authContext
 		if (!(await isProjectMember(dbContext)(projectId, userId))) {
 			return {
@@ -67,19 +67,16 @@ export const createStatus =
 				},
 			}),
 		)
-		const status: PersistedStatus = {
+		const event: StatusCreatedEvent = {
+			type: CoreEventType.STATUS_CREATED,
 			message,
 			author: userId,
 			id,
 			version: 1,
 			project: projectId,
 			reactions: [],
-		}
-		const event: StatusCreatedEvent = {
-			type: CoreEventType.STATUS_CREATED,
-			...status,
 			timestamp: new Date(),
 		}
 		notify(event)
-		return { status }
+		return {}
 	}

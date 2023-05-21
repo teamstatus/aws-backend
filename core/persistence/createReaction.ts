@@ -33,7 +33,7 @@ export type Reaction =
 			description?: string
 	  }
 
-export type PersistedReaction = {
+export type StatusReaction = {
 	id: string
 	author: string
 	status: string
@@ -68,7 +68,7 @@ export const thumbsUp = {
 
 export type ReactionCreatedEvent = CoreEvent & {
 	type: CoreEventType.REACTION_CREATED
-} & PersistedReaction
+} & StatusReaction
 
 export const createReaction =
 	(dbContext: DbContext, notify: Notify) =>
@@ -77,7 +77,7 @@ export const createReaction =
 		statusId: string,
 		reaction: Reaction,
 		authContext: UserAuthContext,
-	): Promise<{ error: ProblemDetail } | { reaction: PersistedReaction }> => {
+	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { sub: userId } = authContext
 		const { db, table } = dbContext
 		const { Item } = await db.send(
@@ -136,17 +136,14 @@ export const createReaction =
 				},
 			}),
 		)
-		const persistedReaction: PersistedReaction = {
+		const event: ReactionCreatedEvent = {
+			type: CoreEventType.REACTION_CREATED,
 			id,
 			...reaction,
 			author: userId,
 			status: statusId,
-		}
-		const event: ReactionCreatedEvent = {
-			type: CoreEventType.REACTION_CREATED,
-			...persistedReaction,
 			timestamp: new Date(),
 		}
 		notify(event)
-		return { reaction: persistedReaction }
+		return {}
 	}

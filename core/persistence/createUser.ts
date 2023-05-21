@@ -16,12 +16,13 @@ import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
 import { l } from './l.js'
 
-export type PersistedUser = { id: string; email: string; name: string | null }
+export type User = { id: string; email: string; name?: string }
 
 export type UserCreatedEvent = CoreEvent & {
 	type: CoreEventType.USER_CREATED
 	id: string
 	email: string
+	name?: string
 }
 
 export const createUser =
@@ -34,7 +35,7 @@ export const createUser =
 		id: string
 		name?: string
 		authContext: EmailAuthContext
-	}): Promise<{ error: ProblemDetail } | { user: PersistedUser }> => {
+	}): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { email } = authContext
 		if (!isUserId(userId))
 			return {
@@ -63,18 +64,15 @@ export const createUser =
 					ConditionExpression: 'attribute_not_exists(id)',
 				}),
 			)
-			const user: PersistedUser = {
-				id: userId,
-				email,
-				name: name ?? null,
-			}
 			const event: UserCreatedEvent = {
 				type: CoreEventType.USER_CREATED,
-				...user,
+				id: userId,
+				email,
+				name,
 				timestamp: new Date(),
 			}
 			notify(event)
-			return { user }
+			return {}
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)
 				return {

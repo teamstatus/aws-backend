@@ -1,10 +1,10 @@
 import { DynamoDBClient, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import type { PersistedReaction } from './createReaction'
+import type { Reaction } from './createReaction'
 
 export const getStatusReactions =
 	({ db, TableName }: { db: DynamoDBClient; TableName: string }) =>
-	async (statusId: string): Promise<PersistedReaction[]> =>
+	async (statusId: string): Promise<Reaction[]> =>
 		db
 			.send(
 				new QueryCommand({

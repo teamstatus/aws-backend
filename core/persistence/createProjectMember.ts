@@ -6,11 +6,12 @@ import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
 import { l } from './l.js'
 
-export type ProjectMemberCreatedEvent = CoreEvent & {
-	type: CoreEventType.PROJECT_MEMBER_CREATED
-} & PersistedProjectMember
+export type ProjectMemberCreatedEvent = CoreEvent &
+	ProjectMember & {
+		type: CoreEventType.PROJECT_MEMBER_CREATED
+	}
 
-export type PersistedProjectMember = {
+export type ProjectMember = {
 	id: string
 	project: string
 	user: string
@@ -19,11 +20,7 @@ export type PersistedProjectMember = {
 
 export const createProjectMember =
 	({ db, table }: DbContext, notify: Notify) =>
-	async (
-		projectId: string,
-		userId: string,
-		role: Role,
-	): Promise<PersistedProjectMember> => {
+	async (projectId: string, userId: string, role: Role): Promise<void> => {
 		const id = `${l(projectId)}:${l(userId)}`
 		await db.send(
 			new PutItemCommand({
@@ -47,16 +44,13 @@ export const createProjectMember =
 				},
 			}),
 		)
-		const member: PersistedProjectMember = {
+		const event: ProjectMemberCreatedEvent = {
+			type: CoreEventType.PROJECT_MEMBER_CREATED,
 			id,
 			project: projectId,
 			user: userId,
 			role,
-		}
-		notify({
-			type: CoreEventType.PROJECT_MEMBER_CREATED,
-			...member,
 			timestamp: new Date(),
-		})
-		return member
+		}
+		notify(event)
 	}

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { before, describe, test as it } from 'node:test'
 import {
 	aString,
+	arrayContaining,
 	check,
 	definedValue,
 	objectMatching,
@@ -20,34 +21,25 @@ import type { DbContext } from './persistence/DbContext.js'
 import { acceptProjectInvitation } from './persistence/acceptProjectInvitation.js'
 import {
 	createOrganization,
-	type PersistedOrganization,
+	type Organization,
 } from './persistence/createOrganization.js'
-import {
-	createProject,
-	type PersistedProject,
-} from './persistence/createProject.js'
+import { createProject, type Project } from './persistence/createProject.js'
 import {
 	createReaction,
 	newVersionRelease,
 	thumbsUp,
-	type PersistedReaction,
 } from './persistence/createReaction.js'
-import {
-	createStatus,
-	type PersistedStatus,
-} from './persistence/createStatus.js'
+import { createStatus, type Status } from './persistence/createStatus.js'
 import { createTable } from './persistence/createTable.js'
-import { createUser, type PersistedUser } from './persistence/createUser.js'
+import { createUser } from './persistence/createUser.js'
 import { deleteStatus } from './persistence/deleteStatus.js'
 import {
 	emailLoginRequest,
 	type EmailLoginRequest,
 } from './persistence/emailLoginRequest.js'
 import { emailPINLogin } from './persistence/emailPINLogin.js'
-import {
-	inviteToProject,
-	type PersistedInvitation,
-} from './persistence/inviteToProject.js'
+import type { MemberInvitedEvent } from './persistence/inviteToProject.js'
+import { inviteToProject } from './persistence/inviteToProject.js'
 import { listOrganizations } from './persistence/listOrganizations.js'
 import { listProjects } from './persistence/listProjects.js'
 import { listStatus } from './persistence/listStatus.js'
@@ -175,19 +167,17 @@ describe('core', async () => {
 			it('allows users to claim a user ID', async () => {
 				const events: CoreEvent[] = []
 				on(CoreEventType.USER_CREATED, (e) => events.push(e))
-				const { user } = (await createUser(
+				const res = await createUser(
 					dbContext,
 					notify,
 				)({
 					id: '@alex',
 					name: 'Alex Doe',
 					authContext: { email: 'alex@example.com' },
-				})) as { user: PersistedUser }
-				check(user).is(
+				})
+				check(res).is(
 					objectMatching({
-						id: '@alex',
-						name: 'Alex Doe',
-						email: 'alex@example.com',
+						error: undefinedValue,
 					}),
 				)
 				check(events[0]).is(
@@ -228,14 +218,13 @@ describe('core', async () => {
 		it('can create a new organization', async () => {
 			const events: CoreEvent[] = []
 			on(CoreEventType.ORGANIZATION_CREATED, (e) => events.push(e))
-			const { organization } = (await createOrganization(dbContext, notify)(
+			const res = await createOrganization(dbContext, notify)(
 				{ id: '$acme', name: 'ACME Inc.' },
 				{ email: 'alex@example.com', sub: '@alex' },
-			)) as { organization: PersistedOrganization }
-			check(organization).is(
+			)
+			check(res).is(
 				objectMatching({
-					id: '$acme',
-					name: 'ACME Inc.',
+					error: undefinedValue,
 				}),
 			)
 			check(events[0]).is(
@@ -262,7 +251,7 @@ describe('core', async () => {
 				email: 'alex@example.com',
 				sub: '@alex',
 			})) as {
-				organizations: PersistedOrganization[]
+				organizations: Organization[]
 			}
 			check(organizations?.[0]).is(
 				objectMatching({
@@ -277,17 +266,13 @@ describe('core', async () => {
 			const events: CoreEvent[] = []
 			on(CoreEventType.PROJECT_CREATED, (e) => events.push(e))
 			on(CoreEventType.PROJECT_MEMBER_CREATED, (e) => events.push(e))
-
-			const { project } = (await createProject(dbContext, notify)(
+			const res = await createProject(dbContext, notify)(
 				{ id: '$acme#teamstatus', name: 'Teamstatus', color: '#ff0000' },
 				{ email: 'alex@example.com', sub: '@alex' },
-			)) as { project: PersistedProject }
-
-			check(project).is(
+			)
+			check(res).is(
 				objectMatching({
-					id: '$acme#teamstatus',
-					name: 'Teamstatus',
-					color: '#ff0000',
+					error: undefinedValue,
 				}),
 			)
 			check(events[0]).is(
@@ -312,7 +297,6 @@ describe('core', async () => {
 				{ id: '$acme#teamstatus' },
 				{ email: 'alex@example.com', sub: '@alex' },
 			)) as { error: ProblemDetail }
-
 			assert.equal(
 				res.error?.title,
 				`Project '$acme#teamstatus' already exists.`,
@@ -323,7 +307,7 @@ describe('core', async () => {
 			const { projects } = (await listProjects(dbContext)('$acme', {
 				email: 'alex@example.com',
 				sub: '@alex',
-			})) as { projects: PersistedProject[] }
+			})) as { projects: Project[] }
 			check(projects?.[0]).is(
 				objectMatching({
 					id: '$acme#teamstatus',
@@ -334,24 +318,20 @@ describe('core', async () => {
 		})
 
 		describe('member', async () => {
-			let invitationId: string
 			it('allows project owners to invite other users to a project', async () => {
-				const events: CoreEvent[] = []
-				on(CoreEventType.PROJECT_MEMBER_INVITED, (e) => events.push(e))
+				const events: MemberInvitedEvent[] = []
+				on(CoreEventType.PROJECT_MEMBER_INVITED, (e) =>
+					events.push(e as MemberInvitedEvent),
+				)
 
-				const { invitation } = (await inviteToProject(dbContext, notify)(
+				const res = await inviteToProject(dbContext, notify)(
 					'@cameron',
 					'$acme#teamstatus',
 					{ email: 'alex@example.com', sub: '@alex' },
-				)) as { invitation: PersistedInvitation }
-
-				check(invitation).is(
+				)
+				check(res).is(
 					objectMatching({
-						project: '$acme#teamstatus',
-						invitee: '@cameron',
-						inviter: '@alex',
-						role: Role.MEMBER,
-						id: aString,
+						error: undefinedValue,
 					}),
 				)
 				check(events[0]).is(
@@ -361,11 +341,8 @@ describe('core', async () => {
 						invitee: '@cameron',
 						inviter: '@alex',
 						role: Role.MEMBER,
-						id: aString,
 					}),
 				)
-
-				invitationId = invitation?.id ?? ''
 			})
 
 			describe('invited member', async () => {
@@ -384,7 +361,7 @@ describe('core', async () => {
 
 				it('allows users to accept invitations', async () => {
 					const { error } = (await acceptProjectInvitation(dbContext, notify)(
-						invitationId,
+						'$acme#teamstatus',
 						{ email: 'cameron@example.com', sub: '@cameron' },
 					)) as { error: ProblemDetail }
 					assert.equal(error, undefined)
@@ -409,19 +386,15 @@ describe('core', async () => {
 					on(CoreEventType.STATUS_CREATED, (e) => events.push(e))
 
 					const id = ulid()
-					const { status } = (await createStatus(dbContext, notify)(
+					const res = await createStatus(dbContext, notify)(
 						id,
 						'$acme#teamstatus',
 						'Implemented ability to persist status updates for projects.',
 						{ email: 'alex@example.com', sub: '@alex' },
-					)) as { status: PersistedStatus }
-
-					check(status).is(
+					)
+					check(res).is(
 						objectMatching({
-							project: '$acme#teamstatus',
-							message:
-								'Implemented ability to persist status updates for projects.',
-							id,
+							error: undefinedValue,
 						}),
 					)
 					check(events[0]).is(
@@ -451,27 +424,31 @@ describe('core', async () => {
 			})
 
 			describe('edit', async () => {
-				let statusId: string
+				const statusId = ulid()
 				it('allows status to be edited by the author', async () => {
 					// Create the status
-					const { status } = (await createStatus(dbContext, notify)(
-						ulid(),
+					const res = await createStatus(dbContext, notify)(
+						statusId,
 						'$acme#teamstatus',
 						'Status with an typo',
 						{ email: 'alex@example.com', sub: '@alex' },
-					)) as { status: PersistedStatus }
-					statusId = status.id
+					)
+					check(res).is(
+						objectMatching({
+							error: undefinedValue,
+						}),
+					)
 
 					// Updated
-					const { status: updated } = (await updateStatus(dbContext, notify)(
+					const res2 = await updateStatus(dbContext, notify)(
 						statusId,
 						'Status with a typo',
 						1,
 						{ email: 'alex@example.com', sub: '@alex' },
-					)) as { status: PersistedStatus }
-					check(updated).is(
+					)
+					check(res2).is(
 						objectMatching({
-							version: 2,
+							error: undefinedValue,
 						}),
 					)
 
@@ -480,9 +457,16 @@ describe('core', async () => {
 						'$acme#teamstatus',
 						{ email: 'alex@example.com', sub: '@alex' },
 					)) as {
-						status: PersistedStatus[]
+						status: Status[]
 					}
-					assert.equal(statusList?.[0]?.message, 'Status with a typo')
+					check(statusList).is(
+						arrayContaining(
+							objectMatching({
+								message: 'Status with a typo',
+								version: 2,
+							}),
+						),
+					)
 				})
 
 				it('allows status to be deleted by the author', async () => {
@@ -500,7 +484,7 @@ describe('core', async () => {
 					const { status } = (await listStatus(dbContext)('$acme#teamstatus', {
 						email: 'alex@example.com',
 						sub: '@alex',
-					})) as { status: PersistedStatus[] }
+					})) as { status: Status[] }
 					check(status?.[0]).is(
 						objectMatching({
 							id: aString,
@@ -536,7 +520,7 @@ describe('core', async () => {
 						email: 'alex@example.com',
 						sub: '@alex',
 					})) as {
-						status: PersistedStatus[]
+						status: Status[]
 					}
 
 					assert.equal(status?.length, 5)
@@ -559,7 +543,7 @@ describe('core', async () => {
 
 			describe('reactions', async () => {
 				const projectId = `#test-${ulid()}`
-				let statusId: string
+				const statusId = ulid()
 				it('allows authors to attach a reaction', async () => {
 					const events: CoreEvent[] = []
 					on(CoreEventType.REACTION_CREATED, (e) => events.push(e))
@@ -569,31 +553,32 @@ describe('core', async () => {
 						{ email: 'alex@example.com', sub: '@alex' },
 					)
 
-					const { status } = (await createStatus(dbContext, notify)(
-						ulid(),
+					const res = await createStatus(dbContext, notify)(
+						statusId,
 						`$acme${projectId}`,
 						`I've released a new version!`,
 						{ email: 'alex@example.com', sub: '@alex' },
-					)) as { status: PersistedStatus }
-
-					statusId = status.id
+					)
+					check(res).is(
+						objectMatching({
+							error: undefinedValue,
+						}),
+					)
 
 					const id = ulid()
 
-					const { reaction } = (await createReaction(dbContext, notify)(
+					const res2 = await createReaction(dbContext, notify)(
 						id,
 						statusId,
 						newVersionRelease,
 						{ email: 'alex@example.com', sub: '@alex' },
-					)) as { reaction: PersistedReaction }
-
-					check(reaction).is(
+					)
+					check(res2).is(
 						objectMatching({
-							status: statusId,
-							id,
-							...newVersionRelease,
+							error: undefinedValue,
 						}),
 					)
+
 					check(events[0]).is(
 						objectMatching({
 							type: CoreEventType.REACTION_CREATED,
@@ -606,15 +591,24 @@ describe('core', async () => {
 				})
 
 				it('allows project members to attach a reaction', async () => {
-					const { invitation } = (await inviteToProject(dbContext, notify)(
+					const res = await inviteToProject(dbContext, notify)(
 						'@blake',
 						`$acme${projectId}`,
 						{ email: 'alex@example.com', sub: '@alex' },
-					)) as { invitation: PersistedInvitation }
-					await acceptProjectInvitation(dbContext, notify)(invitation.id, {
-						email: 'blake@example.com',
-						sub: '@blake',
-					})
+					)
+					check(res).is(
+						objectMatching({
+							error: undefinedValue,
+						}),
+					)
+
+					await acceptProjectInvitation(dbContext, notify)(
+						`$acme${projectId}`,
+						{
+							email: 'blake@example.com',
+							sub: '@blake',
+						},
+					)
 
 					const { error } = (await createReaction(dbContext, notify)(
 						ulid(),
@@ -630,7 +624,7 @@ describe('core', async () => {
 					const { status } = (await listStatus(dbContext)(`$acme${projectId}`, {
 						email: 'alex@example.com',
 						sub: '@alex',
-					})) as { status: PersistedStatus[] }
+					})) as { status: Status[] }
 
 					console.log(status[0]?.reactions[0])
 

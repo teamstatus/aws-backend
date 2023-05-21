@@ -3,7 +3,7 @@ import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
 import { type DbContext } from './DbContext.js'
-import type { PersistedProject } from './createProject.js'
+import type { Project } from './createProject.js'
 import { isOrganizationMember } from './getOrganizationMember.js'
 import { l } from './l.js'
 
@@ -12,7 +12,7 @@ export const listProjects =
 	async (
 		organizationId: string,
 		authContext: UserAuthContext,
-	): Promise<{ error: ProblemDetail } | { projects: PersistedProject[] }> => {
+	): Promise<{ error: ProblemDetail } | { projects: Project[] }> => {
 		const { sub: userId } = authContext
 		if (!(await isOrganizationMember(dbContext)(organizationId, userId))) {
 			return {
@@ -39,7 +39,7 @@ export const listProjects =
 			}),
 		)
 
-		const projects: PersistedProject[] = []
+		const projects: Project[] = []
 
 		for (const membership of res.Items ?? []) {
 			const d: {
@@ -56,7 +56,7 @@ export const listProjects =
 
 const getProject =
 	({ db, table }: DbContext) =>
-	async (projectId: string): Promise<PersistedProject | null> => {
+	async (projectId: string): Promise<Project | null> => {
 		const { Item } = await db.send(
 			new GetItemCommand({
 				TableName: table,

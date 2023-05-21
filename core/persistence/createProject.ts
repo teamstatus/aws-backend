@@ -20,11 +20,12 @@ import { isOrganizationMember } from './getOrganizationMember.js'
 import { l } from './l.js'
 export type ProjectCreatedEvent = CoreEvent & {
 	type: CoreEventType.PROJECT_CREATED
-} & PersistedProject
-export type PersistedProject = {
+} & Project
+
+export type Project = {
 	id: string
-	name: string | null
-	color: string | null
+	name?: string
+	color?: string
 }
 export const createProject =
 	(dbContext: DbContext, notify: Notify) =>
@@ -35,7 +36,7 @@ export const createProject =
 			color,
 		}: { id: string; name?: string; color?: string },
 		authContext: UserAuthContext,
-	): Promise<{ error: ProblemDetail } | { project: PersistedProject }> => {
+	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { sub: userId } = authContext
 		const { organization: organizationId } = parseProjectId(projectId)
 
@@ -83,8 +84,8 @@ export const createProject =
 			const event: ProjectCreatedEvent = {
 				type: CoreEventType.PROJECT_CREATED,
 				id: projectId,
-				name: name ?? null,
-				color: color ?? null,
+				name,
+				color,
 				timestamp: new Date(),
 			}
 			notify(event)
@@ -95,13 +96,7 @@ export const createProject =
 				Role.OWNER,
 			)
 
-			return {
-				project: {
-					id: projectId,
-					name: name ?? null,
-					color: color ?? null,
-				},
-			}
+			return {}
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)
 				return {

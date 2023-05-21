@@ -5,9 +5,11 @@ import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
-import { BadRequestError, StatusCode } from '../core/ProblemDetail.js'
+import { BadRequestError } from '../core/ProblemDetail.js'
+import { StatusCode } from '../core/StatusCode.js'
 import { notifier } from '../core/notifier.js'
 import { emailPINLogin } from '../core/persistence/emailPINLogin.js'
+import { problem, result } from './response.js'
 import { getPrivateKey } from './signingKeyPromise.js'
 import { tokenCookie } from './tokenCookie.js'
 
@@ -39,35 +41,18 @@ export const handler = async (
 		const r = await login({ email, pin })
 
 		if ('error' in r) {
-			console.error(JSON.stringify(r.error))
-			return {
-				statusCode: r.error.status,
-				headers: {
-					'Content-Type': 'application/problem+json',
-					'Content-Language': 'en',
-				},
-				body: JSON.stringify(r.error),
-			}
+			return problem(r.error)
 		}
 
-		return {
-			statusCode: 200,
-			cookies: [
-				await tokenCookie({
-					signingKey: await privateKeyPromise,
-					authContext: r.authContext,
-				}),
-			],
-		}
+		return result(
+			StatusCode.OK,
+			undefined,
+			await tokenCookie({
+				signingKey: await privateKeyPromise,
+				authContext: r.authContext,
+			}),
+		)
 	} catch (error) {
-		console.error(error)
-		return {
-			statusCode: StatusCode.BAD_REQUEST,
-			headers: {
-				'Content-Type': 'application/problem+json',
-				'Content-Language': 'en',
-			},
-			body: JSON.stringify(BadRequestError('Failed to parse JSON.')),
-		}
+		return problem(BadRequestError('Failed to parse JSON.'))
 	}
 }

@@ -30,8 +30,7 @@ export const verifyToken =
 		return { sub, email }
 	}
 
-export type UserAuthContext = {
-	email: string
+export type UserAuthContext = EmailAuthContext & {
 	sub: string
 }
 export type EmailAuthContext = {
