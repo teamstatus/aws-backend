@@ -113,6 +113,12 @@ class API extends Construct {
 				description: 'Lists organizations accessible by the user',
 				authContext: 'user',
 			},
+			listProjects: {
+				routeKey: 'GET /organization/{organizationId}/projects',
+				source: lambdaSources.listProjects,
+				description: 'Lists projects accessible by the user',
+				authContext: 'user',
+			},
 			createOrganization: {
 				routeKey: 'POST /organizations',
 				source: lambdaSources.createOrganization,
@@ -129,6 +135,12 @@ class API extends Construct {
 				routeKey: 'POST /project/{projectId}/status',
 				source: lambdaSources.createStatus,
 				description: 'Creates a new status',
+				authContext: 'user',
+			},
+			listStatus: {
+				routeKey: 'GET /project/{projectId}/status',
+				source: lambdaSources.listStatus,
+				description: 'Lists status accessible by the user',
 				authContext: 'user',
 			},
 		}

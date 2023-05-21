@@ -17,7 +17,10 @@ export const result = (
 						'Content-Language': 'en',
 				  }
 				: {},
-		body: result !== undefined ? JSON.stringify(result) : undefined,
+		body:
+			result !== undefined && !emptyObject(result)
+				? JSON.stringify(result)
+				: undefined,
 		cookies: cookie !== undefined ? [cookie] : undefined,
 	}
 }
@@ -33,3 +36,6 @@ export const problem = (problem: ProblemDetail): APIGatewayProxyResultV2 => {
 		body: JSON.stringify(problem),
 	}
 }
+
+const emptyObject = (v: unknown): boolean =>
+	v !== null && typeof v === 'object' && Object.keys(v).length === 0
