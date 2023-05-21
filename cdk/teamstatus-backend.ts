@@ -143,6 +143,12 @@ class API extends Construct {
 				description: 'Lists status accessible by the user',
 				authContext: 'user',
 			},
+			createReaction: {
+				routeKey: 'POST /status/{statusId}/reaction',
+				source: lambdaSources.createReaction,
+				description: 'Creates a new reaction',
+				authContext: 'user',
+			},
 		}
 
 		const coreLambdas: {
