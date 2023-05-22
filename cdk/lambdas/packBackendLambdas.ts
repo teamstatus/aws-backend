@@ -13,6 +13,7 @@ export type BackendLambdas = {
 	createProject: PackedLambda
 	createStatus: PackedLambda
 	createReaction: PackedLambda
+	cors: PackedLambda
 }
 
 export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
@@ -52,4 +53,5 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 		'lambdas/createReaction.ts',
 	),
 	listStatus: await packLambdaFromPath('listStatus', 'lambdas/listStatus.ts'),
+	cors: await packLambdaFromPath('cors', 'lambdas/cors.ts'),
 })

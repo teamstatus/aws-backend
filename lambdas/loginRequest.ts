@@ -57,7 +57,7 @@ export const handler = async (
 			!allowedDomains.includes(domainChecksum) &&
 			!allowedEmails.includes(emailChecksum)
 		)
-			return problem(
+			return problem(event)(
 				BadRequestError(
 					`Checksum for email ${email} (${emailChecksum}) or domain ${domain} (${domainChecksum}) not in allowed list.`,
 				),
@@ -66,7 +66,7 @@ export const handler = async (
 		const r = await loginRequest({ email })
 
 		if ('error' in r) {
-			return problem(r.error)
+			return problem(event)(r.error)
 		}
 
 		await ses.send(
@@ -86,8 +86,8 @@ export const handler = async (
 			}),
 		)
 
-		return result(StatusCode.ACCEPTED)
+		return result(event)(StatusCode.ACCEPTED)
 	} catch (error) {
-		return problem(BadRequestError('Failed to parse JSON.'))
+		return problem(event)(BadRequestError('Failed to parse JSON.'))
 	}
 }

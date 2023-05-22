@@ -211,13 +211,27 @@ class API extends Construct {
 		this.api = new HttpApi.CfnApi(this, 'api', {
 			name: 'Teamstatus.space API',
 			protocolType: 'HTTP',
+			// This has no effect, maybe a bug?
+			/*
 			corsConfiguration: {
-				allowCredentials: false,
+				allowCredentials: true,
 				allowMethods: [Lambda.HttpMethod.ALL],
 				maxAge: 60,
-				exposeHeaders: ['Content-Type', 'Content-Length'],
+				exposeHeaders: ['Content-Type', 'Content-Length', 'Content-Language'],
 				allowOrigins: ['http://localhost:8080', 'http://teamstatus.space'],
 			},
+			*/
+		})
+		// Use a lambda to send CORS headers
+		const cors = new Lambda.Function(this, 'cors', {
+			description: 'Send CORS headers',
+			handler: lambdaSources.cors.handler,
+			architecture: Lambda.Architecture.ARM_64,
+			runtime: Lambda.Runtime.NODEJS_18_X,
+			timeout: Duration.seconds(1),
+			memorySize: 256,
+			code: Lambda.Code.fromAsset(lambdaSources.cors.zipFile),
+			logRetention: Logs.RetentionDays.ONE_DAY,
 		})
 		this.stage = new HttpApi.CfnStage(this, 'stage', {
 			apiId: this.api.ref,
@@ -311,7 +325,15 @@ class API extends Construct {
 				stage: this.stage,
 				authorizer,
 			})
-
+		const addCors = (path: string) =>
+			new ApiRoute(this, `${path.slice(1).replaceAll('/', '_')}CORS`, {
+				api: this.api,
+				function: cors,
+				method: Lambda.HttpMethod.OPTIONS,
+				route: path,
+				stack: parent,
+				stage: this.stage,
+			})
 		const routes = [
 			addRoute('loginRequestRoute', 'POST /login/email', loginRequest),
 			addRoute('pinLoginRoute', 'POST /login/email/pin', pinLogin),
@@ -323,6 +345,14 @@ class API extends Construct {
 					authContext === 'email' ? emailAuthorizer : userAuthorizer,
 				),
 			),
+			// CORS
+			addCors('/login/email'),
+			addCors('/login/email/pin'),
+			...[
+				...new Set(
+					coreLambdas.map(({ routeKey }) => routeKey.split(' ')[1] as string),
+				),
+			].map((path) => addCors(path)),
 		]
 
 		routes.map((r) => deployment.node.addDependency(r))
@@ -418,10 +448,13 @@ class ApiRoute extends Construct {
 			authorizerId: authorizer?.ref,
 		})
 
-		fn.addPermission('invokeByHttpApi', {
-			principal: new IAM.ServicePrincipal('apigateway.amazonaws.com'),
-			sourceArn: `arn:aws:execute-api:${stack.region}:${stack.account}:${api.ref}/${stage.stageName}/${method}${route}`,
-		})
+		fn.addPermission(
+			`invokeByHttpApi-${method}-${route.slice(1).replaceAll('/', '_')}`,
+			{
+				principal: new IAM.ServicePrincipal('apigateway.amazonaws.com'),
+				sourceArn: `arn:aws:execute-api:${stack.region}:${stack.account}:${api.ref}/${stage.stageName}/${method}${route}`,
+			},
+		)
 	}
 }
 

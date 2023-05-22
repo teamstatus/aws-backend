@@ -41,10 +41,10 @@ export const handler = async (
 		const r = await login({ email, pin })
 
 		if ('error' in r) {
-			return problem(r.error)
+			return problem(event)(r.error)
 		}
 
-		return result(
+		return result(event)(
 			StatusCode.OK,
 			undefined,
 			await tokenCookie({
@@ -53,6 +53,6 @@ export const handler = async (
 			}),
 		)
 	} catch (error) {
-		return problem(BadRequestError('Failed to parse JSON.'))
+		return problem(event)(BadRequestError('Failed to parse JSON.'))
 	}
 }

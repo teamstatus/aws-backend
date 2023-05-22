@@ -16,4 +16,6 @@ export const tokenCookie = async ({
 		`Expires=${new Date(Date.now() + 24 * 60 * 60 * 1000).toString()}`,
 		`Path=/`,
 		`HttpOnly`,
+		`SameSite=None`,
+		`Secure`,
 	].join('; ')

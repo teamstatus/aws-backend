@@ -23,19 +23,20 @@ export const userAuthRequestPipe =
 		event: AuthorizedEvent<UserAuthContext>,
 	): Promise<APIGatewayProxyResultV2> => {
 		{
+			console.log(JSON.stringify({ event }))
 			let input: ValidInput
 			try {
 				input = validateInput(event)
 			} catch (error) {
 				console.error(error)
-				return problem(BadRequestError('Input validation failed.'))
+				return problem(event)(BadRequestError('Input validation failed.'))
 			}
 			const maybeResult = await handle(
 				input,
 				event.requestContext.authorizer.lambda,
 			)
-			if ('error' in maybeResult) return problem(maybeResult.error)
-			return result(
+			if ('error' in maybeResult) return problem(event)(maybeResult.error)
+			return result(event)(
 				toStatusCode?.(maybeResult) ?? StatusCode.OK,
 				maybeResult,
 				await cookie?.(
@@ -65,19 +66,20 @@ export const emailAuthRequestPipe =
 		event: AuthorizedEvent<EmailAuthContext>,
 	): Promise<APIGatewayProxyResultV2> => {
 		{
+			console.log(JSON.stringify({ event }))
 			let input: ValidInput
 			try {
 				input = validateInput(event)
 			} catch (error) {
 				console.error(error)
-				return problem(BadRequestError('Input validation failed.'))
+				return problem(event)(BadRequestError('Input validation failed.'))
 			}
 			const maybeResult = await handle(
 				input,
 				event.requestContext.authorizer.lambda,
 			)
-			if ('error' in maybeResult) return problem(maybeResult.error)
-			return result(
+			if ('error' in maybeResult) return problem(event)(maybeResult.error)
+			return result(event)(
 				toStatusCode?.(maybeResult) ?? StatusCode.OK,
 				maybeResult,
 				await cookie?.(
