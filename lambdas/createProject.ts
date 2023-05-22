@@ -22,12 +22,11 @@ const create = createProject(
 
 export const handler = userAuthRequestPipe(
 	(event) => JSON.parse(event.body ?? ''),
-	async ({ id, name, color }, authContext) =>
+	async ({ id, name }, authContext) =>
 		create(
 			{
 				id,
 				name,
-				color,
 			},
 			authContext,
 		),

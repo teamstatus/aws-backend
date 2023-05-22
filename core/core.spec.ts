@@ -239,7 +239,7 @@ describe('core', async () => {
 
 		it('ensures that organizations are unique', async () => {
 			const { error } = (await createOrganization(dbContext, notify)(
-				{ id: '$acme' },
+				{ id: '$acme', name: 'ACME Inc.' },
 				{ email: 'alex@example.com', sub: '@alex' },
 			)) as { error: ProblemDetail }
 
@@ -267,7 +267,7 @@ describe('core', async () => {
 			on(CoreEventType.PROJECT_CREATED, (e) => events.push(e))
 			on(CoreEventType.PROJECT_MEMBER_CREATED, (e) => events.push(e))
 			const res = await createProject(dbContext, notify)(
-				{ id: '$acme#teamstatus', name: 'Teamstatus', color: '#ff0000' },
+				{ id: '$acme#teamstatus', name: 'Teamstatus' },
 				{ email: 'alex@example.com', sub: '@alex' },
 			)
 			check(res).is(
@@ -280,7 +280,6 @@ describe('core', async () => {
 					type: CoreEventType.PROJECT_CREATED,
 					id: '$acme#teamstatus',
 					name: 'Teamstatus',
-					color: '#ff0000',
 				}),
 			)
 			check(events[1]).is(
@@ -294,7 +293,7 @@ describe('core', async () => {
 
 		it('ensures that projects are unique', async () => {
 			const res = (await createProject(dbContext, notify)(
-				{ id: '$acme#teamstatus' },
+				{ id: '$acme#teamstatus', name: 'Teamstatus' },
 				{ email: 'alex@example.com', sub: '@alex' },
 			)) as { error: ProblemDetail }
 			assert.equal(
@@ -312,7 +311,6 @@ describe('core', async () => {
 				objectMatching({
 					id: '$acme#teamstatus',
 					name: 'Teamstatus',
-					color: '#ff0000',
 				}),
 			)
 		})
@@ -549,7 +547,7 @@ describe('core', async () => {
 					on(CoreEventType.REACTION_CREATED, (e) => events.push(e))
 
 					await createProject(dbContext, notify)(
-						{ id: `$acme${projectId}` },
+						{ id: `$acme${projectId}`, name: `Project ${projectId}` },
 						{ email: 'alex@example.com', sub: '@alex' },
 					)
 

@@ -16,19 +16,19 @@ import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
 import { l } from './l.js'
 
-export type Organization = { id: string; name?: string }
+export type Organization = { id: string; name: string }
 
 export type OrganizationCreatedEvent = CoreEvent & {
 	type: CoreEventType.ORGANIZATION_CREATED
 	id: string
 	owner: string
-	name?: string
+	name: string
 }
 
 export const createOrganization =
 	(dbContext: DbContext, notify: Notify) =>
 	async (
-		{ id: organizationId, name }: { id: string; name?: string },
+		{ id: organizationId, name }: { id: string; name: string },
 		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { sub: userId } = authContext
@@ -48,12 +48,9 @@ export const createOrganization =
 						type: {
 							S: 'organization',
 						},
-						name:
-							name !== undefined
-								? {
-										S: name,
-								  }
-								: { NULL: true },
+						name: {
+							S: name,
+						},
 					},
 					ConditionExpression: 'attribute_not_exists(id)',
 				}),

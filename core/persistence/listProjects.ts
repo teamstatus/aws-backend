@@ -77,6 +77,5 @@ const getProject =
 		return {
 			id: projectId,
 			name: project.name,
-			color: project.color,
 		}
 	}

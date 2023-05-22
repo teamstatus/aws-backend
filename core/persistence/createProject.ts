@@ -24,17 +24,12 @@ export type ProjectCreatedEvent = CoreEvent & {
 
 export type Project = {
 	id: string
-	name?: string
-	color?: string
+	name: string
 }
 export const createProject =
 	(dbContext: DbContext, notify: Notify) =>
 	async (
-		{
-			id: projectId,
-			name,
-			color,
-		}: { id: string; name?: string; color?: string },
+		{ id: projectId, name }: { id: string; name: string },
 		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { sub: userId } = authContext
@@ -65,18 +60,9 @@ export const createProject =
 						type: {
 							S: 'project',
 						},
-						name:
-							name !== undefined
-								? {
-										S: name,
-								  }
-								: { NULL: true },
-						color:
-							color !== undefined
-								? {
-										S: color,
-								  }
-								: { NULL: true },
+						name: {
+							S: name,
+						},
 					},
 					ConditionExpression: 'attribute_not_exists(id)',
 				}),
@@ -85,7 +71,6 @@ export const createProject =
 				type: CoreEventType.PROJECT_CREATED,
 				id: projectId,
 				name,
-				color,
 				timestamp: new Date(),
 			}
 			notify(event)

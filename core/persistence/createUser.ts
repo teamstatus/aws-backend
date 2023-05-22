@@ -16,13 +16,13 @@ import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
 import { l } from './l.js'
 
-export type User = { id: string; email: string; name?: string }
+export type User = { id: string; email: string; name: string }
 
 export type UserCreatedEvent = CoreEvent & {
 	type: CoreEventType.USER_CREATED
 	id: string
 	email: string
-	name?: string
+	name: string
 }
 
 export const createUser =
@@ -33,7 +33,7 @@ export const createUser =
 		authContext,
 	}: {
 		id: string
-		name?: string
+		name: string
 		authContext: EmailAuthContext
 	}): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { email } = authContext
@@ -54,12 +54,9 @@ export const createUser =
 							S: 'user',
 						},
 						user__email: { S: email },
-						name:
-							name !== undefined
-								? {
-										S: name,
-								  }
-								: { NULL: true },
+						name: {
+							S: name,
+						},
 					},
 					ConditionExpression: 'attribute_not_exists(id)',
 				}),
