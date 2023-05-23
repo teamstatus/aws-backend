@@ -179,6 +179,12 @@ class API extends Construct {
 				description: 'Updates a status',
 				authContext: 'user',
 			},
+			deleteReaction: {
+				routeKey: 'DELETE /reaction/{reactionId}',
+				source: lambdaSources.deleteReaction,
+				description: 'Deletes a reaction',
+				authContext: 'user',
+			},
 		}
 
 		const coreLambdas: {

@@ -31,6 +31,7 @@ import {
 } from './persistence/createReaction.js'
 import { createStatus, type Status } from './persistence/createStatus.js'
 import { createUser } from './persistence/createUser.js'
+import { deleteReaction } from './persistence/deleteReaction.js'
 import { deleteStatus } from './persistence/deleteStatus.js'
 import {
 	emailLoginRequest,
@@ -542,6 +543,8 @@ describe('core', async () => {
 			describe('reactions', async () => {
 				const projectId = `#test-${ulid()}`
 				const statusId = ulid()
+				const reactionId = ulid()
+
 				it('allows authors to attach a reaction', async () => {
 					const events: CoreEvent[] = []
 					on(CoreEventType.REACTION_CREATED, (e) => events.push(e))
@@ -563,10 +566,8 @@ describe('core', async () => {
 						}),
 					)
 
-					const id = ulid()
-
 					const res2 = await createReaction(dbContext, notify)(
-						id,
+						reactionId,
 						statusId,
 						newVersionRelease,
 						{ email: 'alex@example.com', sub: '@alex' },
@@ -582,7 +583,7 @@ describe('core', async () => {
 							type: CoreEventType.REACTION_CREATED,
 							status: statusId,
 							author: '@alex',
-							id,
+							id: reactionId,
 							...newVersionRelease,
 						}),
 					)
@@ -640,6 +641,28 @@ describe('core', async () => {
 							id: aUlid(),
 							...thumbsUp,
 						}),
+					)
+				})
+
+				it('allows reactions to be deleted by the author', async () => {
+					const { error } = (await deleteReaction(dbContext, notify)(
+						reactionId,
+						{
+							email: 'alex@example.com',
+							sub: '@alex',
+						},
+					)) as { error: ProblemDetail }
+
+					assert.equal(error, undefined)
+
+					const { status } = (await listStatus(dbContext)(`$acme${projectId}`, {
+						email: 'alex@example.com',
+						sub: '@alex',
+					})) as { status: Status[] }
+
+					assert.equal(
+						status.find(({ id }) => id === statusId)?.reactions.length,
+						1,
 					)
 				})
 			})

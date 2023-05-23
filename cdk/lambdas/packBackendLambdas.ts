@@ -15,6 +15,7 @@ export type BackendLambdas = {
 	createReaction: PackedLambda
 	cors: PackedLambda
 	deleteStatus: PackedLambda
+	deleteReaction: PackedLambda
 	updateStatus: PackedLambda
 	createToken: PackedLambda
 	acceptProjectInvitation: PackedLambda
@@ -78,5 +79,9 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	inviteToProject: await packLambdaFromPath(
 		'inviteToProject',
 		'lambdas/inviteToProject.ts',
+	),
+	deleteReaction: await packLambdaFromPath(
+		'deleteReaction',
+		'lambdas/deleteReaction.ts',
 	),
 })
