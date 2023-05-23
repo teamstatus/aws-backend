@@ -162,7 +162,7 @@ class API extends Construct {
 				authContext: 'user',
 			},
 			acceptProjectInvitation: {
-				routeKey: 'POST /project/{{projectId}}/invitation',
+				routeKey: 'POST /project/{projectId}/invitation',
 				source: lambdaSources.acceptProjectInvitation,
 				description: 'Accepts a project invitation',
 				authContext: 'user',

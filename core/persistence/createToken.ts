@@ -5,12 +5,11 @@ import { create, type UserAuthContext } from '../auth.js'
 import type { DbContext } from './DbContext.js'
 
 export const createToken =
-	({ db, table }: DbContext, signingKey: string) =>
-	async ({
-		authContext,
-	}: {
-		authContext: UserAuthContext
-	}): Promise<{ error: ProblemDetail } | { token: string }> => {
+	({ db, table }: DbContext) =>
+	async (
+		signingKey: string,
+		authContext: UserAuthContext,
+	): Promise<{ error: ProblemDetail } | { token: string }> => {
 		try {
 			const { email } = authContext
 
