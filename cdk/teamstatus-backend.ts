@@ -11,7 +11,7 @@ import {
 	Stack,
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import { indexes } from '../core/persistence/createTable.js'
+import { indexes } from '../core/persistence/db.js'
 import {
 	packBackendLambdas,
 	type BackendLambdas,
@@ -153,6 +153,30 @@ class API extends Construct {
 				routeKey: 'DELETE /status/{statusId}',
 				source: lambdaSources.deleteStatus,
 				description: 'Deletes a status',
+				authContext: 'user',
+			},
+			inviteToProject: {
+				routeKey: 'POST /project/{projectId}/member',
+				source: lambdaSources.inviteToProject,
+				description: 'Invites a user to a project',
+				authContext: 'user',
+			},
+			acceptProjectInvitation: {
+				routeKey: 'POST /project/{{projectId}}/invitation',
+				source: lambdaSources.acceptProjectInvitation,
+				description: 'Accepts a project invitation',
+				authContext: 'user',
+			},
+			createToken: {
+				routeKey: 'POST /me/token',
+				source: lambdaSources.createToken,
+				description: 'Generates a new token',
+				authContext: 'user',
+			},
+			updateStatus: {
+				routeKey: 'PATCH /status/{statusId}',
+				source: lambdaSources.updateStatus,
+				description: 'Updates a status',
 				authContext: 'user',
 			},
 		}

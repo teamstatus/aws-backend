@@ -30,7 +30,6 @@ import {
 	thumbsUp,
 } from './persistence/createReaction.js'
 import { createStatus, type Status } from './persistence/createStatus.js'
-import { createTable } from './persistence/createTable.js'
 import { createUser } from './persistence/createUser.js'
 import { deleteStatus } from './persistence/deleteStatus.js'
 import {
@@ -43,6 +42,7 @@ import { inviteToProject } from './persistence/inviteToProject.js'
 import { listOrganizations } from './persistence/listOrganizations.js'
 import { listProjects } from './persistence/listProjects.js'
 import { listStatus } from './persistence/listStatus.js'
+import { createTable } from './persistence/test/createTable.js'
 import { updateStatus } from './persistence/updateStatus.js'
 
 const aUlid = () => stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any
