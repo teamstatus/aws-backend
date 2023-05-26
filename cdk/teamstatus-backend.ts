@@ -277,7 +277,8 @@ class API extends Construct {
 
 		const httpApiLogGroup = new Logs.LogGroup(this, `HttpApiLogGroup`, {
 			removalPolicy: RemovalPolicy.DESTROY,
-			logGroupName: `/${parent.stackName}/apiAccessLogs`,
+			// See https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AWS-logs-and-resource-policy.html#AWS-logs-infrastructure-CWL
+			logGroupName: `/aws/vendedlogs/${parent.stackName}/apiAccessLogs`,
 			retention:
 				this.node.tryGetContext('isTest') === '1'
 					? Logs.RetentionDays.ONE_DAY
