@@ -39,33 +39,6 @@ export type StatusReaction = {
 	status: string
 } & Reaction
 
-export const bugFix: Reaction = {
-	description: 'A bug was fixed',
-	emoji: '🐞',
-	role: ReactionRole.SIGNIFICANT,
-}
-
-export const newVersionRelease: Reaction = {
-	description: 'A new version was released',
-	emoji: '🚀',
-	role: ReactionRole.SIGNIFICANT,
-}
-
-export const question: Reaction = {
-	description: 'This item needs to be discussed during the next sync meeting',
-	emoji: '🙋',
-	role: ReactionRole.QUESTION,
-}
-
-export const praise: Reaction = {
-	emoji: '🌟',
-	description: 'This is amazing!',
-}
-
-export const thumbsUp = {
-	emoji: '👍',
-}
-
 export type ReactionCreatedEvent = CoreEvent & {
 	type: CoreEventType.REACTION_CREATED
 } & StatusReaction

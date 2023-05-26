@@ -25,9 +25,9 @@ import {
 } from './persistence/createOrganization.js'
 import { createProject, type Project } from './persistence/createProject.js'
 import {
+	ReactionRole,
 	createReaction,
-	newVersionRelease,
-	thumbsUp,
+	type Reaction,
 } from './persistence/createReaction.js'
 import { createStatus, type Status } from './persistence/createStatus.js'
 import { createUser } from './persistence/createUser.js'
@@ -541,6 +541,16 @@ describe('core', async () => {
 			})
 
 			describe('reactions', async () => {
+				const newVersionRelease: Reaction = {
+					description: 'A new version was released',
+					emoji: '🚀',
+					role: ReactionRole.SIGNIFICANT,
+				}
+
+				const thumbsUp = {
+					emoji: '👍',
+				}
+
 				const projectId = `#test-${ulid()}`
 				const statusId = ulid()
 				const reactionId = ulid()
