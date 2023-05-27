@@ -9,3 +9,4 @@ cdk.out/
 dist/
 .envrc
 dynamodb_local_latest/
+dynamodb_local_latest.zip

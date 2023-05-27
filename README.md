@@ -23,6 +23,15 @@ Install the dependencies:
 npm ci
 ```
 
+### Tests
+
+```bash
+wget https://s3.eu-central-1.amazonaws.com/dynamodb-local-frankfurt/dynamodb_local_latest.zip
+unzip dynamodb_local_latest.zip -d ./dynamodb_local_latest
+java -Djava.library.path=./dynamodb_local_latest./DynamoDBLocal_lib -jar ./dynamodb_local_latest/DynamoDBLocal.jar -sharedDb -inMemory &
+npm test
+```
+
 ### Deploy
 
 ```bash
