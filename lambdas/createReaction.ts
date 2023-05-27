@@ -22,10 +22,16 @@ const create = createReaction(
 
 export const handler = userAuthRequestPipe(
 	(event) => {
-		const { id, reaction } = JSON.parse(event.body ?? '')
-		return { id, reaction, statusId: event.pathParameters?.statusId as string }
+		const { id, description, emoji, role } = JSON.parse(event.body ?? '')
+		return {
+			id,
+			description,
+			emoji,
+			role,
+			statusId: event.pathParameters?.statusId as string,
+		}
 	},
-	async ({ id, reaction, statusId }, authContext) =>
-		create(id, statusId, reaction, authContext),
+	async ({ id, description, emoji, role, statusId }, authContext) =>
+		create({ id, status: statusId, description, emoji, role }, authContext),
 	() => StatusCode.CREATED,
 )

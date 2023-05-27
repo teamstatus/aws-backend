@@ -577,9 +577,11 @@ describe('core', async () => {
 					)
 
 					const res2 = await createReaction(dbContext, notify)(
-						reactionId,
-						statusId,
-						newVersionRelease,
+						{
+							id: reactionId,
+							status: statusId,
+							...newVersionRelease,
+						},
 						{ email: 'alex@example.com', sub: '@alex' },
 					)
 					check(res2).is(
@@ -620,9 +622,11 @@ describe('core', async () => {
 					)
 
 					const { error } = (await createReaction(dbContext, notify)(
-						ulid(),
-						statusId,
-						thumbsUp,
+						{
+							id: ulid(),
+							status: statusId,
+							...thumbsUp,
+						},
 						{ email: 'blake@example.com', sub: '@blake' },
 					)) as { error: ProblemDetail }
 

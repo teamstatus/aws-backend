@@ -46,13 +46,12 @@ export type ReactionCreatedEvent = CoreEvent & {
 export const createReaction =
 	(dbContext: DbContext, notify: Notify) =>
 	async (
-		id: string,
-		statusId: string,
-		reaction: Reaction,
+		reaction: Omit<StatusReaction, 'author'> & { role?: ReactionRole },
 		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { sub: userId } = authContext
 		const { db, table } = dbContext
+		const { id, status: statusId, description, emoji } = reaction
 		const { Item } = await db.send(
 			new GetItemCommand({
 				TableName: table,
@@ -99,19 +98,19 @@ export const createReaction =
 						S: l(userId),
 					},
 					emoji: {
-						S: reaction.emoji,
+						S: emoji,
 					},
-					role: 'role' in reaction ? { S: reaction.role } : { NULL: true },
-					description:
-						'description' in reaction && reaction.description !== undefined
-							? { S: reaction.description }
+					role:
+						'role' in reaction && reaction.role !== undefined
+							? { S: reaction.role }
 							: { NULL: true },
+					description:
+						description !== undefined ? { S: description } : { NULL: true },
 				},
 			}),
 		)
 		const event: ReactionCreatedEvent = {
 			type: CoreEventType.REACTION_CREATED,
-			id,
 			...reaction,
 			author: userId,
 			status: statusId,
