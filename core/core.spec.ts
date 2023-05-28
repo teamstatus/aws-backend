@@ -318,6 +318,16 @@ describe('core', async () => {
 
 		describe('member', async () => {
 			it('allows project owners to invite other users to a project', async () => {
+				// Users have to exist to be invited
+				await createUser(
+					dbContext,
+					notify,
+				)({
+					id: '@cameron',
+					name: 'Cameron',
+					authContext: { email: 'cameron@example.com' },
+				})
+
 				const events: MemberInvitedEvent[] = []
 				on(CoreEventType.PROJECT_MEMBER_INVITED, (e) =>
 					events.push(e as MemberInvitedEvent),
@@ -342,6 +352,15 @@ describe('core', async () => {
 						role: Role.MEMBER,
 					}),
 				)
+			})
+
+			it('should not allow to invite non-existing users', async () => {
+				const { error } = (await inviteToProject(dbContext, notify)(
+					'@nobody',
+					'$acme#teamstatus',
+					{ email: 'alex@example.com', sub: '@alex' },
+				)) as { error: ProblemDetail }
+				assert.equal(error?.title, `User @nobody does not exist.`)
 			})
 
 			describe('invited member', async () => {
@@ -602,6 +621,16 @@ describe('core', async () => {
 				})
 
 				it('allows project members to attach a reaction', async () => {
+					// Users have to exist to be invited
+					await createUser(
+						dbContext,
+						notify,
+					)({
+						id: '@blake',
+						name: 'Blake',
+						authContext: { email: 'blake@example.com' },
+					})
+
 					const res = await inviteToProject(dbContext, notify)(
 						'@blake',
 						`$acme${projectId}`,

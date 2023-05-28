@@ -1,7 +1,11 @@
-import { PutItemCommand } from '@aws-sdk/client-dynamodb'
+import { GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb'
 import { type CoreEvent } from '../CoreEvent.js'
 import { CoreEventType } from '../CoreEventType.js'
-import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
+import {
+	BadRequestError,
+	NotFoundError,
+	type ProblemDetail,
+} from '../ProblemDetail.js'
 import { Role } from '../Role.js'
 import type { UserAuthContext } from '../auth.js'
 import { parseProjectId } from '../ids.js'
@@ -45,8 +49,28 @@ export const inviteToProject =
 			}
 		}
 
-		const id = `${l(projectId)}:${l(invitedUserId)}`
 		const { db, table } = dbContext
+
+		const { Item } = await db.send(
+			new GetItemCommand({
+				TableName: table,
+				Key: {
+					id: {
+						S: l(invitedUserId),
+					},
+					type: {
+						S: 'user',
+					},
+				},
+			}),
+		)
+
+		if (Item === undefined)
+			return {
+				error: NotFoundError(`User ${invitedUserId} does not exist.`),
+			}
+
+		const id = `${l(projectId)}:${l(invitedUserId)}`
 		await db.send(
 			new PutItemCommand({
 				TableName: table,
