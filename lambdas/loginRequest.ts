@@ -16,6 +16,8 @@ import { problem, result } from './response.js'
 const allowedEmails = [
 	// Me
 	'bc1dec741233ec9c27c8f48700337ffab729a7934d9d577697dd9f5794fe391b',
+	// Test-Account
+	'd13b7c9609444936a75d79f2b3119af39b581e9a3293b6cfe9bfa97e5d127760',
 ]
 
 // These domains (lowercase, without @) are allowed to request logins
