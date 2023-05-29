@@ -1,18 +1,27 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { type ProblemDetail } from '../ProblemDetail.js'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
 import { type DbContext } from './DbContext.js'
 import type { Project } from './createProject.js'
+import { isOrganizationMember } from './getOrganizationMember.js'
 import { getProject } from './getProject.js'
 import { l } from './l.js'
 
-export const listProjects =
+export const listOrganizationProjects =
 	(dbContext: DbContext) =>
 	async (
+		organizationId: string,
 		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | { projects: Project[] }> => {
 		const { sub: userId } = authContext
+		if (!(await isOrganizationMember(dbContext)(organizationId, userId))) {
+			return {
+				error: BadRequestError(
+					`Only members of ${organizationId} can view projects.`,
+				),
+			}
+		}
 
 		const { db, table } = dbContext
 		const res = await db.send(
@@ -37,6 +46,7 @@ export const listProjects =
 			const d: {
 				projectMember__project: string // '#teamstatus',
 			} = unmarshall(membership) as any
+			if (!d.projectMember__project.startsWith(organizationId)) continue
 			const project = await getProject(dbContext)(d.projectMember__project)
 			if (project !== null) projects.push(project)
 		}

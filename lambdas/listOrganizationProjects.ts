@@ -1,6 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { fromEnv } from '@nordicsemiconductor/from-env'
-import { listProjects } from '../core/persistence/listProjects.js'
+import { listOrganizationProjects } from '../core/persistence/listOrganizationProjects.js'
 import { userAuthRequestPipe } from './requestPipe.js'
 
 const { tableName } = fromEnv({
@@ -9,12 +9,14 @@ const { tableName } = fromEnv({
 
 const db = new DynamoDBClient({})
 
-const list = listProjects({
+const list = listOrganizationProjects({
 	db,
 	table: tableName,
 })
 
 export const handler = userAuthRequestPipe(
-	() => ({}),
-	async (_, authContext) => list(authContext),
+	(event) => ({
+		organizationId: event.pathParameters?.organizationId as string,
+	}),
+	async ({ organizationId }, authContext) => list(organizationId, authContext),
 )

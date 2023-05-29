@@ -40,6 +40,7 @@ import {
 import { emailPINLogin } from './persistence/emailPINLogin.js'
 import type { MemberInvitedEvent } from './persistence/inviteToProject.js'
 import { inviteToProject } from './persistence/inviteToProject.js'
+import { listOrganizationProjects } from './persistence/listOrganizationProjects.js'
 import { listOrganizations } from './persistence/listOrganizations.js'
 import { listProjects } from './persistence/listProjects.js'
 import { listStatus } from './persistence/listStatus.js'
@@ -303,8 +304,8 @@ describe('core', async () => {
 			)
 		})
 
-		it('can list projects for a user', async () => {
-			const { projects } = (await listProjects(dbContext)('$acme', {
+		it('can list projects for an organiztion', async () => {
+			const { projects } = (await listOrganizationProjects(dbContext)('$acme', {
 				email: 'alex@example.com',
 				sub: '@alex',
 			})) as { projects: Project[] }
@@ -554,7 +555,7 @@ describe('core', async () => {
 					})) as { error: ProblemDetail }
 					assert.equal(
 						error?.title,
-						`Only members of '$acme' are allowed to list status.`,
+						`Only members of '$acme#teamstatus' are allowed to list status.`,
 					)
 				})
 			})
@@ -708,6 +709,29 @@ describe('core', async () => {
 						1,
 					)
 				})
+			})
+		})
+
+		describe('projects', async () => {
+			it('can list projects for a user', async () => {
+				const { projects } = (await listProjects(dbContext)({
+					email: 'alex@example.com',
+					sub: '@alex',
+				})) as { projects: Project[] }
+				check(projects?.[0]).is(
+					objectMatching({
+						id: '$acme#teamstatus',
+						name: 'Teamstatus',
+					}),
+				)
+			})
+
+			it('allows project members to list status', async () => {
+				const { status } = (await listStatus(dbContext)('$acme#teamstatus', {
+					email: 'cameron@example.com',
+					sub: '@cameron',
+				})) as { status: Status[] }
+				assert.equal(status.length, 5)
 			})
 		})
 	})

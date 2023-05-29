@@ -114,8 +114,14 @@ class API extends Construct {
 				authContext: 'user',
 			},
 			listProjects: {
-				routeKey: 'GET /organization/{organizationId}/projects',
+				routeKey: 'GET /projects',
 				source: lambdaSources.listProjects,
+				description: 'Lists projects accessible by the user',
+				authContext: 'user',
+			},
+			listOrganizationProjects: {
+				routeKey: 'GET /organization/{organizationId}/projects',
+				source: lambdaSources.listOrganizationProjects,
 				description: 'Lists projects accessible by the user',
 				authContext: 'user',
 			},
@@ -423,7 +429,7 @@ class CoreLambda extends Construct {
 			handler: source.handler,
 			architecture: Lambda.Architecture.ARM_64,
 			runtime: Lambda.Runtime.NODEJS_18_X,
-			timeout: Duration.seconds(1),
+			timeout: Duration.seconds(10),
 			memorySize: 1792,
 			code: Lambda.Code.fromAsset(source.zipFile),
 			layers: [layer],
@@ -431,6 +437,10 @@ class CoreLambda extends Construct {
 			initialPolicy: [
 				readKeyPolicy(stack, 'privateKey'),
 				readKeyPolicy(stack, 'publicKey'),
+				new IAM.PolicyStatement({
+					actions: ['ses:SendEmail'],
+					resources: ['*'],
+				}),
 			],
 			environment: {
 				TABLE_NAME: persistence.table.tableName,

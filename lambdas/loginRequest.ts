@@ -12,6 +12,8 @@ import { emailLoginRequest } from '../core/persistence/emailLoginRequest.js'
 import { checksum } from './checksum.js'
 import { problem, result } from './response.js'
 
+const fromEmail = process.env.FROM_EMAIL ?? 'teamstatus.space@gmail.com'
+
 // These email addresses (lowercase) are allowed to request logins
 const allowedEmails = [
 	// Me
@@ -84,7 +86,7 @@ export const handler = async (
 						Data: `[Teamstatus.space] Please verify your email`,
 					},
 				},
-				Source: 'teamstatus.space@gmail.com',
+				Source: fromEmail,
 			}),
 		)
 

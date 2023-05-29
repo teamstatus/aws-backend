@@ -6,6 +6,7 @@ import { parseProjectId } from '../ids.js'
 import { type DbContext } from './DbContext.js'
 import type { Status } from './createStatus.js'
 import { isOrganizationMember } from './getOrganizationMember.js'
+import { isProjectMember } from './getProjectMember.js'
 import { getStatusReactions } from './getStatusReactions.js'
 import { l } from './l.js'
 
@@ -24,10 +25,13 @@ export const listStatus =
 			}
 		}
 
-		if (!(await isOrganizationMember(dbContext)(organization, userId))) {
+		if (
+			!(await isOrganizationMember(dbContext)(organization, userId)) &&
+			!(await isProjectMember(dbContext)(projectId, userId))
+		) {
 			return {
 				error: BadRequestError(
-					`Only members of '${organization}' are allowed to list status.`,
+					`Only members of '${projectId}' are allowed to list status.`,
 				),
 			}
 		}
