@@ -16,10 +16,10 @@ export const getProjectMember =
 		projectId: string,
 		userId: string,
 	): Promise<{ error: ProblemDetail } | null | MemberInfo> => {
-		const { db, table } = dbContext
+		const { db, TableName } = dbContext
 		const res = await db.send(
 			new QueryCommand({
-				TableName: table,
+				TableName,
 				IndexName: 'projectMember',
 				KeyConditionExpression: '#user = :user AND #project = :project',
 				ExpressionAttributeNames: {

@@ -7,7 +7,7 @@ import { type DbContext } from './DbContext.js'
 import { l } from './l.js'
 
 export const getOrganizationMember =
-	({ db, table }: DbContext) =>
+	({ db, TableName }: DbContext) =>
 	async (
 		organizationId: string,
 		userId: string,
@@ -37,7 +37,7 @@ export const getOrganizationMember =
 
 		const res = await db.send(
 			new QueryCommand({
-				TableName: table,
+				TableName,
 				IndexName: 'organizationMember',
 				KeyConditionExpression:
 					'#user = :user AND #organization = :organization',

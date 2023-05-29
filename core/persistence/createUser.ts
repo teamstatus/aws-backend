@@ -42,10 +42,10 @@ export const createUser =
 				error: BadRequestError(`Not an user ID: ${userId}`),
 			}
 		try {
-			const { db, table } = dbContext
+			const { db, TableName } = dbContext
 			await db.send(
 				new PutItemCommand({
-					TableName: table,
+					TableName,
 					Item: {
 						id: {
 							S: l(userId),

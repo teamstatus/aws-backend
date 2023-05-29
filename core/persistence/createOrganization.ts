@@ -37,10 +37,10 @@ export const createOrganization =
 				error: BadRequestError(`Not an organization ID: ${organizationId}`),
 			}
 		try {
-			const { db, table } = dbContext
+			const { db, TableName } = dbContext
 			await db.send(
 				new PutItemCommand({
-					TableName: table,
+					TableName,
 					Item: {
 						id: {
 							S: l(organizationId),
@@ -57,7 +57,7 @@ export const createOrganization =
 			)
 			await db.send(
 				new PutItemCommand({
-					TableName: table,
+					TableName,
 					Item: {
 						id: {
 							S: `${l(organizationId)}:${l(userId)}`,

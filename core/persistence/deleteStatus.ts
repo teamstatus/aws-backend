@@ -26,10 +26,10 @@ export const deleteStatus =
 	): Promise<{ error: ProblemDetail } | { deleted: true }> => {
 		try {
 			const { sub: userId } = authContext
-			const { db, table } = dbContext
+			const { db, TableName } = dbContext
 			await db.send(
 				new UpdateItemCommand({
-					TableName: table,
+					TableName,
 					Key: {
 						id: {
 							S: statusId,

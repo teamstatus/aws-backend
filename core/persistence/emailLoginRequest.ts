@@ -23,7 +23,6 @@ export type EmailLoginRequest = {
 	expires: Date
 }
 
-// FIXME: do not allow to request multiple
 export const emailLoginRequest =
 	(dbContext: DbContext, notify: Notify) =>
 	async ({
@@ -34,7 +33,7 @@ export const emailLoginRequest =
 		{ error: ProblemDetail } | { loginRequest: EmailLoginRequest; pin: string }
 	> => {
 		try {
-			const { db, table } = dbContext
+			const { db, TableName } = dbContext
 			const pin = generatePIN()
 			// Expires in 5 Minutes
 			const expires = new Date(Date.now() + 5 * 60 * 1000)
@@ -42,7 +41,7 @@ export const emailLoginRequest =
 			const rerequestAfter = new Date(Date.now() + 1 * 60 * 1000)
 			await db.send(
 				new UpdateItemCommand({
-					TableName: table,
+					TableName,
 					Key: {
 						id: {
 							S: email,

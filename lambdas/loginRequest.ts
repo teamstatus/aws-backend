@@ -12,7 +12,7 @@ import { emailLoginRequest } from '../core/persistence/emailLoginRequest.js'
 import { checksum } from './checksum.js'
 import { problem, result } from './response.js'
 
-const fromEmail = process.env.FROM_EMAIL ?? 'teamstatus.space@gmail.com'
+const fromEmail = process.env.FROM_EMAIL ?? 'notification@teamstatus.space'
 
 // These email addresses (lowercase) are allowed to request logins
 const allowedEmails = [
@@ -32,8 +32,8 @@ const allowedDomains = [
 		: '',
 ]
 
-const { tableName } = fromEnv({
-	tableName: 'TABLE_NAME',
+const { TableName } = fromEnv({
+	TableName: 'TABLE_NAME',
 })(process.env)
 
 const ses = new SESClient({})
@@ -43,7 +43,7 @@ const { notify } = notifier()
 const loginRequest = emailLoginRequest(
 	{
 		db,
-		table: tableName,
+		TableName,
 	},
 	notify,
 )
@@ -51,6 +51,7 @@ const loginRequest = emailLoginRequest(
 export const handler = async (
 	event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> => {
+	console.log(JSON.stringify({ event }))
 	try {
 		const { email } = JSON.parse(event.body ?? '')
 		const domain = email.split('@')[1]
@@ -92,6 +93,6 @@ export const handler = async (
 
 		return result(event)(StatusCode.ACCEPTED)
 	} catch (error) {
-		return problem(event)(BadRequestError('Failed to parse JSON.'))
+		return problem(event)(BadRequestError((error as Error).message))
 	}
 }

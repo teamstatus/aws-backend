@@ -36,11 +36,11 @@ export const listStatus =
 			}
 		}
 
-		const { db, table } = dbContext
+		const { db, TableName } = dbContext
 
 		const res = await db.send(
 			new QueryCommand({
-				TableName: table,
+				TableName,
 				IndexName: 'projectStatus',
 				KeyConditionExpression: '#project = :project',
 				ExpressionAttributeNames: {
@@ -66,7 +66,7 @@ export const listStatus =
 						version: d.version,
 						reactions: await getStatusReactions({
 							db,
-							TableName: table,
+							TableName,
 						})(d.id),
 					}
 				}),

@@ -49,10 +49,10 @@ export const createProject =
 			}
 		}
 		try {
-			const { db, table } = dbContext
+			const { db, TableName } = dbContext
 			await db.send(
 				new PutItemCommand({
-					TableName: table,
+					TableName,
 					Item: {
 						id: {
 							S: l(projectId),

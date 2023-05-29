@@ -3,15 +3,15 @@ import { fromEnv } from '@nordicsemiconductor/from-env'
 import { listOrganizationProjects } from '../core/persistence/listOrganizationProjects.js'
 import { userAuthRequestPipe } from './requestPipe.js'
 
-const { tableName } = fromEnv({
-	tableName: 'TABLE_NAME',
+const { TableName } = fromEnv({
+	TableName: 'TABLE_NAME',
 })(process.env)
 
 const db = new DynamoDBClient({})
 
 const list = listOrganizationProjects({
 	db,
-	table: tableName,
+	TableName,
 })
 
 export const handler = userAuthRequestPipe(

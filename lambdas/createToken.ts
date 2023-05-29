@@ -10,8 +10,8 @@ import { userAuthRequestPipe } from './requestPipe.js'
 import { problem, result } from './response.js'
 import { getPrivateKey } from './signingKeyPromise.js'
 
-const { tableName, stackName } = fromEnv({
-	tableName: 'TABLE_NAME',
+const { TableName, stackName } = fromEnv({
+	TableName: 'TABLE_NAME',
 	stackName: 'STACK_NAME',
 })(process.env)
 
@@ -20,7 +20,7 @@ const ssm = new SSMClient({})
 
 const create = createToken({
 	db,
-	table: tableName,
+	TableName,
 })
 
 const privateKeyPromise = getPrivateKey({ ssm, stackName })

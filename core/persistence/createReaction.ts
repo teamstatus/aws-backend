@@ -50,11 +50,11 @@ export const createReaction =
 		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { sub: userId } = authContext
-		const { db, table } = dbContext
+		const { db, TableName } = dbContext
 		const { id, status: statusId, description, emoji } = reaction
 		const { Item } = await db.send(
 			new GetItemCommand({
-				TableName: table,
+				TableName,
 				Key: {
 					id: {
 						S: statusId,
@@ -83,7 +83,7 @@ export const createReaction =
 
 		await db.send(
 			new PutItemCommand({
-				TableName: table,
+				TableName,
 				Item: {
 					id: {
 						S: verifyULID(id),

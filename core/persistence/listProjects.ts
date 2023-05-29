@@ -14,10 +14,10 @@ export const listProjects =
 	): Promise<{ error: ProblemDetail } | { projects: Project[] }> => {
 		const { sub: userId } = authContext
 
-		const { db, table } = dbContext
+		const { db, TableName } = dbContext
 		const res = await db.send(
 			new QueryCommand({
-				TableName: table,
+				TableName,
 				IndexName: 'projectMember',
 				KeyConditionExpression: '#user = :user',
 				ExpressionAttributeNames: {

@@ -5,8 +5,8 @@ import { notifier } from '../core/notifier.js'
 import { deleteStatus } from '../core/persistence/deleteStatus.js'
 import { userAuthRequestPipe } from './requestPipe.js'
 
-const { tableName } = fromEnv({
-	tableName: 'TABLE_NAME',
+const { TableName } = fromEnv({
+	TableName: 'TABLE_NAME',
 })(process.env)
 
 const db = new DynamoDBClient({})
@@ -15,7 +15,7 @@ const { notify } = notifier()
 const del = deleteStatus(
 	{
 		db,
-		table: tableName,
+		TableName,
 	},
 	notify,
 )

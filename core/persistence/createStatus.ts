@@ -41,10 +41,10 @@ export const createStatus =
 			}
 		}
 
-		const { db, table } = dbContext
+		const { db, TableName } = dbContext
 		await db.send(
 			new PutItemCommand({
-				TableName: table,
+				TableName,
 				Item: {
 					id: {
 						S: verifyULID(id),

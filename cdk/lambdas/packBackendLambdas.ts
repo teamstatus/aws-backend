@@ -21,6 +21,10 @@ export type BackendLambdas = {
 	createToken: PackedLambda
 	acceptProjectInvitation: PackedLambda
 	inviteToProject: PackedLambda
+	wsOnConnect: PackedLambda
+	wsOnDisconnect: PackedLambda
+	wsOnMessage: PackedLambda
+	wsAuthorizer: PackedLambda
 }
 
 export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
@@ -88,5 +92,21 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	deleteReaction: await packLambdaFromPath(
 		'deleteReaction',
 		'lambdas/deleteReaction.ts',
+	),
+	wsOnConnect: await packLambdaFromPath(
+		'wsOnConnect',
+		'lambdas/ws/onConnect.ts',
+	),
+	wsOnDisconnect: await packLambdaFromPath(
+		'wsOnDisconnect',
+		'lambdas/ws/onDisconnect.ts',
+	),
+	wsOnMessage: await packLambdaFromPath(
+		'wsOnMessage',
+		'lambdas/ws/onMessage.ts',
+	),
+	wsAuthorizer: await packLambdaFromPath(
+		'wsAuthorizer',
+		'lambdas/ws/authorizer.ts',
 	),
 })

@@ -11,11 +11,11 @@ import { indexes } from '../db.js'
 
 export const createTable = async (
 	db: DynamoDBClient,
-	table: string,
+	TableName: string,
 ): Promise<void> => {
 	await db.send(
 		new CreateTableCommand({
-			TableName: table,
+			TableName,
 			KeySchema: [
 				{
 					AttributeName: 'id',
@@ -67,7 +67,7 @@ export const createTable = async (
 	)
 	await db.send(
 		new UpdateTimeToLiveCommand({
-			TableName: table,
+			TableName,
 			TimeToLiveSpecification: {
 				Enabled: true,
 				AttributeName: 'ttl',

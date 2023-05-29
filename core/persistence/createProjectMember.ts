@@ -19,12 +19,12 @@ export type ProjectMember = {
 }
 
 export const createProjectMember =
-	({ db, table }: DbContext, notify: Notify) =>
+	({ db, TableName }: DbContext, notify: Notify) =>
 	async (projectId: string, userId: string, role: Role): Promise<void> => {
 		const id = `${l(projectId)}:${l(userId)}`
 		await db.send(
 			new PutItemCommand({
-				TableName: table,
+				TableName,
 				Item: {
 					id: {
 						S: id,

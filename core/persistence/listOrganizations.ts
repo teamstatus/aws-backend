@@ -12,10 +12,10 @@ export const listOrganizations =
 		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | { organizations: Organization[] }> => {
 		const { sub: userId } = authContext
-		const { db, table } = dbContext
+		const { db, TableName } = dbContext
 		const res = await db.send(
 			new QueryCommand({
-				TableName: table,
+				TableName,
 				IndexName: 'organizationMember',
 				KeyConditionExpression: '#user = :user',
 				ExpressionAttributeNames: {
@@ -43,11 +43,11 @@ export const listOrganizations =
 	}
 
 const getOrganization =
-	({ db, table }: DbContext) =>
+	({ db, TableName }: DbContext) =>
 	async (organizationId: string): Promise<Organization | null> => {
 		const { Item } = await db.send(
 			new GetItemCommand({
-				TableName: table,
+				TableName,
 				Key: {
 					id: {
 						S: organizationId,

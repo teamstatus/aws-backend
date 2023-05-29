@@ -19,10 +19,10 @@ export const acceptProjectInvitation =
 	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { sub: userId } = authContext
 		const id = `${l(projectId)}:${l(userId)}`
-		const { db, table } = dbContext
+		const { db, TableName } = dbContext
 		const { Item } = await db.send(
 			new GetItemCommand({
-				TableName: table,
+				TableName,
 				Key: {
 					id: {
 						S: id,
@@ -55,7 +55,7 @@ export const acceptProjectInvitation =
 			),
 			db.send(
 				new DeleteItemCommand({
-					TableName: table,
+					TableName,
 					Key: {
 						id: {
 							S: id,

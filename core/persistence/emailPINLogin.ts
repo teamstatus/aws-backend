@@ -33,10 +33,10 @@ export const emailPINLogin =
 		| { authContext: EmailAuthContext | UserAuthContext }
 	> => {
 		try {
-			const { db, table } = dbContext
+			const { db, TableName } = dbContext
 			await db.send(
 				new DeleteItemCommand({
-					TableName: table,
+					TableName,
 					Key: {
 						id: {
 							S: email,
@@ -64,7 +64,7 @@ export const emailPINLogin =
 
 			const { Items } = await db.send(
 				new QueryCommand({
-					TableName: table,
+					TableName,
 					Limit: 1,
 					IndexName: 'emailUser',
 					KeyConditionExpression: '#email = :email',

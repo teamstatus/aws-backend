@@ -13,8 +13,8 @@ import { problem, result } from './response.js'
 import { getPrivateKey } from './signingKeyPromise.js'
 import { tokenCookie } from './tokenCookie.js'
 
-const { tableName, stackName } = fromEnv({
-	tableName: 'TABLE_NAME',
+const { TableName, stackName } = fromEnv({
+	TableName: 'TABLE_NAME',
 	stackName: 'STACK_NAME',
 })(process.env)
 
@@ -25,7 +25,7 @@ const { notify } = notifier()
 const login = emailPINLogin(
 	{
 		db,
-		table: tableName,
+		TableName,
 	},
 	notify,
 )

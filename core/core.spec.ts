@@ -53,12 +53,12 @@ const isCI = process.env.CI !== undefined
 const testDb = () => {
 	if (isCI) {
 		return {
-			table: process.env.TABLE_NAME ?? '',
+			TableName: process.env.TABLE_NAME ?? '',
 			db: new DynamoDBClient({}),
 		}
 	}
 	return {
-		table: `teamstatus-${ulid()}`,
+		TableName: `teamstatus-${ulid()}`,
 		db: new DynamoDBClient({
 			endpoint: 'http://localhost:8000/',
 			region: 'eu-west-1',
@@ -67,27 +67,27 @@ const testDb = () => {
 }
 
 describe('core', async () => {
-	const { table, db } = testDb()
+	const { TableName, db } = testDb()
 
 	const dbContext: DbContext = {
 		db,
-		table,
+		TableName,
 	}
 
 	const { on, notify } = notifier()
 
 	before(async () => {
 		if (isCI) {
-			console.log(`Using existing table ${table}.`)
+			console.log(`Using existing table ${TableName}.`)
 			return
 		}
 		try {
-			await createTable(db, table)
+			await createTable(db, TableName)
 		} catch (err) {
 			console.error(`Failed to create table: ${(err as Error).message}!`)
 			throw err
 		}
-		console.log(`Table ${table} created.`)
+		console.log(`Table ${TableName} created.`)
 	})
 
 	describe('user management', async () => {

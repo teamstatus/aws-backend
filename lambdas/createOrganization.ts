@@ -5,8 +5,8 @@ import { notifier } from '../core/notifier.js'
 import { createOrganization } from '../core/persistence/createOrganization.js'
 import { userAuthRequestPipe } from './requestPipe.js'
 
-const { tableName } = fromEnv({
-	tableName: 'TABLE_NAME',
+const { TableName } = fromEnv({
+	TableName: 'TABLE_NAME',
 })(process.env)
 
 const db = new DynamoDBClient({})
@@ -15,7 +15,7 @@ const { notify } = notifier()
 const create = createOrganization(
 	{
 		db,
-		table: tableName,
+		TableName,
 	},
 	notify,
 )

@@ -9,11 +9,11 @@ import { inviteToProject } from '../core/persistence/inviteToProject.js'
 import { l } from '../core/persistence/l.js'
 import { userAuthRequestPipe } from './requestPipe.js'
 
-const { tableName } = fromEnv({
-	tableName: 'TABLE_NAME',
+const { TableName } = fromEnv({
+	TableName: 'TABLE_NAME',
 })(process.env)
 
-const fromEmail = process.env.FROM_EMAIL ?? 'teamstatus.space@gmail.com'
+const fromEmail = process.env.FROM_EMAIL ?? 'notification@teamstatus.space'
 
 const ses = new SESClient({})
 const db = new DynamoDBClient({})
@@ -22,7 +22,7 @@ const { notify } = notifier()
 const invite = inviteToProject(
 	{
 		db,
-		table: tableName,
+		TableName,
 	},
 	notify,
 )
@@ -34,12 +34,12 @@ type UserInfo = {
 	user__email: string
 }
 const getUser =
-	({ db, table }: DbContext) =>
+	({ db, TableName }: DbContext) =>
 	async (id: string): Promise<null | UserInfo> =>
 		db
 			.send(
 				new GetItemCommand({
-					TableName: table,
+					TableName,
 					Key: {
 						id: {
 							S: l(id),
@@ -74,8 +74,8 @@ export const handler = userAuthRequestPipe(
 		const res = await invite(invitedUserId, projectId, authContext)
 		if ('id' in res) {
 			const [Invitee, Inviter] = await Promise.all([
-				getUser({ db, table: tableName })(invitedUserId),
-				getUser({ db, table: tableName })(authContext.sub),
+				getUser({ db, TableName })(invitedUserId),
+				getUser({ db, TableName })(authContext.sub),
 			])
 
 			console.log(

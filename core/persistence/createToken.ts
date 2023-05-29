@@ -5,7 +5,7 @@ import { create, type UserAuthContext } from '../auth.js'
 import type { DbContext } from './DbContext.js'
 
 export const createToken =
-	({ db, table }: DbContext) =>
+	({ db, TableName }: DbContext) =>
 	async (
 		signingKey: string,
 		authContext: UserAuthContext,
@@ -15,7 +15,7 @@ export const createToken =
 
 			const { Items } = await db.send(
 				new QueryCommand({
-					TableName: table,
+					TableName,
 					Limit: 1,
 					IndexName: 'emailUser',
 					KeyConditionExpression: '#email = :email',

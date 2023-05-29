@@ -33,10 +33,10 @@ export const updateStatus =
 	): Promise<{ error: ProblemDetail } | { status: Status }> => {
 		try {
 			const { sub: userId } = authContext
-			const { db, table } = dbContext
+			const { db, TableName } = dbContext
 			const { Attributes } = await db.send(
 				new UpdateItemCommand({
-					TableName: table,
+					TableName,
 					Key: {
 						id: {
 							S: statusId,

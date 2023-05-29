@@ -38,6 +38,9 @@ npm test
 # Optionally, configure the stack name prefix to use a suitable name for your deployment
 export STACK_NAME_PREFIX="my-teamstatus"
 npx cdk deploy
+
+# Configure the JWT keys
+npx tsx ./cli/configureKeys.ts
 ```
 
 ## CD with GitHub Actions

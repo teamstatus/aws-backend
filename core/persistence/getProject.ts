@@ -4,11 +4,11 @@ import { type DbContext } from './DbContext.js'
 import type { Project } from './createProject.js'
 
 export const getProject =
-	({ db, table }: DbContext) =>
+	({ db, TableName }: DbContext) =>
 	async (projectId: string): Promise<Project | null> => {
 		const { Item } = await db.send(
 			new GetItemCommand({
-				TableName: table,
+				TableName,
 				Key: {
 					id: {
 						S: projectId,

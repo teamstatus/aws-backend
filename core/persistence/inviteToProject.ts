@@ -56,11 +56,11 @@ export const inviteToProject =
 				}
 			}
 
-			const { db, table } = dbContext
+			const { db, TableName } = dbContext
 
 			const { Item } = await db.send(
 				new GetItemCommand({
-					TableName: table,
+					TableName,
 					Key: {
 						id: {
 							S: l(invitedUserId),
@@ -80,7 +80,7 @@ export const inviteToProject =
 			const id = `${l(projectId)}:${l(invitedUserId)}`
 			await db.send(
 				new PutItemCommand({
-					TableName: table,
+					TableName,
 					Item: {
 						id: {
 							S: id,
