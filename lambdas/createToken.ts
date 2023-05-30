@@ -43,5 +43,5 @@ export const handler = async (
 		return problem(event)(r.error)
 	}
 
-	return result(event)(StatusCode.CREATED, undefined, r.token)
+	return result(event)(StatusCode.CREATED, undefined, [r.token])
 }

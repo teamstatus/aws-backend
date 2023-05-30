@@ -11,7 +11,7 @@ export const result =
 	(
 		statusCode: StatusCode,
 		result?: unknown,
-		cookie?: string,
+		cookies?: string[],
 	): APIGatewayProxyResultV2 => {
 		console.log(JSON.stringify({ statusCode, result }))
 		const cors = corsHeaders(event)
@@ -29,7 +29,7 @@ export const result =
 				result !== undefined && !emptyObject(result)
 					? JSON.stringify(result)
 					: undefined,
-			cookies: cookie !== undefined ? [cookie] : undefined,
+			cookies,
 		}
 	}
 

@@ -7,9 +7,11 @@ import {
 export const tokenCookie = async ({
 	authContext,
 	signingKey,
+	cookieProps,
 }: {
 	authContext: UserAuthContext | EmailAuthContext
 	signingKey: string
+	cookieProps?: string[]
 }): Promise<string> =>
 	[
 		`token=${create({ signingKey })(authContext)}`,
@@ -18,4 +20,7 @@ export const tokenCookie = async ({
 		`HttpOnly`,
 		`SameSite=None`,
 		`Secure`,
-	].join('; ')
+		...(cookieProps ?? []),
+	]
+		.filter((v) => v !== undefined)
+		.join('; ')

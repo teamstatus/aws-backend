@@ -14,6 +14,7 @@ import { ApiEmailAuthorizer, ApiUserAuthorizer } from './APIAuthorizer.js'
 import { ApiRoute } from './ApiRoute.js'
 import { CoreLambda } from './CoreLambda.js'
 import { Persistence } from './Persistence.js'
+import type { WebsocketAPI } from './WebsocketAPI.js'
 
 export class RESTAPI extends Construct {
 	public readonly URL: string
@@ -23,10 +24,12 @@ export class RESTAPI extends Construct {
 			lambdaSources,
 			persistence,
 			layer,
+			ws,
 		}: {
 			lambdaSources: BackendLambdas
 			layer: Lambda.ILayerVersion
 			persistence: Persistence
+			ws: WebsocketAPI
 		},
 	) {
 		super(parent, 'API')
@@ -197,6 +200,7 @@ export class RESTAPI extends Construct {
 					layer,
 					persistence,
 					source,
+					ws,
 				}).lambda,
 				routeKey,
 				authContext,

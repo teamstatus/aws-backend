@@ -8,9 +8,10 @@ import { emailAuthRequestPipe } from './requestPipe.js'
 import { getPrivateKey } from './signingKeyPromise.js'
 import { tokenCookie } from './tokenCookie.js'
 
-const { TableName, stackName } = fromEnv({
+const { TableName, stackName, wsURL } = fromEnv({
 	TableName: 'TABLE_NAME',
 	stackName: 'STACK_NAME',
+	wsURL: 'WS_URL',
 })(process.env)
 
 const db = new DynamoDBClient({})
@@ -31,12 +32,21 @@ export const handler = emailAuthRequestPipe(
 	(event) => JSON.parse(event.body ?? ''),
 	async ({ id, name }, authContext) => create({ id, name, authContext }),
 	() => StatusCode.CREATED,
-	async (input, authContext) =>
-		tokenCookie({
+	async (input, authContext) => [
+		await tokenCookie({
 			signingKey: await privateKeyPromise,
 			authContext: {
 				email: authContext.email,
 				sub: input.id,
 			},
 		}),
+		await tokenCookie({
+			signingKey: await privateKeyPromise,
+			authContext: {
+				email: authContext.email,
+				sub: input.id,
+			},
+			cookieProps: [`Domain=${new URL(wsURL).hostname}`],
+		}),
+	],
 )

@@ -71,15 +71,16 @@ class TeamStatusBackendStack extends Stack {
 			compatibleRuntimes: [Lambda.Runtime.NODEJS_18_X],
 		})
 
+		const ws = new WebsocketAPI(this, {
+			lambdaSources,
+			layer: backendLayer,
+		})
+
 		const api = new RESTAPI(this, {
 			lambdaSources,
 			persistence,
 			layer: backendLayer,
-		})
-
-		const ws = new WebsocketAPI(this, {
-			lambdaSources,
-			layer: backendLayer,
+			ws,
 		})
 
 		new CfnOutput(this, 'tableName', {

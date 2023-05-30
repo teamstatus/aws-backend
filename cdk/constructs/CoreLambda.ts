@@ -9,6 +9,7 @@ import { Construct } from 'constructs'
 import type { PackedLambda } from '../lambdas/packLambdaFromPath.js'
 import { readKeyPolicy } from '../teamstatus-backend.js'
 import { Persistence } from './Persistence.js'
+import type { WebsocketAPI } from './WebsocketAPI.js'
 
 export class CoreLambda extends Construct {
 	public readonly lambda: Lambda.Function
@@ -21,6 +22,7 @@ export class CoreLambda extends Construct {
 			source,
 			layer,
 			persistence,
+			ws,
 		}: {
 			stack: Stack
 			description: string
@@ -28,6 +30,7 @@ export class CoreLambda extends Construct {
 			layer: Lambda.ILayerVersion
 			persistence: Persistence
 			environment?: Record<string, string>
+			ws: WebsocketAPI
 		},
 	) {
 		super(parent, id)
@@ -53,6 +56,7 @@ export class CoreLambda extends Construct {
 			environment: {
 				TABLE_NAME: persistence.table.tableName,
 				STACK_NAME: stack.stackName,
+				WS_URL: ws.URL,
 			},
 		})
 		persistence.table.grantFullAccess(this.lambda)

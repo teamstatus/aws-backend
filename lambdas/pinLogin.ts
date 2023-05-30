@@ -13,9 +13,10 @@ import { problem, result } from './response.js'
 import { getPrivateKey } from './signingKeyPromise.js'
 import { tokenCookie } from './tokenCookie.js'
 
-const { TableName, stackName } = fromEnv({
+const { TableName, stackName, wsURL } = fromEnv({
 	TableName: 'TABLE_NAME',
 	stackName: 'STACK_NAME',
+	wsURL: 'WS_URL',
 })(process.env)
 
 const ssm = new SSMClient({})
@@ -44,14 +45,17 @@ export const handler = async (
 			return problem(event)(r.error)
 		}
 
-		return result(event)(
-			StatusCode.OK,
-			undefined,
+		return result(event)(StatusCode.OK, undefined, [
 			await tokenCookie({
 				signingKey: await privateKeyPromise,
 				authContext: r.authContext,
 			}),
-		)
+			await tokenCookie({
+				signingKey: await privateKeyPromise,
+				authContext: r.authContext,
+				cookieProps: [`Domain=${new URL(wsURL).hostname}`],
+			}),
+		])
 	} catch (error) {
 		return problem(event)(BadRequestError('Failed to parse JSON.'))
 	}

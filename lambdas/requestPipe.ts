@@ -13,11 +13,11 @@ export const userAuthRequestPipe =
 			authContext: UserAuthContext,
 		) => Promise<{ error: ProblemDetail } | Result>,
 		toStatusCode?: (result?: Result) => StatusCode,
-		cookie?: (
+		cookies?: (
 			input: ValidInput,
 			authContext: EmailAuthContext,
 			result?: Result,
-		) => Promise<string>,
+		) => Promise<string[]>,
 	) =>
 	async (
 		event: AuthorizedEvent<UserAuthContext>,
@@ -39,7 +39,7 @@ export const userAuthRequestPipe =
 			return result(event)(
 				toStatusCode?.(maybeResult) ?? StatusCode.OK,
 				maybeResult,
-				await cookie?.(
+				await cookies?.(
 					input,
 					event.requestContext.authorizer.lambda,
 					maybeResult,
@@ -56,11 +56,11 @@ export const emailAuthRequestPipe =
 			authContext: EmailAuthContext,
 		) => Promise<{ error: ProblemDetail } | Result>,
 		toStatusCode?: (result?: Result) => StatusCode,
-		cookie?: (
+		cookies?: (
 			input: ValidInput,
 			authContext: EmailAuthContext,
 			result?: Result,
-		) => Promise<string>,
+		) => Promise<string[]>,
 	) =>
 	async (
 		event: AuthorizedEvent<EmailAuthContext>,
@@ -82,7 +82,7 @@ export const emailAuthRequestPipe =
 			return result(event)(
 				toStatusCode?.(maybeResult) ?? StatusCode.OK,
 				maybeResult,
-				await cookie?.(
+				await cookies?.(
 					input,
 					event.requestContext.authorizer.lambda,
 					maybeResult,
