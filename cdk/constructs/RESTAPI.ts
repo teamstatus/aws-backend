@@ -70,6 +70,7 @@ export class RESTAPI extends Construct {
 			environment: {
 				STACK_NAME: parent.stackName,
 				TABLE_NAME: persistence.table.tableName,
+				WS_URL: ws.URL,
 			},
 		})
 		persistence.table.grantFullAccess(pinLogin)
