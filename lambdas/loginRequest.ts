@@ -25,7 +25,7 @@ const allowedEmails = [
 // These domains (lowercase, without @) are allowed to request logins
 const allowedDomains = [
 	// Nordic
-	'1e115f6998bbff78477fe6e267a4cf307824d3ef1d1c61cf549dc0a70ac7e438',
+	'd82e75b328f982d9ea18f436113684e111d684908f5926d2f585fc26aed923ac',
 	// example.com
 	process.env.IS_TEST !== undefined
 		? 'a379a6f6eeafb9a55e378c118034e2751e682fab9f2d30ab13d2125586ce1947'
