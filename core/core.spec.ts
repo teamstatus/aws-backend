@@ -24,11 +24,7 @@ import {
 	type Organization,
 } from './persistence/createOrganization.js'
 import { createProject, type Project } from './persistence/createProject.js'
-import {
-	ReactionRole,
-	createReaction,
-	type Reaction,
-} from './persistence/createReaction.js'
+import { createReaction, type Reaction } from './persistence/createReaction.js'
 import { createStatus, type Status } from './persistence/createStatus.js'
 import { createUser } from './persistence/createUser.js'
 import { deleteReaction } from './persistence/deleteReaction.js'
@@ -561,6 +557,14 @@ describe('core', async () => {
 			})
 
 			describe('reactions', async () => {
+				// Reactions can have special roles
+				enum ReactionRole {
+					// A significant thing happened, makes the status stand out from others in the list of status
+					SIGNIFICANT = 'SIGNIFICANT',
+					// The status needs to be discussed during the next sync meeting, this will collect this status in a separate list of open questions during the next sync meeting
+					QUESTION = 'QUESTION',
+				}
+
 				const newVersionRelease: Reaction = {
 					description: 'A new version was released',
 					emoji: '🚀',

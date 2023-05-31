@@ -14,17 +14,9 @@ import { type DbContext } from './DbContext.js'
 import { isProjectMember } from './getProjectMember.js'
 import { l } from './l.js'
 
-// Reactions can have special roles
-export enum ReactionRole {
-	// A significant thing happened, makes the status stand out from others in the list of status
-	SIGNIFICANT = 'SIGNIFICANT',
-	// The status needs to be discussed during the next sync meeting, this will collect this status in a separate list of open questions during the next sync meeting
-	QUESTION = 'QUESTION',
-}
-
 export type Reaction =
 	| {
-			role: ReactionRole
+			role: string
 			emoji: string
 			description: string
 	  }
@@ -46,7 +38,7 @@ export type ReactionCreatedEvent = CoreEvent & {
 export const createReaction =
 	(dbContext: DbContext, notify: Notify) =>
 	async (
-		reaction: Omit<StatusReaction, 'author'> & { role?: ReactionRole },
+		reaction: Omit<StatusReaction, 'author'> & { role?: string },
 		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { sub: userId } = authContext
