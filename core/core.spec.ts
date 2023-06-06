@@ -1,4 +1,3 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import assert from 'node:assert/strict'
 import { before, describe, test as it } from 'node:test'
 import {
@@ -40,27 +39,10 @@ import { listOrganizationProjects } from './persistence/listOrganizationProjects
 import { listOrganizations } from './persistence/listOrganizations.js'
 import { listProjects } from './persistence/listProjects.js'
 import { listStatus } from './persistence/listStatus.js'
-import { createTable } from './persistence/test/createTable.js'
 import { updateStatus } from './persistence/updateStatus.js'
-
-const aUlid = () => stringMatching(/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm) as any
-
-const isCI = process.env.CI !== undefined
-const testDb = () => {
-	if (isCI) {
-		return {
-			TableName: process.env.TABLE_NAME ?? '',
-			db: new DynamoDBClient({}),
-		}
-	}
-	return {
-		TableName: `teamstatus-${ulid()}`,
-		db: new DynamoDBClient({
-			endpoint: 'http://localhost:8000/',
-			region: 'eu-west-1',
-		}),
-	}
-}
+import { aUlid } from './test/aUlid.js'
+import { createTestDb } from './test/createTestDb.js'
+import { testDb } from './test/testDb.js'
 
 describe('core', async () => {
 	const { TableName, db } = testDb()
@@ -72,19 +54,7 @@ describe('core', async () => {
 
 	const { on, notify } = notifier()
 
-	before(async () => {
-		if (isCI) {
-			console.log(`Using existing table ${TableName}.`)
-			return
-		}
-		try {
-			await createTable(db, TableName)
-		} catch (err) {
-			console.error(`Failed to create table: ${(err as Error).message}!`)
-			throw err
-		}
-		console.log(`Table ${TableName} created.`)
-	})
+	before(createTestDb(dbContext))
 
 	describe('user management', async () => {
 		describe('allows users to log-in with their email', async () => {
@@ -672,8 +642,6 @@ describe('core', async () => {
 						email: 'alex@example.com',
 						sub: '@alex',
 					})) as { status: Status[] }
-
-					console.log(status[0]?.reactions[0])
 
 					check(status[0]?.reactions[0]).is(
 						objectMatching({

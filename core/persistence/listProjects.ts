@@ -40,7 +40,6 @@ export const listProjects =
 		const projects: UserProject[] = []
 
 		for (const membership of res.Items ?? []) {
-			console.log(JSON.stringify({ membership }))
 			const d: {
 				projectMember__project: string // '#teamstatus',
 				role: Role
