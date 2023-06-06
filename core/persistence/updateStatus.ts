@@ -13,7 +13,6 @@ import {
 import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
-import type { Status } from './createStatus.js'
 import { l } from './l.js'
 
 type StatusUpdatedEvent = CoreEvent & {
@@ -30,7 +29,7 @@ export const updateStatus =
 		message: string,
 		version: number,
 		authContext: UserAuthContext,
-	): Promise<{ error: ProblemDetail } | { status: Status }> => {
+	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		try {
 			const { sub: userId } = authContext
 			const { db, TableName } = dbContext
@@ -72,14 +71,6 @@ export const updateStatus =
 			if (Attributes === undefined)
 				return { error: ConflictError('Update failed.') }
 			const updated = unmarshall(Attributes)
-			const status: Status = {
-				message,
-				author: userId,
-				id: statusId,
-				project: updated.projectStatus__project,
-				version: updated.version,
-				reactions: [],
-			}
 			const event: StatusUpdatedEvent = {
 				type: CoreEventType.STATUS_UPDATED,
 				id: statusId,
@@ -88,7 +79,7 @@ export const updateStatus =
 				timestamp: new Date(),
 			}
 			notify(event)
-			return { status }
+			return {}
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)
 				return {

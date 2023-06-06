@@ -12,8 +12,8 @@ describe('corsHeaders()', () => {
 			}),
 			{
 				'Access-Control-Allow-Credentials': true,
-				'Access-Control-Allow-Headers': 'content-type, accept',
-				'Access-Control-Allow-Methods': 'PUT, DELETE, POST, GET, OPTIONS',
+				'Access-Control-Allow-Headers': 'content-type, accept, if-match',
+				'Access-Control-Allow-Methods': 'PUT, DELETE, POST, GET, PATCH',
 				'Access-Control-Allow-Origin': 'https://teamstatus.space',
 				'Access-Control-Max-Age': 600,
 				Vary: 'Origin',

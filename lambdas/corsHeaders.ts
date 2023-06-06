@@ -16,16 +16,16 @@ export const corsHeaders = ({
 	headers: APIGatewayProxyEventHeaders
 }): {
 	'Access-Control-Allow-Credentials': true
-	'Access-Control-Allow-Headers': 'content-type, accept'
-	'Access-Control-Allow-Methods': 'PUT, DELETE, POST, GET, OPTIONS'
+	'Access-Control-Allow-Headers': 'content-type, accept, if-match'
+	'Access-Control-Allow-Methods': 'PUT, DELETE, POST, GET, PATCH'
 	'Access-Control-Allow-Origin': string
 	'Access-Control-Max-Age': 600
 	Vary: 'Origin'
 } => ({
 	'Access-Control-Allow-Credentials': true,
 	'Access-Control-Allow-Origin': origin({ headers }),
-	'Access-Control-Allow-Methods': 'PUT, DELETE, POST, GET, OPTIONS',
-	'Access-Control-Allow-Headers': 'content-type, accept',
+	'Access-Control-Allow-Methods': 'PUT, DELETE, POST, GET, PATCH',
+	'Access-Control-Allow-Headers': 'content-type, accept, if-match',
 	'Access-Control-Max-Age': 600,
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin#cors_and_caching
 	Vary: 'Origin',
