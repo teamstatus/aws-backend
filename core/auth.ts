@@ -7,7 +7,7 @@ export const create =
 		const options: SignOptions = {
 			algorithm: 'ES256',
 			allowInsecureKeySizes: false,
-			expiresIn: 24 * 60 * 60, // seconds
+			expiresIn: 24 * 60 * 60 * 30, // seconds
 		}
 		if (sub !== undefined) {
 			options.subject = sub
