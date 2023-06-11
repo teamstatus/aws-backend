@@ -1,5 +1,5 @@
 import { before, beforeEach, describe, test as it } from 'node:test'
-import { arrayMatching, check } from 'tsmatchers'
+import { arrayMatching, check, objectMatching } from 'tsmatchers'
 import { ulid } from 'ulid'
 import type { CoreEvent } from './CoreEvent.js'
 import { CoreEventType } from './CoreEventType.js'
@@ -88,6 +88,16 @@ describe('sync', async () => {
 					'My sync',
 					user,
 				),
+			)
+
+			check(events[0]).is(
+				objectMatching({
+					type: CoreEventType.SYNC_CREATED,
+					projects: [projectA, projectB],
+					title: 'My sync',
+					author: '@alex',
+					id: syncId,
+				}),
 			)
 
 			await eventually(async () => {
