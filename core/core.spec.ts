@@ -42,6 +42,7 @@ import { listStatus } from './persistence/listStatus.js'
 import { updateStatus } from './persistence/updateStatus.js'
 import { aUlid } from './test/aUlid.js'
 import { createTestDb } from './test/createTestDb.js'
+import { isNotAnError } from './test/isNotAnError.js'
 import { testDb } from './test/testDb.js'
 
 describe('core', async () => {
@@ -135,17 +136,14 @@ describe('core', async () => {
 			it('allows users to claim a user ID', async () => {
 				const events: CoreEvent[] = []
 				on(CoreEventType.USER_CREATED, (e) => events.push(e))
-				const res = await createUser(
-					dbContext,
-					notify,
-				)({
-					id: '@alex',
-					name: 'Alex Doe',
-					authContext: { email: 'alex@example.com' },
-				})
-				check(res).is(
-					objectMatching({
-						error: undefinedValue,
+				isNotAnError(
+					await createUser(
+						dbContext,
+						notify,
+					)({
+						id: '@alex',
+						name: 'Alex Doe',
+						authContext: { email: 'alex@example.com' },
 					}),
 				)
 				check(events[0]).is(
@@ -186,14 +184,11 @@ describe('core', async () => {
 		it('can create a new organization', async () => {
 			const events: CoreEvent[] = []
 			on(CoreEventType.ORGANIZATION_CREATED, (e) => events.push(e))
-			const res = await createOrganization(dbContext, notify)(
-				{ id: '$acme', name: 'ACME Inc.' },
-				{ email: 'alex@example.com', sub: '@alex' },
-			)
-			check(res).is(
-				objectMatching({
-					error: undefinedValue,
-				}),
+			isNotAnError(
+				await createOrganization(dbContext, notify)(
+					{ id: '$acme', name: 'ACME Inc.' },
+					{ email: 'alex@example.com', sub: '@alex' },
+				),
 			)
 			check(events[0]).is(
 				objectMatching({
@@ -234,14 +229,11 @@ describe('core', async () => {
 			const events: CoreEvent[] = []
 			on(CoreEventType.PROJECT_CREATED, (e) => events.push(e))
 			on(CoreEventType.PROJECT_MEMBER_CREATED, (e) => events.push(e))
-			const res = await createProject(dbContext, notify)(
-				{ id: '$acme#teamstatus', name: 'Teamstatus' },
-				{ email: 'alex@example.com', sub: '@alex' },
-			)
-			check(res).is(
-				objectMatching({
-					error: undefinedValue,
-				}),
+			isNotAnError(
+				await createProject(dbContext, notify)(
+					{ id: '$acme#teamstatus', name: 'Teamstatus' },
+					{ email: 'alex@example.com', sub: '@alex' },
+				),
 			)
 			check(events[0]).is(
 				objectMatching({
@@ -300,15 +292,12 @@ describe('core', async () => {
 					events.push(e as MemberInvitedEvent),
 				)
 
-				const res = await inviteToProject(dbContext, notify)(
-					'@cameron',
-					'$acme#teamstatus',
-					{ email: 'alex@example.com', sub: '@alex' },
-				)
-				check(res).is(
-					objectMatching({
-						error: undefinedValue,
-					}),
+				isNotAnError(
+					await inviteToProject(dbContext, notify)(
+						'@cameron',
+						'$acme#teamstatus',
+						{ email: 'alex@example.com', sub: '@alex' },
+					),
 				)
 				check(events[0]).is(
 					objectMatching({
@@ -371,16 +360,13 @@ describe('core', async () => {
 					on(CoreEventType.STATUS_CREATED, (e) => events.push(e))
 
 					const id = ulid()
-					const res = await createStatus(dbContext, notify)(
-						id,
-						'$acme#teamstatus',
-						'Implemented ability to persist status updates for projects.',
-						{ email: 'alex@example.com', sub: '@alex' },
-					)
-					check(res).is(
-						objectMatching({
-							error: undefinedValue,
-						}),
+					isNotAnError(
+						await createStatus(dbContext, notify)(
+							id,
+							'$acme#teamstatus',
+							'Implemented ability to persist status updates for projects.',
+							{ email: 'alex@example.com', sub: '@alex' },
+						),
 					)
 					check(events[0]).is(
 						objectMatching({
@@ -412,31 +398,24 @@ describe('core', async () => {
 				const statusId = ulid()
 				it('allows status to be edited by the author', async () => {
 					// Create the status
-					const res = await createStatus(dbContext, notify)(
-						statusId,
-						'$acme#teamstatus',
-						'Status with an typo',
-						{ email: 'alex@example.com', sub: '@alex' },
-					)
-					check(res).is(
-						objectMatching({
-							error: undefinedValue,
-						}),
+					isNotAnError(
+						await createStatus(dbContext, notify)(
+							statusId,
+							'$acme#teamstatus',
+							'Status with an typo',
+							{ email: 'alex@example.com', sub: '@alex' },
+						),
 					)
 
 					// Updated
-					const res2 = await updateStatus(dbContext, notify)(
-						statusId,
-						'Status with a typo',
-						1,
-						{ email: 'alex@example.com', sub: '@alex' },
+					isNotAnError(
+						await updateStatus(dbContext, notify)(
+							statusId,
+							'Status with a typo',
+							1,
+							{ email: 'alex@example.com', sub: '@alex' },
+						),
 					)
-					check(res2).is(
-						objectMatching({
-							error: undefinedValue,
-						}),
-					)
-
 					// Fetch
 					const { status: statusList } = (await listStatus(dbContext)(
 						'$acme#teamstatus',
@@ -558,30 +537,24 @@ describe('core', async () => {
 						{ email: 'alex@example.com', sub: '@alex' },
 					)
 
-					const res = await createStatus(dbContext, notify)(
-						statusId,
-						`$acme${projectId}`,
-						`I've released a new version!`,
-						{ email: 'alex@example.com', sub: '@alex' },
-					)
-					check(res).is(
-						objectMatching({
-							error: undefinedValue,
-						}),
+					isNotAnError(
+						await createStatus(dbContext, notify)(
+							statusId,
+							`$acme${projectId}`,
+							`I've released a new version!`,
+							{ email: 'alex@example.com', sub: '@alex' },
+						),
 					)
 
-					const res2 = await createReaction(dbContext, notify)(
-						{
-							id: reactionId,
-							status: statusId,
-							...newVersionRelease,
-						},
-						{ email: 'alex@example.com', sub: '@alex' },
-					)
-					check(res2).is(
-						objectMatching({
-							error: undefinedValue,
-						}),
+					isNotAnError(
+						await createReaction(dbContext, notify)(
+							{
+								id: reactionId,
+								status: statusId,
+								...newVersionRelease,
+							},
+							{ email: 'alex@example.com', sub: '@alex' },
+						),
 					)
 
 					check(events[0]).is(
@@ -606,15 +579,12 @@ describe('core', async () => {
 						authContext: { email: 'blake@example.com' },
 					})
 
-					const res = await inviteToProject(dbContext, notify)(
-						'@blake',
-						`$acme${projectId}`,
-						{ email: 'alex@example.com', sub: '@alex' },
-					)
-					check(res).is(
-						objectMatching({
-							error: undefinedValue,
-						}),
+					isNotAnError(
+						await inviteToProject(dbContext, notify)(
+							'@blake',
+							`$acme${projectId}`,
+							{ email: 'alex@example.com', sub: '@alex' },
+						),
 					)
 
 					await acceptProjectInvitation(dbContext, notify)(
