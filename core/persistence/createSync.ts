@@ -23,9 +23,17 @@ export type Sync = {
 export const createSync =
 	(dbContext: DbContext, notify: Notify) =>
 	async (
-		id: string,
-		projectIds: string[],
-		title: string,
+		{
+			id,
+			projectIds,
+			title,
+			inclusiveStartDate,
+		}: {
+			id: string
+			projectIds: string[]
+			title: string
+			inclusiveStartDate?: Date
+		},
 		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { sub: userId } = authContext
@@ -60,6 +68,10 @@ export const createSync =
 					title: {
 						S: title,
 					},
+					inclusiveStartDate:
+						inclusiveStartDate === undefined
+							? { NULL: true }
+							: { S: inclusiveStartDate.toISOString() },
 				},
 			}),
 		)

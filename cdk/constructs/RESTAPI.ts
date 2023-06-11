@@ -181,6 +181,12 @@ export class RESTAPI extends Construct {
 				description: 'Deletes a reaction',
 				authContext: 'user',
 			},
+			createSync: {
+				routeKey: 'POST /sync',
+				source: lambdaSources.createSync,
+				description: 'Creates a new sync',
+				authContext: 'user',
+			},
 		}
 
 		const coreLambdas: {

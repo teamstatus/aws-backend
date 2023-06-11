@@ -1,6 +1,6 @@
 import { before, beforeEach, describe, test as it } from 'node:test'
-import { arrayMatching, check, objectMatching } from 'tsmatchers'
-import { ulid } from 'ulid'
+import { arrayMatching, check, not, objectMatching } from 'tsmatchers'
+import { decodeTime, ulid } from 'ulid'
 import type { CoreEvent } from './CoreEvent.js'
 import { CoreEventType } from './CoreEventType.js'
 import type { UserAuthContext } from './auth.js'
@@ -34,8 +34,10 @@ describe('sync', async () => {
 		const projectB = `${organizationId}#test-${ulid()}`
 		const projectC = `${organizationId}#test-${ulid()}`
 		const projectIds = [projectA, projectB, projectC]
-		const createdStatus: Record<string, string[]> = {}
+		const recentStatus: Record<string, string[]> = {}
+		const olderStatus: Record<string, string[]> = {}
 		const user: UserAuthContext = { email: 'alex@example.com', sub: '@alex' }
+		const startDate = new Date()
 
 		// Given there is a project with status
 		beforeEach(async () => {
@@ -53,11 +55,11 @@ describe('sync', async () => {
 							user,
 						),
 					)
-					return Promise.all(
+					await Promise.all(
 						[1, 2, 3, 4].map(async (i) => {
 							const statusId = ulid()
-							createdStatus[projectId] = [
-								...(createdStatus[projectId] ?? []),
+							recentStatus[projectId] = [
+								...(recentStatus[projectId] ?? []),
 								statusId,
 							]
 							isNotAnError(
@@ -69,6 +71,20 @@ describe('sync', async () => {
 								),
 							)
 						}),
+					)
+					// Create some older status that should not be in the sync
+					const olderStatusId = ulid(startDate.getTime() - 5 * 1000)
+					olderStatus[projectId] = [
+						...(olderStatus[projectId] ?? []),
+						olderStatusId,
+					]
+					isNotAnError(
+						await createStatus(dbContext, notify)(
+							olderStatusId,
+							projectId,
+							`Older status for project ${projectId}`,
+							user,
+						),
 					)
 				}),
 			)
@@ -83,9 +99,12 @@ describe('sync', async () => {
 			const syncId = ulid()
 			isNotAnError(
 				await createSync(dbContext, notify)(
-					syncId,
-					[projectA, projectB],
-					'My sync',
+					{
+						id: syncId,
+						projectIds: [projectA, projectB],
+						title: 'My sync',
+						inclusiveStartDate: startDate,
+					},
 					user,
 				),
 			)
@@ -105,16 +124,31 @@ describe('sync', async () => {
 					await getStatusInSync(dbContext, user)(syncId),
 				)
 
-				const expectedStatusIds: string[] = [
-					...(createdStatus[projectA] ?? []),
-					...(createdStatus[projectB] ?? []),
-				].sort((a, b) => a.localeCompare(b))
-
 				const createdIds = statusInSync.status
 					.map(({ id }) => id)
 					.sort((a, b) => a.localeCompare(b))
 
-				check(createdIds).is(arrayMatching(expectedStatusIds))
+				console.log(createdIds.map((id) => `${id}: ${decodeTime(id)}`))
+
+				check(createdIds).is(
+					arrayMatching(
+						[
+							...(recentStatus[projectA] ?? []),
+							...(recentStatus[projectB] ?? []),
+						].sort((a, b) => a.localeCompare(b)),
+					),
+				)
+
+				check(createdIds).is(
+					not(
+						arrayMatching(
+							[
+								...(olderStatus[projectA] ?? []),
+								...(olderStatus[projectB] ?? []),
+							].sort((a, b) => a.localeCompare(b)),
+						),
+					),
+				)
 			})
 		})
 	})

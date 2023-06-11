@@ -1,5 +1,6 @@
-import { QueryCommand } from '@aws-sdk/client-dynamodb'
+import { QueryCommand, type QueryCommandInput } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import { ulid } from 'ulid'
 import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
 import { parseProjectId } from '../ids.js'
@@ -13,7 +14,10 @@ import { l } from './l.js'
 export const listStatus =
 	(dbContext: DbContext) =>
 	async (
-		projectId: string,
+		{
+			projectId,
+			inclusiveStartDate,
+		}: { projectId: string; inclusiveStartDate?: Date },
 		authContext: UserAuthContext,
 	): Promise<{ status: Status[] } | { error: ProblemDetail }> => {
 		const { sub: userId } = authContext
@@ -38,22 +42,33 @@ export const listStatus =
 
 		const { db, TableName } = dbContext
 
-		const res = await db.send(
-			new QueryCommand({
-				TableName,
-				IndexName: 'projectStatus',
-				KeyConditionExpression: '#project = :project',
-				ExpressionAttributeNames: {
-					'#project': 'projectStatus__project',
+		const KeyConditionExpression = ['#project = :project']
+		if (inclusiveStartDate !== undefined)
+			KeyConditionExpression.push('#id >= :inclusiveId')
+		const args: QueryCommandInput = {
+			TableName,
+			IndexName: 'projectStatus',
+			KeyConditionExpression: KeyConditionExpression.join(' AND '),
+			ExpressionAttributeNames: {
+				'#project': 'projectStatus__project',
+				...(inclusiveStartDate !== undefined ? { '#id': 'id' } : {}),
+			},
+			ExpressionAttributeValues: {
+				':project': {
+					S: l(projectId),
 				},
-				ExpressionAttributeValues: {
-					':project': {
-						S: l(projectId),
-					},
-				},
-				ScanIndexForward: false,
-			}),
-		)
+				...(inclusiveStartDate !== undefined
+					? {
+							':inclusiveId': {
+								S: ulid(inclusiveStartDate.getTime()),
+							},
+					  }
+					: {}),
+			},
+			ScanIndexForward: false,
+		}
+
+		const res = await db.send(new QueryCommand(args))
 		return {
 			status: await Promise.all(
 				(res.Items ?? []).map(async (item) => {

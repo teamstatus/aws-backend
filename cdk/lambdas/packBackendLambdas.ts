@@ -25,6 +25,7 @@ export type BackendLambdas = {
 	wsOnDisconnect: PackedLambda
 	wsOnMessage: PackedLambda
 	wsAuthorizer: PackedLambda
+	createSync: PackedLambda
 }
 
 export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
@@ -109,4 +110,5 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 		'wsAuthorizer',
 		'lambdas/ws/authorizer.ts',
 	),
+	createSync: await packLambdaFromPath('createSync', 'lambdas/createSync.ts'),
 })

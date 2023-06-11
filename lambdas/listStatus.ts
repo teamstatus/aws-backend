@@ -18,5 +18,5 @@ export const handler = userAuthRequestPipe(
 	(event) => ({
 		projectId: event.pathParameters?.projectId as string,
 	}),
-	async ({ projectId }, authContext) => list(projectId, authContext),
+	async ({ projectId }, authContext) => list({ projectId }, authContext),
 )

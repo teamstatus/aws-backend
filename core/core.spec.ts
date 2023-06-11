@@ -418,7 +418,7 @@ describe('core', async () => {
 					)
 					// Fetch
 					const { status: statusList } = (await listStatus(dbContext)(
-						'$acme#teamstatus',
+						{ projectId: '$acme#teamstatus' },
 						{ email: 'alex@example.com', sub: '@alex' },
 					)) as {
 						status: Status[]
@@ -445,10 +445,13 @@ describe('core', async () => {
 
 			describe('list', async () => {
 				it('can list status for a project', async () => {
-					const { status } = (await listStatus(dbContext)('$acme#teamstatus', {
-						email: 'alex@example.com',
-						sub: '@alex',
-					})) as { status: Status[] }
+					const { status } = (await listStatus(dbContext)(
+						{ projectId: '$acme#teamstatus' },
+						{
+							email: 'alex@example.com',
+							sub: '@alex',
+						},
+					)) as { status: Status[] }
 					check(status?.[0]).is(
 						objectMatching({
 							id: aString,
@@ -480,10 +483,13 @@ describe('core', async () => {
 						{ email: 'alex@example.com', sub: '@alex' },
 					)
 
-					const { status } = (await listStatus(dbContext)('$acme#teamstatus', {
-						email: 'alex@example.com',
-						sub: '@alex',
-					})) as {
+					const { status } = (await listStatus(dbContext)(
+						{ projectId: '$acme#teamstatus' },
+						{
+							email: 'alex@example.com',
+							sub: '@alex',
+						},
+					)) as {
 						status: Status[]
 					}
 
@@ -494,10 +500,13 @@ describe('core', async () => {
 				})
 
 				it('allows only organization members to list status', async () => {
-					const { error } = (await listStatus(dbContext)('$acme#teamstatus', {
-						email: 'blake@example.com',
-						sub: '@blake',
-					})) as { error: ProblemDetail }
+					const { error } = (await listStatus(dbContext)(
+						{ projectId: '$acme#teamstatus' },
+						{
+							email: 'blake@example.com',
+							sub: '@blake',
+						},
+					)) as { error: ProblemDetail }
 					assert.equal(
 						error?.title,
 						`Only members of '$acme#teamstatus' are allowed to list status.`,
@@ -608,10 +617,13 @@ describe('core', async () => {
 				})
 
 				it('returns reactions with the status', async () => {
-					const { status } = (await listStatus(dbContext)(`$acme${projectId}`, {
-						email: 'alex@example.com',
-						sub: '@alex',
-					})) as { status: Status[] }
+					const { status } = (await listStatus(dbContext)(
+						{ projectId: `$acme${projectId}` },
+						{
+							email: 'alex@example.com',
+							sub: '@alex',
+						},
+					)) as { status: Status[] }
 
 					check(status[0]?.reactions[0]).is(
 						objectMatching({
@@ -641,10 +653,13 @@ describe('core', async () => {
 
 					assert.equal(error, undefined)
 
-					const { status } = (await listStatus(dbContext)(`$acme${projectId}`, {
-						email: 'alex@example.com',
-						sub: '@alex',
-					})) as { status: Status[] }
+					const { status } = (await listStatus(dbContext)(
+						{ projectId: `$acme${projectId}` },
+						{
+							email: 'alex@example.com',
+							sub: '@alex',
+						},
+					)) as { status: Status[] }
 
 					assert.equal(
 						status.find(({ id }) => id === statusId)?.reactions.length,
@@ -669,10 +684,13 @@ describe('core', async () => {
 			})
 
 			it('allows project members to list status', async () => {
-				const { status } = (await listStatus(dbContext)('$acme#teamstatus', {
-					email: 'cameron@example.com',
-					sub: '@cameron',
-				})) as { status: Status[] }
+				const { status } = (await listStatus(dbContext)(
+					{ projectId: '$acme#teamstatus' },
+					{
+						email: 'cameron@example.com',
+						sub: '@cameron',
+					},
+				)) as { status: Status[] }
 				assert.equal(status.length, 5)
 			})
 		})
