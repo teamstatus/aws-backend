@@ -1,14 +1,8 @@
 import { before, beforeEach, describe, test as it } from 'node:test'
-import {
-	arrayMatching,
-	check,
-	objectMatching,
-	undefinedValue,
-} from 'tsmatchers'
+import { arrayMatching, check } from 'tsmatchers'
 import { ulid } from 'ulid'
 import type { CoreEvent } from './CoreEvent.js'
 import { CoreEventType } from './CoreEventType.js'
-import type { ProblemDetail } from './ProblemDetail.js'
 import type { UserAuthContext } from './auth.js'
 import { notifier } from './notifier.js'
 import type { DbContext } from './persistence/DbContext.js'
@@ -18,18 +12,9 @@ import { createStatus } from './persistence/createStatus.js'
 import { createSync } from './persistence/createSync.js'
 import { getStatusInSync } from './persistence/getStatusInSync.js'
 import { createTestDb } from './test/createTestDb.js'
+import { eventually } from './test/eventually.js'
+import { isNotAnError } from './test/isNotAnError.js'
 import { testDb } from './test/testDb.js'
-
-const isNotAnError = <Result>(
-	res: { error: ProblemDetail } | Result,
-): Result => {
-	check(res).is(
-		objectMatching({
-			error: undefinedValue,
-		}),
-	)
-	return res as Result
-}
 
 describe('sync', async () => {
 	const { TableName, db } = testDb()
@@ -95,8 +80,6 @@ describe('sync', async () => {
 			const events: CoreEvent[] = []
 			on(CoreEventType.SYNC_CREATED, (e) => events.push(e))
 
-			console.log(createdStatus)
-
 			const syncId = ulid()
 			isNotAnError(
 				await createSync(dbContext, notify)(
@@ -107,20 +90,22 @@ describe('sync', async () => {
 				),
 			)
 
-			const statusInSync = isNotAnError(
-				await getStatusInSync(dbContext, user)(syncId),
-			)
+			await eventually(async () => {
+				const statusInSync = isNotAnError(
+					await getStatusInSync(dbContext, user)(syncId),
+				)
 
-			const expectedStatusIds: string[] = [
-				...(createdStatus[projectA] ?? []),
-				...(createdStatus[projectB] ?? []),
-			]
+				const expectedStatusIds: string[] = [
+					...(createdStatus[projectA] ?? []),
+					...(createdStatus[projectB] ?? []),
+				].sort((a, b) => a.localeCompare(b))
 
-			console.log(statusInSync)
+				const createdIds = statusInSync.status
+					.map(({ id }) => id)
+					.sort((a, b) => a.localeCompare(b))
 
-			const createdIds = statusInSync.status.map(({ id }) => id)
-
-			check(createdIds).is(arrayMatching(expectedStatusIds))
+				check(createdIds).is(arrayMatching(expectedStatusIds))
+			})
 		})
 	})
 })
