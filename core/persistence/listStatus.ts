@@ -1,5 +1,6 @@
-import { QueryCommand } from '@aws-sdk/client-dynamodb'
+import { QueryCommand, type QueryCommandInput } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import { ulid } from 'ulid'
 import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
 import { parseProjectId } from '../ids.js'
@@ -13,7 +14,15 @@ import { l } from './l.js'
 export const listStatus =
 	(dbContext: DbContext) =>
 	async (
-		projectId: string,
+		{
+			projectId,
+			inclusiveStartDate,
+			inclusiveEndDate,
+		}: {
+			projectId: string
+			inclusiveStartDate?: Date
+			inclusiveEndDate?: Date
+		},
 		authContext: UserAuthContext,
 	): Promise<{ status: Status[] } | { error: ProblemDetail }> => {
 		const { sub: userId } = authContext
@@ -38,22 +47,49 @@ export const listStatus =
 
 		const { db, TableName } = dbContext
 
-		const res = await db.send(
-			new QueryCommand({
-				TableName,
-				IndexName: 'projectStatus',
-				KeyConditionExpression: '#project = :project',
-				ExpressionAttributeNames: {
-					'#project': 'projectStatus__project',
+		const KeyConditionExpression = ['#project = :project']
+		if (inclusiveStartDate !== undefined && inclusiveEndDate !== undefined) {
+			KeyConditionExpression.push(
+				'#id BETWEEN :inclusiveStartDate AND :inclusiveEndDate',
+			)
+		} else if (inclusiveStartDate !== undefined) {
+			KeyConditionExpression.push('#id >= :inclusiveStartDate')
+		} else if (inclusiveEndDate !== undefined) {
+			KeyConditionExpression.push('#id <= :inclusiveEndDate')
+		}
+		const args: QueryCommandInput = {
+			TableName,
+			IndexName: 'projectStatus',
+			KeyConditionExpression: KeyConditionExpression.join(' AND '),
+			ExpressionAttributeNames: {
+				'#project': 'projectStatus__project',
+				...(inclusiveStartDate !== undefined || inclusiveEndDate !== undefined
+					? { '#id': 'id' }
+					: {}),
+			},
+			ExpressionAttributeValues: {
+				':project': {
+					S: l(projectId),
 				},
-				ExpressionAttributeValues: {
-					':project': {
-						S: l(projectId),
-					},
-				},
-				ScanIndexForward: false,
-			}),
-		)
+				...(inclusiveStartDate !== undefined
+					? {
+							':inclusiveStartDate': {
+								S: ulid(inclusiveStartDate.getTime()),
+							},
+					  }
+					: {}),
+				...(inclusiveEndDate !== undefined
+					? {
+							':inclusiveEndDate': {
+								S: ulid(inclusiveEndDate.getTime()),
+							},
+					  }
+					: {}),
+			},
+			ScanIndexForward: false,
+		}
+
+		const res = await db.send(new QueryCommand(args))
 		return {
 			status: await Promise.all(
 				(res.Items ?? []).map(async (item) => {
