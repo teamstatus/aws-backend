@@ -17,7 +17,12 @@ export const listStatus =
 		{
 			projectId,
 			inclusiveStartDate,
-		}: { projectId: string; inclusiveStartDate?: Date },
+			inclusiveEndDate,
+		}: {
+			projectId: string
+			inclusiveStartDate?: Date
+			inclusiveEndDate?: Date
+		},
 		authContext: UserAuthContext,
 	): Promise<{ status: Status[] } | { error: ProblemDetail }> => {
 		const { sub: userId } = authContext
@@ -43,15 +48,24 @@ export const listStatus =
 		const { db, TableName } = dbContext
 
 		const KeyConditionExpression = ['#project = :project']
-		if (inclusiveStartDate !== undefined)
-			KeyConditionExpression.push('#id >= :inclusiveId')
+		if (inclusiveStartDate !== undefined && inclusiveEndDate !== undefined) {
+			KeyConditionExpression.push(
+				'#id BETWEEN :inclusiveStartDate AND :inclusiveEndDate',
+			)
+		} else if (inclusiveStartDate !== undefined) {
+			KeyConditionExpression.push('#id >= :inclusiveStartDate')
+		} else if (inclusiveEndDate !== undefined) {
+			KeyConditionExpression.push('#id <= :inclusiveEndDate')
+		}
 		const args: QueryCommandInput = {
 			TableName,
 			IndexName: 'projectStatus',
 			KeyConditionExpression: KeyConditionExpression.join(' AND '),
 			ExpressionAttributeNames: {
 				'#project': 'projectStatus__project',
-				...(inclusiveStartDate !== undefined ? { '#id': 'id' } : {}),
+				...(inclusiveStartDate !== undefined || inclusiveEndDate !== undefined
+					? { '#id': 'id' }
+					: {}),
 			},
 			ExpressionAttributeValues: {
 				':project': {
@@ -59,8 +73,15 @@ export const listStatus =
 				},
 				...(inclusiveStartDate !== undefined
 					? {
-							':inclusiveId': {
+							':inclusiveStartDate': {
 								S: ulid(inclusiveStartDate.getTime()),
+							},
+					  }
+					: {}),
+				...(inclusiveEndDate !== undefined
+					? {
+							':inclusiveEndDate': {
+								S: ulid(inclusiveEndDate.getTime()),
 							},
 					  }
 					: {}),

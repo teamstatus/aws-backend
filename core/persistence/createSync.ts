@@ -18,6 +18,8 @@ export type Sync = {
 	projects: string[]
 	author: string
 	id: string
+	inclusiveStartDate?: Date
+	inclusiveEndDate?: Date
 }
 
 export const createSync =
@@ -28,11 +30,13 @@ export const createSync =
 			projectIds,
 			title,
 			inclusiveStartDate,
+			inclusiveEndDate,
 		}: {
 			id: string
 			projectIds: string[]
 			title: string
 			inclusiveStartDate?: Date
+			inclusiveEndDate?: Date
 		},
 		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
@@ -72,6 +76,10 @@ export const createSync =
 						inclusiveStartDate === undefined
 							? { NULL: true }
 							: { S: inclusiveStartDate.toISOString() },
+					inclusiveEndDate:
+						inclusiveEndDate === undefined
+							? { NULL: true }
+							: { S: inclusiveEndDate.toISOString() },
 				},
 			}),
 		)
@@ -82,6 +90,8 @@ export const createSync =
 			id,
 			projects: projectIds,
 			timestamp: new Date(),
+			inclusiveStartDate,
+			inclusiveEndDate,
 		}
 		notify(event)
 		return {}

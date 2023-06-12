@@ -5,16 +5,17 @@ import {
 	NotFoundError,
 	type ProblemDetail,
 } from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth'
+import type { UserAuthContext } from '../auth.js'
 import type { DbContext } from './DbContext.js'
 import { canReadProjects } from './canReadProjects.js'
 import type { Status } from './createStatus.js'
 import { listStatus } from './listStatus.js'
 
-export const getStatusInSync =
-	(dbContext: DbContext, authContext: UserAuthContext) =>
+export const listStatusInSync =
+	(dbContext: DbContext) =>
 	async (
 		syncId: string,
+		authContext: UserAuthContext,
 	): Promise<{ status: Status[] } | { error: ProblemDetail }> => {
 		const { db, TableName } = dbContext
 		const { Item: sync } = await db.send(
@@ -28,10 +29,12 @@ export const getStatusInSync =
 						S: 'projectSync',
 					},
 				},
-				ProjectionExpression: '#projectIds, #inclusiveStartDate',
+				ProjectionExpression:
+					'#projectIds, #inclusiveStartDate, #inclusiveEndDate',
 				ExpressionAttributeNames: {
 					'#projectIds': 'projectIds',
 					'#inclusiveStartDate': 'inclusiveStartDate',
+					'#inclusiveEndDate': 'inclusiveEndDate',
 				},
 			}),
 		)
@@ -39,9 +42,12 @@ export const getStatusInSync =
 		if (sync === undefined)
 			return { error: NotFoundError(`Sync ${syncId} not found!`) }
 
-		const { projectIds, inclusiveStartDate } = unmarshall(sync) as {
+		const { projectIds, inclusiveStartDate, inclusiveEndDate } = unmarshall(
+			sync,
+		) as {
 			projectIds: string[]
 			inclusiveStartDate: null | string
+			inclusiveEndDate: null | string
 		}
 
 		if (!(await canReadProjects(dbContext)([...projectIds], authContext))) {
@@ -63,6 +69,10 @@ export const getStatusInSync =
 							inclusiveStartDate === null
 								? undefined
 								: new Date(inclusiveStartDate),
+						inclusiveEndDate:
+							inclusiveEndDate === null
+								? undefined
+								: new Date(inclusiveEndDate),
 					},
 					authContext,
 				),

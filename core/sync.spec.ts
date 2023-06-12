@@ -1,6 +1,6 @@
 import { before, beforeEach, describe, test as it } from 'node:test'
-import { arrayMatching, check, not, objectMatching } from 'tsmatchers'
-import { decodeTime, ulid } from 'ulid'
+import { arrayMatching, check, either, not, objectMatching } from 'tsmatchers'
+import { ulid } from 'ulid'
 import type { CoreEvent } from './CoreEvent.js'
 import { CoreEventType } from './CoreEventType.js'
 import type { UserAuthContext } from './auth.js'
@@ -10,7 +10,7 @@ import { createOrganization } from './persistence/createOrganization.js'
 import { createProject } from './persistence/createProject.js'
 import { createStatus } from './persistence/createStatus.js'
 import { createSync } from './persistence/createSync.js'
-import { getStatusInSync } from './persistence/getStatusInSync.js'
+import { listStatusInSync } from './persistence/listStatusInSync.js'
 import { createTestDb } from './test/createTestDb.js'
 import { eventually } from './test/eventually.js'
 import { isNotAnError } from './test/isNotAnError.js'
@@ -36,6 +36,7 @@ describe('sync', async () => {
 		const projectIds = [projectA, projectB, projectC]
 		const recentStatus: Record<string, string[]> = {}
 		const olderStatus: Record<string, string[]> = {}
+		const newerStatus: Record<string, string[]> = {}
 		const user: UserAuthContext = { email: 'alex@example.com', sub: '@alex' }
 		const startDate = new Date()
 
@@ -86,6 +87,20 @@ describe('sync', async () => {
 							user,
 						),
 					)
+					// Create some future status that should not be in the sync
+					const newerStatusId = ulid(startDate.getTime() + 5 * 60 * 1000)
+					newerStatus[projectId] = [
+						...(newerStatus[projectId] ?? []),
+						newerStatusId,
+					]
+					isNotAnError(
+						await createStatus(dbContext, notify)(
+							newerStatusId,
+							projectId,
+							`Newer status for project ${projectId}`,
+							user,
+						),
+					)
 				}),
 			)
 		})
@@ -104,6 +119,7 @@ describe('sync', async () => {
 						projectIds: [projectA, projectB],
 						title: 'My sync',
 						inclusiveStartDate: startDate,
+						inclusiveEndDate: new Date(startDate.getTime() + 60 * 1000),
 					},
 					user,
 				),
@@ -116,38 +132,49 @@ describe('sync', async () => {
 					title: 'My sync',
 					author: '@alex',
 					id: syncId,
+					inclusiveStartDate: startDate,
+					inclusiveEndDate: new Date(startDate.getTime() + 60 * 1000),
 				}),
 			)
 
 			await eventually(async () => {
 				const statusInSync = isNotAnError(
-					await getStatusInSync(dbContext, user)(syncId),
+					await listStatusInSync(dbContext)(syncId, user),
 				)
 
-				const createdIds = statusInSync.status
+				const statusIdsInSync = statusInSync.status
 					.map(({ id }) => id)
 					.sort((a, b) => a.localeCompare(b))
 
-				console.log(createdIds.map((id) => `${id}: ${decodeTime(id)}`))
-
-				check(createdIds).is(
-					arrayMatching(
-						[
-							...(recentStatus[projectA] ?? []),
-							...(recentStatus[projectB] ?? []),
-						].sort((a, b) => a.localeCompare(b)),
-					),
-				)
-
-				check(createdIds).is(
-					not(
+				check(statusIdsInSync).is(
+					either(
 						arrayMatching(
 							[
-								...(olderStatus[projectA] ?? []),
-								...(olderStatus[projectB] ?? []),
+								...(recentStatus[projectA] ?? []),
+								...(recentStatus[projectB] ?? []),
 							].sort((a, b) => a.localeCompare(b)),
 						),
-					),
+					)
+						.and(
+							not(
+								arrayMatching(
+									[
+										...(olderStatus[projectA] ?? []),
+										...(olderStatus[projectB] ?? []),
+									].sort((a, b) => a.localeCompare(b)),
+								),
+							),
+						)
+						.and(
+							not(
+								arrayMatching(
+									[
+										...(newerStatus[projectA] ?? []),
+										...(newerStatus[projectB] ?? []),
+									].sort((a, b) => a.localeCompare(b)),
+								),
+							),
+						),
 				)
 			})
 		})
