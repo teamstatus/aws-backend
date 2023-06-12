@@ -188,7 +188,7 @@ export class RESTAPI extends Construct {
 				authContext: 'user',
 			},
 			listStatusInSync: {
-				routeKey: 'GET /sync/{syncId|/status',
+				routeKey: 'GET /sync/{syncId}/status',
 				source: lambdaSources.listStatusInSync,
 				description: 'Lists status in a sync',
 				authContext: 'user',
