@@ -17,8 +17,8 @@ const list = listStatus({
 export const handler = userAuthRequestPipe(
 	(event) => ({
 		projectId: event.pathParameters?.projectId as string,
-		inclusiveStartDate: event.pathParameters?.inclusiveStartDate,
-		inclusiveEndDate: event.pathParameters?.inclusiveEndDate,
+		inclusiveStartDate: event.queryStringParameters?.inclusiveStartDate,
+		inclusiveEndDate: event.queryStringParameters?.inclusiveEndDate,
 	}),
 	async ({ projectId, inclusiveStartDate, inclusiveEndDate }, authContext) =>
 		list(
