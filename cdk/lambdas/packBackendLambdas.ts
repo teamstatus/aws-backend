@@ -113,7 +113,7 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	),
 	createSync: await packLambdaFromPath('createSync', 'lambdas/createSync.ts'),
 	listStatusInSync: await packLambdaFromPath(
-		'createSync',
+		'listStatusInSync',
 		'lambdas/listStatusInSync.ts',
 	),
 })
