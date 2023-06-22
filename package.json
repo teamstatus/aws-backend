@@ -48,7 +48,7 @@
     "check-node-version": "4.2.1",
     "constructs": "10.2.56",
     "eslint-plugin-unicorn": "47.0.0",
-    "glob": "10.2.7",
+    "glob": "10.3.0",
     "husky": "8.0.3",
     "prettier": "2.8.8",
     "tsmatchers": "4.0.12",
