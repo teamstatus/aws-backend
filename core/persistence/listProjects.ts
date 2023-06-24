@@ -1,11 +1,11 @@
-import { QueryCommand } from '@aws-sdk/client-dynamodb'
+import { BatchGetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { type ProblemDetail } from '../ProblemDetail.js'
 import type { Role } from '../Role.js'
 import type { UserAuthContext } from '../auth.js'
 import { type DbContext } from './DbContext.js'
 import type { Project } from './createProject.js'
-import { getProject } from './getProject.js'
+import { itemToProject } from './getProject.js'
 import { l } from './l.js'
 
 type UserProject = Project & { role: Role }
@@ -37,22 +37,40 @@ export const listProjects =
 			}),
 		)
 
-		const projects: UserProject[] = []
+		const projectRole: Record<string, Role> = (res.Items ?? [])
+			.map((Item) => unmarshall(Item))
+			.reduce(
+				(projectRole, { projectMember__project, role }) => ({
+					...projectRole,
+					[projectMember__project]: role,
+				}),
+				{},
+			)
 
-		for (const membership of res.Items ?? []) {
-			const d: {
-				projectMember__project: string // '#teamstatus',
-				role: Role
-			} = unmarshall(membership) as any
-			const project = await getProject(dbContext)(d.projectMember__project)
-			if (project !== null)
-				projects.push({
-					...project,
-					role: d.role,
-				})
-		}
+		const { Responses } = await db.send(
+			new BatchGetItemCommand({
+				RequestItems: {
+					[TableName]: {
+						Keys: (res.Items ?? [])
+							.map((Item) => unmarshall(Item))
+							.map(({ projectMember__project: id }) => ({
+								id: { S: id },
+								type: {
+									S: 'project',
+								},
+							})),
+					},
+				},
+			}),
+		)
 
 		return {
-			projects,
+			projects: (Responses?.[TableName] ?? []).map((Item) => {
+				const project = itemToProject(unmarshall(Item))
+				return {
+					...project,
+					role: projectRole[project.id],
+				} as UserProject
+			}),
 		}
 	}
