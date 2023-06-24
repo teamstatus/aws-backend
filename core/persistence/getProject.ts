@@ -23,8 +23,10 @@ export const getProject =
 		if (Item === undefined) return null
 		const project = unmarshall(Item)
 
-		return {
-			id: projectId,
-			name: project.name,
-		}
+		return itemToProject(project)
 	}
+
+export const itemToProject = (item: Record<string, any>): Project => ({
+	id: item.id,
+	name: item.name,
+})

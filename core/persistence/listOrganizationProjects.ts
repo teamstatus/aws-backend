@@ -1,11 +1,11 @@
-import { QueryCommand } from '@aws-sdk/client-dynamodb'
+import { BatchGetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
 import { type DbContext } from './DbContext.js'
 import type { Project } from './createProject.js'
 import { isOrganizationMember } from './getOrganizationMember.js'
-import { getProject } from './getProject.js'
+import { itemToProject } from './getProject.js'
 import { l } from './l.js'
 
 export const listOrganizationProjects =
@@ -40,18 +40,26 @@ export const listOrganizationProjects =
 			}),
 		)
 
-		const projects: Project[] = []
-
-		for (const membership of res.Items ?? []) {
-			const d: {
-				projectMember__project: string // '#teamstatus',
-			} = unmarshall(membership) as any
-			if (!d.projectMember__project.startsWith(organizationId)) continue
-			const project = await getProject(dbContext)(d.projectMember__project)
-			if (project !== null) projects.push(project)
-		}
+		const { Responses } = await db.send(
+			new BatchGetItemCommand({
+				RequestItems: {
+					[TableName]: {
+						Keys: (res.Items ?? [])
+							.map((Item) => unmarshall(Item))
+							.map(({ projectMember__project: id }) => ({
+								id: { S: id },
+								type: {
+									S: 'project',
+								},
+							})),
+					},
+				},
+			}),
+		)
 
 		return {
-			projects,
+			projects: (Responses?.[TableName] ?? []).map((Item) =>
+				itemToProject(unmarshall(Item)),
+			),
 		}
 	}
