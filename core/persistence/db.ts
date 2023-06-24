@@ -21,4 +21,7 @@ export const indexes: Record<
 	emailUser: {
 		keys: ['user__email', 'id'],
 	},
+	syncOwner: {
+		keys: ['sync__owner', 'id'],
+	},
 }

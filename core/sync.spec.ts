@@ -1,5 +1,12 @@
-import { before, beforeEach, describe, test as it } from 'node:test'
-import { arrayMatching, check, either, not, objectMatching } from 'tsmatchers'
+import { before, describe, test as it } from 'node:test'
+import {
+	aString,
+	arrayMatching,
+	check,
+	either,
+	not,
+	objectMatching,
+} from 'tsmatchers'
 import { ulid } from 'ulid'
 import type { CoreEvent } from './CoreEvent.js'
 import { CoreEventType } from './CoreEventType.js'
@@ -9,8 +16,9 @@ import type { DbContext } from './persistence/DbContext.js'
 import { createOrganization } from './persistence/createOrganization.js'
 import { createProject } from './persistence/createProject.js'
 import { createStatus } from './persistence/createStatus.js'
-import { createSync } from './persistence/createSync.js'
+import { createSync, type Sync } from './persistence/createSync.js'
 import { listStatusInSync } from './persistence/listStatusInSync.js'
+import { listSyncs } from './persistence/listSyncs.js'
 import { createTestDb } from './test/createTestDb.js'
 import { eventually } from './test/eventually.js'
 import { isNotAnError } from './test/isNotAnError.js'
@@ -41,7 +49,7 @@ describe('sync', async () => {
 		const startDate = new Date()
 
 		// Given there is a project with status
-		beforeEach(async () => {
+		before(async () => {
 			isNotAnError(
 				await createOrganization(dbContext, notify)(
 					{ id: organizationId, name: `Organization ${organizationId}` },
@@ -116,7 +124,7 @@ describe('sync', async () => {
 				await createSync(dbContext, notify)(
 					{
 						id: syncId,
-						projectIds: [projectA, projectB],
+						projectIds: new Set([projectA, projectB]),
 						title: 'My sync',
 						inclusiveStartDate: startDate,
 						inclusiveEndDate: new Date(startDate.getTime() + 60 * 1000),
@@ -128,9 +136,9 @@ describe('sync', async () => {
 			check(events[0]).is(
 				objectMatching({
 					type: CoreEventType.SYNC_CREATED,
-					projects: [projectA, projectB],
+					projectIds: new Set([projectA, projectB]),
 					title: 'My sync',
-					author: '@alex',
+					owner: user.sub,
 					id: syncId,
 					inclusiveStartDate: startDate,
 					inclusiveEndDate: new Date(startDate.getTime() + 60 * 1000),
@@ -177,6 +185,19 @@ describe('sync', async () => {
 						),
 				)
 			})
+		})
+
+		it('should list syncs', async () => {
+			const { syncs } = (await listSyncs(dbContext)(user)) as { syncs: Sync[] }
+
+			check(syncs?.[0]).is(
+				objectMatching({
+					id: aString,
+					title: 'My sync',
+					owner: user.sub,
+					projectIds: new Set([projectA, projectB]),
+				}),
+			)
 		})
 	})
 })

@@ -45,15 +45,15 @@ export const listStatusInSync =
 		const { projectIds, inclusiveStartDate, inclusiveEndDate } = unmarshall(
 			sync,
 		) as {
-			projectIds: string[]
+			projectIds: Set<string>
 			inclusiveStartDate: null | string
 			inclusiveEndDate: null | string
 		}
 
-		if (!(await canReadProjects(dbContext)([...projectIds], authContext))) {
+		if (!(await canReadProjects(dbContext)(projectIds, authContext))) {
 			return {
 				error: BadRequestError(
-					`Only members of '${projectIds.join(
+					`Only members of '${[...projectIds].join(
 						',',
 					)}' are allowed to create a sync.`,
 				),

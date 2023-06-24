@@ -5,12 +5,12 @@ import { isProjectMember } from './getProjectMember.js'
 export const canReadProjects =
 	(dbContext: DbContext) =>
 	async (
-		projectIds: string[],
+		projectIds: Set<string>,
 		{ sub: userId }: UserAuthContext,
 	): Promise<boolean> => {
 		const memberCheck = isProjectMember(dbContext)
 		const allMember = await Promise.all(
-			projectIds.map(async (projectId) => ({
+			[...projectIds].map(async (projectId) => ({
 				projectId,
 				isMember: await memberCheck(projectId, userId),
 			})),

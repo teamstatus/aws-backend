@@ -15,8 +15,8 @@ type SyncCreatedEvent = CoreEvent & {
 
 export type Sync = {
 	title: string
-	projects: string[]
-	author: string
+	projectIds: Set<string>
+	owner: string
 	id: string
 	inclusiveStartDate?: Date
 	inclusiveEndDate?: Date
@@ -33,7 +33,7 @@ export const createSync =
 			inclusiveEndDate,
 		}: {
 			id: string
-			projectIds: string[]
+			projectIds: Set<string>
 			title: string
 			inclusiveStartDate?: Date
 			inclusiveEndDate?: Date
@@ -45,7 +45,7 @@ export const createSync =
 		if (!(await canReadProjects(dbContext)(projectIds, authContext))) {
 			return {
 				error: BadRequestError(
-					`Only members of '${projectIds.join(
+					`Only members of '${[...projectIds].join(
 						',',
 					)}' are allowed to create a sync.`,
 				),
@@ -64,9 +64,9 @@ export const createSync =
 						S: 'projectSync',
 					},
 					projectIds: {
-						SS: projectIds.map(l),
+						SS: [...projectIds].map(l),
 					},
-					author: {
+					sync__owner: {
 						S: l(userId),
 					},
 					title: {
@@ -86,9 +86,9 @@ export const createSync =
 		const event: SyncCreatedEvent = {
 			type: CoreEventType.SYNC_CREATED,
 			title,
-			author: userId,
+			owner: userId,
 			id,
-			projects: projectIds,
+			projectIds,
 			timestamp: new Date(),
 			inclusiveStartDate,
 			inclusiveEndDate,
