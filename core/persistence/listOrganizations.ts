@@ -1,4 +1,4 @@
-import { GetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
+import { BatchGetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import type { ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
@@ -28,42 +28,32 @@ export const listOrganizations =
 				},
 			}),
 		)
-		const organizations: Organization[] = []
 
-		for (const item of res.Items ?? []) {
-			const d = unmarshall(item)
-			const org = await getOrganization(dbContext)(
-				d.organizationMember__organization,
-			)
-			if (org !== null) organizations.push(org)
-		}
-		return {
-			organizations,
-		}
-	}
-
-const getOrganization =
-	({ db, TableName }: DbContext) =>
-	async (organizationId: string): Promise<Organization | null> => {
-		const { Item } = await db.send(
-			new GetItemCommand({
-				TableName,
-				Key: {
-					id: {
-						S: organizationId,
-					},
-					type: {
-						S: 'organization',
+		const { Responses } = await db.send(
+			new BatchGetItemCommand({
+				RequestItems: {
+					[TableName]: {
+						Keys: (res.Items ?? [])
+							.map((Item) => unmarshall(Item))
+							.map(({ organizationMember__organization: id }) => ({
+								id: { S: id },
+								type: {
+									S: 'organization',
+								},
+							})),
 					},
 				},
 			}),
 		)
 
-		if (Item === undefined) return null
-		const org = unmarshall(Item)
-
 		return {
-			id: organizationId,
-			name: org.name,
+			organizations: (Responses?.[TableName] ?? []).map((Item) =>
+				itemToOrganization(unmarshall(Item)),
+			),
 		}
 	}
+
+const itemToOrganization = (item: Record<string, any>): Organization => ({
+	id: item.id,
+	name: item.name,
+})
