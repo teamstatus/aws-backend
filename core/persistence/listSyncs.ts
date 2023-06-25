@@ -33,11 +33,18 @@ export const listSyncs =
 			}),
 		)
 
+		const items = res.Items ?? []
+
+		if (items.length === 0)
+			return {
+				syncs: [],
+			}
+
 		const { Responses } = await db.send(
 			new BatchGetItemCommand({
 				RequestItems: {
 					[TableName]: {
-						Keys: (res.Items ?? [])
+						Keys: items
 							.map((Item) => unmarshall(Item))
 							.map(({ id }) => ({
 								id: { S: id },
