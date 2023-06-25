@@ -32,11 +32,11 @@ export const itemToSync = (sync: Record<string, any>): Sync => ({
 	projectIds: sync.projectIds,
 	owner: sync.sync__owner,
 	inclusiveStartDate:
-		sync.inclusiveStartDate === undefined
+		sync.inclusiveStartDate === null
 			? undefined
 			: new Date(sync.inclusiveStartDate),
 	inclusiveEndDate:
-		sync.inclusiveEndDate === undefined
+		sync.inclusiveEndDate === null
 			? undefined
 			: new Date(sync.inclusiveEndDate),
 })
