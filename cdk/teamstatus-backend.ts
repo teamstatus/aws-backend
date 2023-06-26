@@ -6,6 +6,7 @@ import {
 	Stack,
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
+import { LambdaSource } from './constructs/LambdaSource.js'
 import { Persistence } from './constructs/Persistence.js'
 import { RESTAPI } from './constructs/RESTAPI.js'
 import { WebsocketAPI } from './constructs/WebsocketAPI.js'
@@ -66,7 +67,11 @@ class TeamStatusBackendStack extends Stack {
 		const persistence = new Persistence(this, { isTest })
 
 		const backendLayer = new Lambda.LayerVersion(this, 'backendLayer', {
-			code: Lambda.Code.fromAsset(layer.layerZipFile),
+			code: new LambdaSource(this, {
+				hash: layer.hash,
+				zipFile: layer.layerZipFile,
+				id: 'backendLayer',
+			}).code,
 			compatibleArchitectures: [Lambda.Architecture.ARM_64],
 			compatibleRuntimes: [Lambda.Runtime.NODEJS_18_X],
 		})

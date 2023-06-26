@@ -10,6 +10,7 @@ import { Construct } from 'constructs'
 import type { PackedLambda } from '../lambdas/packLambdaFromPath.js'
 import { readKeyPolicy } from '../teamstatus-backend.js'
 import { integrationUri } from './ApiRoute.js'
+import { LambdaSource } from './LambdaSource.js'
 
 abstract class APIAuthorizer extends Construct {
 	public readonly fn: Lambda.IFunction
@@ -34,7 +35,7 @@ abstract class APIAuthorizer extends Construct {
 			runtime: Lambda.Runtime.NODEJS_18_X,
 			timeout: Duration.seconds(1),
 			memorySize: 1792,
-			code: Lambda.Code.fromAsset(source.zipFile),
+			code: new LambdaSource(this, source).code,
 			layers: [layer],
 			logRetention: Logs.RetentionDays.ONE_WEEK,
 			initialPolicy: [readKeyPolicy(stack, 'publicKey')],

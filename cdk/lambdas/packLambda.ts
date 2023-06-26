@@ -2,6 +2,7 @@ import swc from '@swc/core'
 import { createWriteStream } from 'node:fs'
 import { parse } from 'path'
 import yazl from 'yazl'
+import { checkSumOfFiles } from './checksumOfFiles.js'
 import { commonParent } from './commonParent.js'
 import { findDependencies } from './findDependencies.js'
 
@@ -31,9 +32,10 @@ export const packLambda = async ({
 }: {
 	sourceFile: string
 	zipFile: string
+
 	debug?: (label: string, info: string) => void
 	progress?: (label: string, info: string) => void
-}): Promise<{ handler: string }> => {
+}): Promise<{ handler: string; hash: string }> => {
 	const lambdaFiles = [sourceFile, ...findDependencies(sourceFile)]
 
 	const zipfile = new yazl.ZipFile()
@@ -74,5 +76,8 @@ export const packLambda = async ({
 	})
 	progress?.(`written`, zipFile)
 
-	return { handler: stripCommon(sourceFile) }
+	return {
+		handler: stripCommon(sourceFile),
+		hash: await checkSumOfFiles(lambdaFiles),
+	}
 }

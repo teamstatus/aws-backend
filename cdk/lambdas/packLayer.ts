@@ -4,8 +4,9 @@ import { copyFile, mkdir, readFile, rm, writeFile } from 'fs/promises'
 import { glob } from 'glob'
 import path from 'path'
 import { ZipFile } from 'yazl'
+import { checkSumOfFiles } from './checksumOfFiles.js'
 
-export type PackedLayer = { layerZipFile: string }
+export type PackedLayer = { layerZipFile: string; hash: string }
 
 export const packLayer = async ({
 	id,
@@ -43,8 +44,9 @@ export const packLayer = async ({
 		}
 	}, {} as Record<string, string>)
 
+	const packageJSON = path.join(nodejsDir, 'package.json')
 	await writeFile(
-		path.join(nodejsDir, 'package.json'),
+		packageJSON,
 		JSON.stringify({
 			dependencies: depsToBeInstalled,
 		}),
@@ -95,5 +97,6 @@ export const packLayer = async ({
 
 	return {
 		layerZipFile: zipFileName,
+		hash: await checkSumOfFiles([packageJSON, packageLockJsonFile]),
 	}
 }

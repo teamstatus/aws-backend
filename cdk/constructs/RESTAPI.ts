@@ -13,6 +13,7 @@ import { readKeyPolicy } from '../teamstatus-backend.js'
 import { ApiEmailAuthorizer, ApiUserAuthorizer } from './APIAuthorizer.js'
 import { ApiRoute } from './ApiRoute.js'
 import { CoreLambda } from './CoreLambda.js'
+import { LambdaSource } from './LambdaSource.js'
 import { Persistence } from './Persistence.js'
 import type { WebsocketAPI } from './WebsocketAPI.js'
 
@@ -41,7 +42,7 @@ export class RESTAPI extends Construct {
 			runtime: Lambda.Runtime.NODEJS_18_X,
 			timeout: Duration.seconds(1),
 			memorySize: 1792,
-			code: Lambda.Code.fromAsset(lambdaSources.loginRequest.zipFile),
+			code: new LambdaSource(this, lambdaSources.loginRequest).code,
 			layers: [layer],
 			logRetention: Logs.RetentionDays.ONE_WEEK,
 			initialPolicy: [
@@ -63,7 +64,7 @@ export class RESTAPI extends Construct {
 			runtime: Lambda.Runtime.NODEJS_18_X,
 			timeout: Duration.seconds(1),
 			memorySize: 1792,
-			code: Lambda.Code.fromAsset(lambdaSources.pinLogin.zipFile),
+			code: new LambdaSource(this, lambdaSources.pinLogin).code,
 			layers: [layer],
 			logRetention: Logs.RetentionDays.ONE_WEEK,
 			initialPolicy: [readKeyPolicy(parent, 'privateKey')],
@@ -249,7 +250,7 @@ export class RESTAPI extends Construct {
 			runtime: Lambda.Runtime.NODEJS_18_X,
 			timeout: Duration.seconds(1),
 			memorySize: 256,
-			code: Lambda.Code.fromAsset(lambdaSources.cors.zipFile),
+			code: new LambdaSource(this, lambdaSources.cors).code,
 			logRetention: Logs.RetentionDays.ONE_DAY,
 		})
 

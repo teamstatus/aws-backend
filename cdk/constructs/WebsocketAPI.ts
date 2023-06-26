@@ -12,6 +12,7 @@ import type { BackendLambdas } from '../lambdas/packBackendLambdas'
 import type { PackedLambda } from '../lambdas/packLambdaFromPath'
 import { WSUserAuthorizer } from './APIAuthorizer.js'
 import { integrationUri } from './ApiRoute.js'
+import { LambdaSource } from './LambdaSource.js'
 
 export class WebsocketAPI extends Construct {
 	public readonly URL: string
@@ -108,7 +109,7 @@ class WSAPIRoute extends Construct {
 			runtime: Lambda.Runtime.NODEJS_18_X,
 			timeout: Duration.seconds(5),
 			memorySize: 1792,
-			code: Lambda.Code.fromAsset(source.zipFile),
+			code: new LambdaSource(this, source).code,
 			description: `Websocket handler for ${routeKey}`,
 			environment: {
 				CONNECTIONS_TABLE_NAME: clientsTable.tableName,
