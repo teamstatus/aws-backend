@@ -3,9 +3,13 @@ import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { type DbContext } from './DbContext.js'
 import type { Sync } from './createSync.js'
 
+export type SerializedSync = Omit<Sync, 'projectIds'> & {
+	projectIds: string[]
+}
+
 export const getSync =
 	({ db, TableName }: DbContext) =>
-	async (syncId: string): Promise<Sync | null> => {
+	async (syncId: string): Promise<SerializedSync | null> => {
 		const { Item } = await db.send(
 			new GetItemCommand({
 				TableName,
@@ -21,10 +25,15 @@ export const getSync =
 		)
 
 		if (Item === undefined) return null
-		const sync = unmarshall(Item)
+		const sync = itemToSync(unmarshall(Item))
 
-		return itemToSync(sync)
+		return serialize(sync)
 	}
+
+export const serialize = (sync: Sync): SerializedSync => ({
+	...sync,
+	projectIds: [...sync.projectIds],
+})
 
 export const itemToSync = (sync: Record<string, any>): Sync => ({
 	id: sync.id,

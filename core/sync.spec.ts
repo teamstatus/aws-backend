@@ -16,7 +16,8 @@ import type { DbContext } from './persistence/DbContext.js'
 import { createOrganization } from './persistence/createOrganization.js'
 import { createProject } from './persistence/createProject.js'
 import { createStatus } from './persistence/createStatus.js'
-import { createSync, type Sync } from './persistence/createSync.js'
+import { createSync } from './persistence/createSync.js'
+import type { SerializedSync } from './persistence/getSync.js'
 import { listStatusInSync } from './persistence/listStatusInSync.js'
 import { listSyncs } from './persistence/listSyncs.js'
 import { createTestDb } from './test/createTestDb.js'
@@ -188,14 +189,16 @@ describe('sync', async () => {
 		})
 
 		it('should list syncs', async () => {
-			const { syncs } = (await listSyncs(dbContext)(user)) as { syncs: Sync[] }
+			const { syncs } = (await listSyncs(dbContext)(user)) as {
+				syncs: SerializedSync[]
+			}
 
 			check(syncs?.[0]).is(
 				objectMatching({
 					id: aString,
 					title: 'My sync',
 					owner: user.sub,
-					projectIds: new Set([projectA, projectB]),
+					projectIds: [projectA, projectB],
 				}),
 			)
 		})

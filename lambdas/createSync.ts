@@ -22,7 +22,25 @@ const create = createSync(
 
 export const handler = userAuthRequestPipe(
 	(event) => JSON.parse(event.body ?? ''),
-	async ({ id, title, projectIds }, authContext) =>
-		create({ id, projectIds, title }, authContext),
+	async (
+		{ id, title, projectIds, inclusiveStartDate, inclusiveEndDate },
+		authContext,
+	) =>
+		create(
+			{
+				id,
+				projectIds,
+				title,
+				inclusiveStartDate:
+					inclusiveStartDate !== undefined
+						? new Date(inclusiveStartDate)
+						: undefined,
+				inclusiveEndDate:
+					inclusiveEndDate !== undefined
+						? new Date(inclusiveEndDate)
+						: undefined,
+			},
+			authContext,
+		),
 	() => StatusCode.CREATED,
 )

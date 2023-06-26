@@ -1,17 +1,17 @@
 import { BatchGetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import { decodeTime } from 'ulid'
 import { type ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
 import { type DbContext } from './DbContext.js'
-import type { Sync } from './createSync.js'
-import { itemToSync } from './getSync.js'
+import { itemToSync, serialize, type SerializedSync } from './getSync.js'
 import { l } from './l.js'
 
 export const listSyncs =
 	(dbContext: DbContext) =>
 	async (
 		authContext: UserAuthContext,
-	): Promise<{ error: ProblemDetail } | { syncs: Sync[] }> => {
+	): Promise<{ error: ProblemDetail } | { syncs: SerializedSync[] }> => {
 		const { sub: userId } = authContext
 
 		const { db, TableName } = dbContext
@@ -58,8 +58,9 @@ export const listSyncs =
 		)
 
 		return {
-			syncs: (Responses?.[TableName] ?? []).map((Item) =>
-				itemToSync(unmarshall(Item)),
-			),
+			syncs: (Responses?.[TableName] ?? [])
+				.map((Item) => itemToSync(unmarshall(Item)))
+				.sort((s1, s2) => decodeTime(s2.id) - decodeTime(s1.id))
+				.map(serialize),
 		}
 	}
