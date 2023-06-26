@@ -15,7 +15,7 @@ export const tokenCookie = async ({
 }): Promise<string> =>
 	[
 		`token=${create({ signingKey })(authContext)}`,
-		`Expires=${new Date(Date.now() + 24 * 60 * 60 * 1000).toString()}`,
+		`Expires=${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toString()}`,
 		`Path=/`,
 		`HttpOnly`,
 		`SameSite=None`,
