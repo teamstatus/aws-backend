@@ -40,7 +40,7 @@
     "@types/glob": "8.1.0",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/yazl": "2.4.2",
-    "@typescript-eslint/eslint-plugin": "5.60.0",
+    "@typescript-eslint/eslint-plugin": "5.60.1",
     "aws-cdk": "2.85.0",
     "aws-cdk-lib": "2.85.0",
     "cdk": "2.85.0",
