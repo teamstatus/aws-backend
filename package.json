@@ -53,7 +53,7 @@
     "prettier": "2.8.8",
     "tsmatchers": "4.0.12",
     "tsx": "3.12.7",
-    "typescript": "5.1.5",
+    "typescript": "5.1.6",
     "ulid": "2.3.0",
     "yazl": "2.5.1"
   },
