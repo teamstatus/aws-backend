@@ -64,7 +64,7 @@ export const createSync =
 						S: 'projectSync',
 					},
 					projectIds: {
-						SS: [...projectIds].map(l),
+						SS: [...projectIds],
 					},
 					sync__owner: {
 						S: l(userId),

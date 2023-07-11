@@ -198,8 +198,10 @@ describe('sync', async () => {
 					id: aString,
 					title: 'My sync',
 					owner: user.sub,
-					projectIds: [projectA, projectB],
 				}),
+			)
+			check(syncs?.[0]?.projectIds.sort((a, b) => a.localeCompare(b))).is(
+				arrayMatching([projectA, projectB].sort((a, b) => a.localeCompare(b))),
 			)
 		})
 	})
