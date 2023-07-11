@@ -11,7 +11,7 @@ import {
 } from '../ProblemDetail.js'
 import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
-import { generatePIN } from './generatePIN.js'
+import { generatePIN } from '../generatePIN.js'
 
 export type EmailLoginRequestedEvent = CoreEvent & {
 	type: CoreEventType.EMAIL_LOGIN_REQUESTED
