@@ -11,7 +11,7 @@ import { ulid } from 'ulid'
 import type { CoreEvent } from './CoreEvent.js'
 import { CoreEventType } from './CoreEventType.js'
 import type { UserAuthContext } from './auth.js'
-import { notifier } from './notifier.js'
+import { notifier, type Notify } from './notifier.js'
 import type { DbContext } from './persistence/DbContext.js'
 import { createOrganization } from './persistence/createOrganization.js'
 import { createProject } from './persistence/createProject.js'
@@ -51,20 +51,10 @@ describe('sync', async () => {
 
 		// Given there is a project with status
 		before(async () => {
-			isNotAnError(
-				await createOrganization(dbContext, notify)(
-					{ id: organizationId, name: `Organization ${organizationId}` },
-					user,
-				),
-			)
+			await newOrg(dbContext, notify, organizationId, user)
 			return Promise.all(
 				projectIds.map(async (projectId) => {
-					isNotAnError(
-						await createProject(dbContext, notify)(
-							{ id: projectId, name: `Project ${projectId}` },
-							user,
-						),
-					)
+					await newProject(dbContext, notify, projectId, user)
 					await Promise.all(
 						[1, 2, 3, 4].map(async (i) => {
 							const statusId = ulid()
@@ -206,3 +196,31 @@ describe('sync', async () => {
 		})
 	})
 })
+
+export const newProject = async (
+	dbContext: DbContext,
+	notify: Notify,
+	projectId: string,
+	user: UserAuthContext,
+): Promise<void> => {
+	isNotAnError(
+		await createProject(dbContext, notify)(
+			{ id: projectId, name: `Project ${projectId}` },
+			user,
+		),
+	)
+}
+
+export const newOrg = async (
+	dbContext: DbContext,
+	notify: Notify,
+	organizationId: string,
+	user: UserAuthContext,
+): Promise<void> => {
+	isNotAnError(
+		await createOrganization(dbContext, notify)(
+			{ id: organizationId, name: `Organization ${organizationId}` },
+			user,
+		),
+	)
+}

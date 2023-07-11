@@ -21,6 +21,14 @@ export enum StatusCode {
 	 */
 	BAD_REQUEST = 400,
 	/**
+	 * The request contained valid data and was understood by the server, but
+	 * the server is refusing action. This may be due to the user not having the
+	 * necessary permissions for a resource or needing an account of some sort,
+	 * or attempting a prohibited action (e.g. creating a duplicate record where
+	 * only one is allowed).
+	 */
+	FORBIDDEN = 403,
+	/**
 	 * The requested resource could not be found but may be available in the future.
 	 * Subsequent requests by the client are permissible.
 	 */

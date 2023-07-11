@@ -14,12 +14,14 @@ type SyncCreatedEvent = CoreEvent & {
 } & Sync
 
 export type Sync = {
-	title: string
+	title?: string
 	projectIds: Set<string>
 	owner: string
 	id: string
 	inclusiveStartDate?: Date
 	inclusiveEndDate?: Date
+	version: number
+	sharingToken?: string
 }
 
 export const createSync =
@@ -34,7 +36,7 @@ export const createSync =
 		}: {
 			id: string
 			projectIds: Set<string>
-			title: string
+			title?: string
 			inclusiveStartDate?: Date
 			inclusiveEndDate?: Date
 		},
@@ -69,9 +71,15 @@ export const createSync =
 					sync__owner: {
 						S: l(userId),
 					},
-					title: {
-						S: title,
+					version: {
+						N: '1',
 					},
+					title:
+						title === undefined
+							? { NULL: true }
+							: {
+									S: title,
+							  },
 					inclusiveStartDate:
 						inclusiveStartDate === undefined
 							? { NULL: true }
@@ -92,6 +100,7 @@ export const createSync =
 			timestamp: new Date(),
 			inclusiveStartDate,
 			inclusiveEndDate,
+			version: 1,
 		}
 		notify(event)
 		return {}
