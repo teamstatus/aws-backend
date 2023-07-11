@@ -4,7 +4,7 @@
   "description": "AWS backend for teamstatus developed using CDK in TypeScript",
   "type": "module",
   "scripts": {
-    "test": "npx tsx --test --test-reporter spec ./**/**/*.spec.ts",
+    "test": "find ./ -type f -name \\*.spec.ts | xargs npx tsx --test --test-reporter spec",
     "test:e2e": "$(set -o pipefail && npx tsx ./feature-runner/run-features.ts | npx tsx ./feature-runner/console-reporter.ts)",
     "prepare": "husky install && check-node-version --package"
   },
