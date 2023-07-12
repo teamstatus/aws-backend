@@ -4,7 +4,6 @@ import { CoreEventType } from '../CoreEventType.js'
 import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
-import { verifyULID } from '../verifyULID.js'
 import { type DbContext } from './DbContext.js'
 import { canReadProjects } from './canReadProjects.js'
 import { l } from './l.js'
@@ -21,7 +20,6 @@ export type Sync = {
 	inclusiveStartDate?: Date
 	inclusiveEndDate?: Date
 	version: number
-	sharingToken?: string
 }
 
 export const createSync =
@@ -60,13 +58,13 @@ export const createSync =
 				TableName,
 				Item: {
 					id: {
-						S: verifyULID(id),
+						S: id,
 					},
 					type: {
 						S: 'projectSync',
 					},
 					projectIds: {
-						SS: [...projectIds],
+						SS: [...projectIds].map(l),
 					},
 					sync__owner: {
 						S: l(userId),
@@ -89,6 +87,7 @@ export const createSync =
 							? { NULL: true }
 							: { S: inclusiveEndDate.toISOString() },
 				},
+				ConditionExpression: 'attribute_not_exists(id)',
 			}),
 		)
 		const event: SyncCreatedEvent = {

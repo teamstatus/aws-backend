@@ -4,6 +4,7 @@ import { StatusCode } from '../core/StatusCode.js'
 import { notifier } from '../core/notifier.js'
 import { createStatus } from '../core/persistence/createStatus.js'
 import { userAuthRequestPipe } from './requestPipe.js'
+import { verifyRecentULID } from './verifyULID.js'
 
 const { TableName } = fromEnv({
 	TableName: 'TABLE_NAME',
@@ -23,7 +24,11 @@ const create = createStatus(
 export const handler = userAuthRequestPipe(
 	(event) => {
 		const { id, message } = JSON.parse(event.body ?? '')
-		return { id, message, projectId: event.pathParameters?.projectId as string }
+		return {
+			id: verifyRecentULID(id),
+			message,
+			projectId: event.pathParameters?.projectId as string,
+		}
 	},
 	async ({ id, message, projectId }, authContext) =>
 		create(id, projectId, message, authContext),

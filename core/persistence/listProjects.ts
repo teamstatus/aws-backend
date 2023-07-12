@@ -18,7 +18,7 @@ export const listProjects =
 		const { sub: userId } = authContext
 
 		const { db, TableName } = dbContext
-		const res = await db.send(
+		const { Items } = await db.send(
 			new QueryCommand({
 				TableName,
 				IndexName: 'projectMember',
@@ -37,28 +37,30 @@ export const listProjects =
 			}),
 		)
 
-		const projectRole: Record<string, Role> = (res.Items ?? [])
-			.map((Item) => unmarshall(Item))
-			.reduce(
-				(projectRole, { projectMember__project, role }) => ({
-					...projectRole,
-					[projectMember__project]: role,
-				}),
-				{},
-			)
+		if (Items === undefined || Items.length === 0) return { projects: [] }
+
+		const projectRole: Record<string, Role> = Items.map((Item) =>
+			unmarshall(Item),
+		).reduce(
+			(projectRole, { projectMember__project, role }) => ({
+				...projectRole,
+				[projectMember__project]: role,
+			}),
+			{},
+		)
 
 		const { Responses } = await db.send(
 			new BatchGetItemCommand({
 				RequestItems: {
 					[TableName]: {
-						Keys: (res.Items ?? [])
-							.map((Item) => unmarshall(Item))
-							.map(({ projectMember__project: id }) => ({
+						Keys: Items.map((Item) => unmarshall(Item)).map(
+							({ projectMember__project: id }) => ({
 								id: { S: id },
 								type: {
 									S: 'project',
 								},
-							})),
+							}),
+						),
 					},
 				},
 			}),

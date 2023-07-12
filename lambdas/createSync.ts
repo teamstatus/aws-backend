@@ -4,6 +4,7 @@ import { StatusCode } from '../core/StatusCode.js'
 import { notifier } from '../core/notifier.js'
 import { createSync } from '../core/persistence/createSync.js'
 import { userAuthRequestPipe } from './requestPipe.js'
+import { verifyRecentULID } from './verifyULID.js'
 
 const { TableName } = fromEnv({
 	TableName: 'TABLE_NAME',
@@ -21,7 +22,17 @@ const create = createSync(
 )
 
 export const handler = userAuthRequestPipe(
-	(event) => JSON.parse(event.body ?? ''),
+	(event) => {
+		const { id, title, projectIds, inclusiveStartDate, inclusiveEndDate } =
+			JSON.parse(event.body ?? '')
+		return {
+			id: verifyRecentULID(id),
+			title,
+			projectIds,
+			inclusiveStartDate,
+			inclusiveEndDate,
+		}
+	},
 	async (
 		{ id, title, projectIds, inclusiveStartDate, inclusiveEndDate },
 		authContext,

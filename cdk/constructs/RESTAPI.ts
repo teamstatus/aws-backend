@@ -194,12 +194,6 @@ export class RESTAPI extends Construct {
 				description: 'Retrieve a sync',
 				authContext: 'user',
 			},
-			getSharedSync: {
-				routeKey: 'GET /sync/{syncId}/share/{sharingToken}',
-				source: lambdaSources.getSharedSync,
-				description: 'Retrieve a shared sync',
-				authContext: 'anon',
-			},
 			listStatusInSync: {
 				routeKey: 'GET /sync/{syncId}/status',
 				source: lambdaSources.listStatusInSync,
@@ -210,12 +204,6 @@ export class RESTAPI extends Construct {
 				routeKey: 'GET /syncs',
 				source: lambdaSources.listSyncs,
 				description: 'Lists syncs a user has created',
-				authContext: 'user',
-			},
-			shareSync: {
-				routeKey: 'PATCH /sync/{statusId}/share',
-				source: lambdaSources.shareSync,
-				description: 'Shares a sync',
 				authContext: 'user',
 			},
 		}

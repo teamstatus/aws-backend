@@ -4,6 +4,7 @@ import { StatusCode } from '../core/StatusCode.js'
 import { notifier } from '../core/notifier.js'
 import { updateStatus } from '../core/persistence/updateStatus.js'
 import { userAuthRequestPipe } from './requestPipe.js'
+import { verifyOlderULID } from './verifyULID.js'
 
 const { TableName } = fromEnv({
 	TableName: 'TABLE_NAME',
@@ -22,7 +23,7 @@ const update = updateStatus(
 
 export const handler = userAuthRequestPipe(
 	(event) => ({
-		id: event.pathParameters?.statusId as string,
+		id: verifyOlderULID(event.pathParameters?.statusId as string),
 		message: JSON.parse(event.body ?? '').message,
 		version: parseInt(event.headers['if-match'] ?? '0', 10),
 	}),

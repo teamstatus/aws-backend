@@ -9,7 +9,6 @@ import {
 } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
-import { verifyULID } from '../verifyULID.js'
 import { type DbContext } from './DbContext.js'
 import { isProjectMember } from './getProjectMember.js'
 import { l } from './l.js'
@@ -78,7 +77,7 @@ export const createReaction =
 				TableName,
 				Item: {
 					id: {
-						S: verifyULID(id),
+						S: id,
 					},
 					type: {
 						S: 'statusReaction',
@@ -99,6 +98,7 @@ export const createReaction =
 					description:
 						description !== undefined ? { S: description } : { NULL: true },
 				},
+				ConditionExpression: 'attribute_not_exists(id)',
 			}),
 		)
 		const event: ReactionCreatedEvent = {

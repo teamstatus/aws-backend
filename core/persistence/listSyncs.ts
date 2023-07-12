@@ -15,7 +15,7 @@ export const listSyncs =
 		const { sub: userId } = authContext
 
 		const { db, TableName } = dbContext
-		const res = await db.send(
+		const { Items } = await db.send(
 			new QueryCommand({
 				TableName,
 				IndexName: 'syncOwner',
@@ -33,25 +33,18 @@ export const listSyncs =
 			}),
 		)
 
-		const items = res.Items ?? []
-
-		if (items.length === 0)
-			return {
-				syncs: [],
-			}
+		if (Items === undefined || Items.length === 0) return { syncs: [] }
 
 		const { Responses } = await db.send(
 			new BatchGetItemCommand({
 				RequestItems: {
 					[TableName]: {
-						Keys: items
-							.map((Item) => unmarshall(Item))
-							.map(({ id }) => ({
-								id: { S: id },
-								type: {
-									S: 'projectSync',
-								},
-							})),
+						Keys: Items.map((Item) => unmarshall(Item)).map(({ id }) => ({
+							id: { S: id },
+							type: {
+								S: 'projectSync',
+							},
+						})),
 					},
 				},
 			}),

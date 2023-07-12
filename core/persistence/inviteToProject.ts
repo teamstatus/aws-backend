@@ -83,7 +83,7 @@ export const inviteToProject =
 					TableName,
 					Item: {
 						id: {
-							S: id,
+							S: l(id),
 						},
 						type: {
 							S: 'projectInvitation',

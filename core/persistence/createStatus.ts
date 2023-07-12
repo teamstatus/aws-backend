@@ -4,7 +4,6 @@ import { CoreEventType } from '../CoreEventType.js'
 import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
-import { verifyULID } from '../verifyULID.js'
 import { type DbContext } from './DbContext.js'
 import type { Reaction } from './createReaction.js'
 import { isProjectMember } from './getProjectMember.js'
@@ -47,7 +46,7 @@ export const createStatus =
 				TableName,
 				Item: {
 					id: {
-						S: verifyULID(id),
+						S: id,
 					},
 					type: {
 						S: 'projectStatus',
@@ -65,6 +64,7 @@ export const createStatus =
 						N: `1`,
 					},
 				},
+				ConditionExpression: 'attribute_not_exists(id)',
 			}),
 		)
 		const event: StatusCreatedEvent = {

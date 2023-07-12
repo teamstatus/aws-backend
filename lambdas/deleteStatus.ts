@@ -4,6 +4,7 @@ import { StatusCode } from '../core/StatusCode.js'
 import { notifier } from '../core/notifier.js'
 import { deleteStatus } from '../core/persistence/deleteStatus.js'
 import { userAuthRequestPipe } from './requestPipe.js'
+import { verifyOlderULID } from './verifyULID.js'
 
 const { TableName } = fromEnv({
 	TableName: 'TABLE_NAME',
@@ -21,7 +22,9 @@ const del = deleteStatus(
 )
 
 export const handler = userAuthRequestPipe(
-	(event) => ({ id: event.pathParameters?.statusId as string }),
+	(event) => ({
+		id: verifyOlderULID(event.pathParameters?.statusId as string),
+	}),
 	async ({ id }, authContext) => del(id, authContext),
 	() => StatusCode.ACCEPTED,
 )

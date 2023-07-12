@@ -53,7 +53,7 @@ export const createUser =
 						type: {
 							S: 'user',
 						},
-						user__email: { S: email },
+						user__email: { S: l(email) },
 						name: {
 							S: name,
 						},

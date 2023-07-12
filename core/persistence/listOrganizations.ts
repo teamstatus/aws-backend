@@ -13,7 +13,7 @@ export const listOrganizations =
 	): Promise<{ error: ProblemDetail } | { organizations: Organization[] }> => {
 		const { sub: userId } = authContext
 		const { db, TableName } = dbContext
-		const res = await db.send(
+		const { Items } = await db.send(
 			new QueryCommand({
 				TableName,
 				IndexName: 'organizationMember',
@@ -29,18 +29,20 @@ export const listOrganizations =
 			}),
 		)
 
+		if (Items === undefined || Items.length === 0) return { organizations: [] }
+
 		const { Responses } = await db.send(
 			new BatchGetItemCommand({
 				RequestItems: {
 					[TableName]: {
-						Keys: (res.Items ?? [])
-							.map((Item) => unmarshall(Item))
-							.map(({ organizationMember__organization: id }) => ({
+						Keys: Items.map((Item) => unmarshall(Item)).map(
+							({ organizationMember__organization: id }) => ({
 								id: { S: id },
 								type: {
 									S: 'organization',
 								},
-							})),
+							}),
+						),
 					},
 				},
 			}),

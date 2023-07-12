@@ -8,6 +8,7 @@ import {
 	NotFoundError,
 	type ProblemDetail,
 } from '../ProblemDetail.js'
+import { listProjects } from './listProjects.js'
 
 export type SerializedSync = Omit<Sync, 'projectIds'> & {
 	projectIds: string[]
@@ -16,17 +17,32 @@ export type SerializedSync = Omit<Sync, 'projectIds'> & {
 export const getSync =
 	(dbContext: DbContext) =>
 	async (
-		{ syncId, sharingToken }: { syncId: string; sharingToken?: string },
+		{ syncId }: { syncId: string },
 		authContext: UserAuthContext,
 	): Promise<{ sync: SerializedSync } | { error: ProblemDetail }> => {
 		const maybeSync = await getSyncById(dbContext)(syncId)
 		if ('error' in maybeSync) return { error: maybeSync.error }
 		const { sync } = maybeSync
+		// If user is not the owner, check if they have relevant projects in the sync
 		if (sync.owner !== authContext.sub) {
-			if (sharingToken === undefined || sharingToken !== sync.sharingToken) {
+			const maybeProjects = await listProjects(dbContext)(authContext)
+			const userProjectIds = (
+				'projects' in maybeProjects ? maybeProjects.projects : []
+			).map(({ id }) => id)
+			const userProjectIdsInSync = [...sync.projectIds].filter((id) =>
+				userProjectIds.includes(id),
+			)
+			if (userProjectIdsInSync.length === 0)
 				return {
 					error: AccessDeniedError(`Access to sync ${syncId} denied.`),
 				}
+
+			return {
+				sync: serialize({
+					...sync,
+					// Only show user the project IDs they have access to
+					projectIds: new Set(userProjectIdsInSync),
+				}),
 			}
 		}
 
@@ -52,7 +68,6 @@ export const itemToSync = (sync: Record<string, any>): Sync => ({
 			? undefined
 			: new Date(sync.inclusiveEndDate),
 	version: sync.version,
-	sharingToken: sync.sharingToken ?? undefined,
 })
 
 export const getSyncById =

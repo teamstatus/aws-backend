@@ -24,7 +24,7 @@ export const listOrganizationProjects =
 		}
 
 		const { db, TableName } = dbContext
-		const res = await db.send(
+		const { Items } = await db.send(
 			new QueryCommand({
 				TableName,
 				IndexName: 'projectMember',
@@ -40,18 +40,20 @@ export const listOrganizationProjects =
 			}),
 		)
 
+		if (Items === undefined || Items.length === 0) return { projects: [] }
+
 		const { Responses } = await db.send(
 			new BatchGetItemCommand({
 				RequestItems: {
 					[TableName]: {
-						Keys: (res.Items ?? [])
-							.map((Item) => unmarshall(Item))
-							.map(({ projectMember__project: id }) => ({
+						Keys: Items.map((Item) => unmarshall(Item)).map(
+							({ projectMember__project: id }) => ({
 								id: { S: id },
 								type: {
 									S: 'project',
 								},
-							})),
+							}),
+						),
 					},
 				},
 			}),

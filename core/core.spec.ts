@@ -262,7 +262,7 @@ describe('core', async () => {
 			)
 		})
 
-		it('can list projects for an organiztion', async () => {
+		it('can list projects for an organization', async () => {
 			const { projects } = (await listOrganizationProjects(dbContext)('$acme', {
 				email: 'alex@example.com',
 				sub: '@alex',

@@ -18,9 +18,7 @@ const get = getSync({
 export const handler = userAuthRequestPipe(
 	(event) => ({
 		id: event.pathParameters?.statusId as string,
-		sharingToken: event.queryStringParameters?.sharingToken,
 	}),
-	async ({ id, sharingToken }, authContext) =>
-		get({ syncId: id, sharingToken }, authContext),
+	async ({ id }, authContext) => get({ syncId: id }, authContext),
 	() => StatusCode.OK,
 )
