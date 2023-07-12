@@ -34,7 +34,10 @@ export const getSync =
 			)
 			if (userProjectIdsInSync.length === 0)
 				return {
-					error: AccessDeniedError(`Access to sync ${syncId} denied.`),
+					error: AccessDeniedError(
+						`Access to sync ${syncId} denied.`,
+						`Only members of the organizations referenced in this sync have access. Ask the owner of this sync (${sync.owner}) to invite you to the relevant organizations.`,
+					),
 				}
 
 			return {

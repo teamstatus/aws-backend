@@ -36,8 +36,12 @@ export const NotFoundError = (title: string): ProblemDetail => ({
 	title,
 })
 
-export const AccessDeniedError = (title: string): ProblemDetail => ({
+export const AccessDeniedError = (
+	title: string,
+	detail?: string,
+): ProblemDetail => ({
 	type: new URL(`https://teamstatus.space/error/AccessDeniedError`),
 	status: StatusCode.FORBIDDEN,
 	title,
+	detail,
 })

@@ -17,7 +17,7 @@ const get = getSync({
 
 export const handler = userAuthRequestPipe(
 	(event) => ({
-		id: event.pathParameters?.statusId as string,
+		id: event.pathParameters?.syncId as string,
 	}),
 	async ({ id }, authContext) => get({ syncId: id }, authContext),
 	() => StatusCode.OK,
