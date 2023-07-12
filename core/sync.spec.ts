@@ -17,13 +17,14 @@ import { createOrganization } from './persistence/createOrganization.js'
 import { createProject } from './persistence/createProject.js'
 import { createStatus } from './persistence/createStatus.js'
 import { createSync } from './persistence/createSync.js'
-import type { SerializedSync } from './persistence/getSync.js'
+import { getSync, type SerializedSync } from './persistence/getSync.js'
 import { listStatusInSync } from './persistence/listStatusInSync.js'
 import { listSyncs } from './persistence/listSyncs.js'
 import { createTestDb } from './test/createTestDb.js'
 import { eventually } from './test/eventually.js'
 import { isNotAnError } from './test/isNotAnError.js'
 import { testDb } from './test/testDb.js'
+import type { ProblemDetail } from './ProblemDetail.js'
 
 describe('sync', async () => {
 	const { TableName, db } = testDb()
@@ -48,6 +49,7 @@ describe('sync', async () => {
 		const newerStatus: Record<string, string[]> = {}
 		const user: UserAuthContext = { email: 'alex@example.com', sub: '@alex' }
 		const startDate = new Date()
+		const syncId = ulid()
 
 		// Given there is a project with status
 		before(async () => {
@@ -110,7 +112,6 @@ describe('sync', async () => {
 			const events: CoreEvent[] = []
 			on(CoreEventType.SYNC_CREATED, (e) => events.push(e))
 
-			const syncId = ulid()
 			isNotAnError(
 				await createSync(dbContext, notify)(
 					{
@@ -176,6 +177,17 @@ describe('sync', async () => {
 						),
 				)
 			})
+		})
+
+		it('only owners should be allowed to access a sync', async () => {
+			const { error } = (await getSync(dbContext)(
+				{ syncId },
+				{
+					email: 'blake@example.com',
+					sub: '@blake',
+				},
+			)) as { error: ProblemDetail }
+			check(error?.title).is(`Access to sync ${syncId} denied.`)
 		})
 
 		it('should list syncs', async () => {

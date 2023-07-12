@@ -7,14 +7,13 @@ import type { UserAuthContext } from './auth.js'
 import { notifier } from './notifier.js'
 import type { DbContext } from './persistence/DbContext.js'
 import { createSync } from './persistence/createSync.js'
-import { getSync } from './persistence/getSync.js'
 import { createTestDb } from './test/createTestDb.js'
 import { isNotAnError } from './test/isNotAnError.js'
 import { testDb } from './test/testDb.js'
 import { newOrg, newProject } from './sync.spec.js'
-import type { ProblemDetail } from './ProblemDetail.js'
 import { shareSync } from './persistence/shareSync.js'
 import { generateSharingToken } from './generateSharingToken.js'
+import { getSharedSync } from './persistence/getSharedSync.js'
 
 describe('sync', async () => {
 	const { TableName, db } = testDb()
@@ -51,17 +50,6 @@ describe('sync', async () => {
 			)
 		})
 
-		it('should not share syncs by default', async () => {
-			const { error } = (await getSync(dbContext)(
-				{ syncId },
-				{
-					email: 'blake@example.com',
-					sub: '@blake',
-				},
-			)) as { error: ProblemDetail }
-			check(error?.title).is(`Access to sync ${syncId} denied.`)
-		})
-
 		const sharingToken = generateSharingToken()
 
 		it('should allow the owner to share a sync', async () => {
@@ -84,13 +72,7 @@ describe('sync', async () => {
 
 		it('should allow non-onwers to access the sync using the sharing token', async () => {
 			const { sync } = isNotAnError(
-				await getSync(dbContext)(
-					{ syncId, sharingToken },
-					{
-						email: 'blake@example.com',
-						sub: '@blake',
-					},
-				),
+				await getSharedSync(dbContext)({ syncId, sharingToken }),
 			)
 
 			check(sync).is(

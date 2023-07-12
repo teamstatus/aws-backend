@@ -30,6 +30,7 @@ export type BackendLambdas = {
 	listSyncs: PackedLambda
 	shareSync: PackedLambda
 	getSync: PackedLambda
+	getSharedSync: PackedLambda
 }
 
 export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
@@ -122,4 +123,8 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	listSyncs: await packLambdaFromPath('listSyncs', 'lambdas/listSyncs.ts'),
 	shareSync: await packLambdaFromPath('shareSync', 'lambdas/shareSync.ts'),
 	getSync: await packLambdaFromPath('getSync', 'lambdas/getSync.ts'),
+	getSharedSync: await packLambdaFromPath(
+		'getSharedSync',
+		'lambdas/getSharedSync.ts',
+	),
 })

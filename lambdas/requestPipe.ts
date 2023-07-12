@@ -1,9 +1,37 @@
-import type { APIGatewayProxyResultV2 } from 'aws-lambda'
+import type {
+	APIGatewayProxyEventV2,
+	APIGatewayProxyResultV2,
+} from 'aws-lambda'
 import { BadRequestError, type ProblemDetail } from '../core/ProblemDetail.js'
 import { StatusCode } from '../core/StatusCode.js'
 import type { EmailAuthContext, UserAuthContext } from '../core/auth.js'
 import type { AuthorizedEvent } from './AuthorizedEvent.js'
 import { problem, result } from './response.js'
+
+export const anonRequestPipe =
+	<ValidInput, Result extends Record<string, any>>(
+		validateInput: (event: APIGatewayProxyEventV2) => ValidInput,
+		handle: (input: ValidInput) => Promise<{ error: ProblemDetail } | Result>,
+		toStatusCode?: (result?: Result) => StatusCode,
+	) =>
+	async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
+		{
+			console.log(JSON.stringify({ event }))
+			let input: ValidInput
+			try {
+				input = validateInput(event)
+			} catch (error) {
+				console.error(error)
+				return problem(event)(BadRequestError('Input validation failed.'))
+			}
+			const maybeResult = await handle(input)
+			if ('error' in maybeResult) return problem(event)(maybeResult.error)
+			return result(event)(
+				toStatusCode?.(maybeResult) ?? StatusCode.OK,
+				maybeResult,
+			)
+		}
+	}
 
 export const userAuthRequestPipe =
 	<ValidInput, Result extends Record<string, any>>(

@@ -83,7 +83,7 @@ export class RESTAPI extends Construct {
 				routeKey: string
 				description: string
 				source: PackedLambda
-				authContext: 'email' | 'user'
+				authContext: 'email' | 'user' | 'anon'
 			}
 		> = {
 			me: {
@@ -194,6 +194,12 @@ export class RESTAPI extends Construct {
 				description: 'Retrieve a sync',
 				authContext: 'user',
 			},
+			getSharedSync: {
+				routeKey: 'GET /sync/{syncId}/share/{sharingToken}',
+				source: lambdaSources.getSharedSync,
+				description: 'Retrieve a shared sync',
+				authContext: 'anon',
+			},
 			listStatusInSync: {
 				routeKey: 'GET /sync/{syncId}/status',
 				source: lambdaSources.listStatusInSync,
@@ -218,7 +224,7 @@ export class RESTAPI extends Construct {
 			routeId: string
 			fn: Lambda.IFunction
 			routeKey: string
-			authContext: 'email' | 'user'
+			authContext: 'email' | 'user' | 'anon'
 		}[] = []
 		for (const [
 			id,
@@ -322,18 +328,17 @@ export class RESTAPI extends Construct {
 				stage,
 			})
 
+		const authContextMap = {
+			email: emailAuthorizer.authorizer,
+			user: userAuthorizer.authorizer,
+			anon: undefined,
+		} as const
+
 		const routes = [
 			addRoute('loginRequestRoute', 'POST /login/email', loginRequest),
 			addRoute('pinLoginRoute', 'POST /login/email/pin', pinLogin),
 			...coreLambdas.map(({ routeId: id, fn, routeKey, authContext }) =>
-				addRoute(
-					id,
-					routeKey,
-					fn,
-					authContext === 'email'
-						? emailAuthorizer.authorizer
-						: userAuthorizer.authorizer,
-				),
+				addRoute(id, routeKey, fn, authContextMap[authContext]),
 			),
 			// CORS
 			addCors('/login/email'),

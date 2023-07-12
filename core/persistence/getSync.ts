@@ -14,29 +14,14 @@ export type SerializedSync = Omit<Sync, 'projectIds'> & {
 }
 
 export const getSync =
-	({ db, TableName }: DbContext) =>
+	(dbContext: DbContext) =>
 	async (
 		{ syncId, sharingToken }: { syncId: string; sharingToken?: string },
 		authContext: UserAuthContext,
 	): Promise<{ sync: SerializedSync } | { error: ProblemDetail }> => {
-		const { Item } = await db.send(
-			new GetItemCommand({
-				TableName,
-				Key: {
-					id: {
-						S: syncId,
-					},
-					type: {
-						S: 'projectSync',
-					},
-				},
-			}),
-		)
-
-		if (Item === undefined)
-			return { error: NotFoundError(`Sync ${syncId} not found!`) }
-		const sync = itemToSync(unmarshall(Item))
-
+		const maybeSync = await getSyncById(dbContext)(syncId)
+		if ('error' in maybeSync) return { error: maybeSync.error }
+		const { sync } = maybeSync
 		if (sync.owner !== authContext.sub) {
 			if (sharingToken === undefined || sharingToken !== sync.sharingToken) {
 				return {
@@ -69,3 +54,26 @@ export const itemToSync = (sync: Record<string, any>): Sync => ({
 	version: sync.version,
 	sharingToken: sync.sharingToken ?? undefined,
 })
+
+export const getSyncById =
+	({ db, TableName }: DbContext) =>
+	async (id: string): Promise<{ sync: Sync } | { error: ProblemDetail }> => {
+		const { Item } = await db.send(
+			new GetItemCommand({
+				TableName,
+				Key: {
+					id: {
+						S: id,
+					},
+					type: {
+						S: 'projectSync',
+					},
+				},
+			}),
+		)
+
+		if (Item === undefined)
+			return { error: NotFoundError(`Sync ${id} not found!`) }
+		const sync = itemToSync(unmarshall(Item))
+		return { sync }
+	}
