@@ -16,7 +16,7 @@ import { notifier, type Notify } from './notifier.js'
 import type { DbContext } from './persistence/DbContext.js'
 import { createOrganization } from './persistence/createOrganization.js'
 import { createProject } from './persistence/createProject.js'
-import { createStatus } from './persistence/createStatus.js'
+import { createStatus, type Status } from './persistence/createStatus.js'
 import { createSync } from './persistence/createSync.js'
 import { getSync, type SerializedSync } from './persistence/getSync.js'
 import { listStatusInSync } from './persistence/listStatusInSync.js'
@@ -203,7 +203,7 @@ describe('sync', async () => {
 
 	describe('accessing syncs', async () => {
 		it('should allow owners to access a sync', async () => {
-			const { sync } = (await getSync(dbContext)({ syncId }, user)) as {
+			const { sync } = (await getSync(dbContext)(syncId, user)) as {
 				sync: SerializedSync
 			}
 			check(sync).is(
@@ -220,7 +220,7 @@ describe('sync', async () => {
 		}
 
 		it('users who have not related project should not be allowed to access a sync', async () => {
-			const { error } = (await getSync(dbContext)({ syncId }, blake)) as {
+			const { error } = (await getSync(dbContext)(syncId, blake)) as {
 				error: ProblemDetail
 			}
 			check(error?.title).is(`Access to sync ${syncId} denied.`)
@@ -234,7 +234,7 @@ describe('sync', async () => {
 			)
 
 			eventually(async () => {
-				const { sync } = (await getSync(dbContext)({ syncId }, blake)) as {
+				const { sync } = (await getSync(dbContext)(syncId, blake)) as {
 					sync: SerializedSync
 				}
 				check(sync).is(
@@ -245,6 +245,21 @@ describe('sync', async () => {
 				)
 				check(sync.projectIds).is(arrayMatching([projectA.toLowerCase()]))
 				check(sync.projectIds).is(not(arrayContaining(projectB.toLowerCase())))
+			})
+		})
+
+		it('should allow users to fetch status in the sync if they have at least one project in the sync', () => {
+			eventually(async () => {
+				const { status } = (await listStatusInSync(dbContext)(
+					syncId,
+					blake,
+				)) as {
+					status: Status[]
+				}
+
+				recentStatus[projectA]?.map((id) =>
+					check(status).is(arrayContaining(objectMatching({ id }))),
+				)
 			})
 		})
 	})

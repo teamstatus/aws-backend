@@ -1,15 +1,11 @@
 import { GetItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import {
-	BadRequestError,
-	NotFoundError,
-	type ProblemDetail,
-} from '../ProblemDetail.js'
+import { NotFoundError, type ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
 import type { DbContext } from './DbContext.js'
-import { canReadProjects } from './canReadProjects.js'
 import type { Status } from './createStatus.js'
 import { listStatus } from './listStatus.js'
+import { itemToSync, projectsInSyncForUser } from './getSync.js'
 
 export const listStatusInSync =
 	(dbContext: DbContext) =>
@@ -18,7 +14,7 @@ export const listStatusInSync =
 		authContext: UserAuthContext,
 	): Promise<{ status: Status[] } | { error: ProblemDetail }> => {
 		const { db, TableName } = dbContext
-		const { Item: sync } = await db.send(
+		const { Item } = await db.send(
 			new GetItemCommand({
 				TableName,
 				Key: {
@@ -39,40 +35,26 @@ export const listStatusInSync =
 			}),
 		)
 
-		if (sync === undefined)
+		if (Item === undefined)
 			return { error: NotFoundError(`Sync ${syncId} not found!`) }
 
-		const { projectIds, inclusiveStartDate, inclusiveEndDate } = unmarshall(
-			sync,
-		) as {
-			projectIds: Set<string>
-			inclusiveStartDate: null | string
-			inclusiveEndDate: null | string
-		}
+		const sync = itemToSync(unmarshall(Item))
 
-		if (!(await canReadProjects(dbContext)(projectIds, authContext))) {
-			return {
-				error: BadRequestError(
-					`Only members of '${[...projectIds].join(
-						',',
-					)}' are allowed to create a sync.`,
-				),
-			}
-		}
+		const maybeProjectIds = await projectsInSyncForUser(dbContext)(
+			sync,
+			authContext,
+		)
+		if ('error' in maybeProjectIds) return maybeProjectIds
+
+		const { projectIds, inclusiveStartDate, inclusiveEndDate } = sync
 
 		const maybeStatus = await Promise.all(
 			[...projectIds].map(async (projectId) =>
 				listStatus({ db, TableName })(
 					{
 						projectId,
-						inclusiveStartDate:
-							inclusiveStartDate === null
-								? undefined
-								: new Date(inclusiveStartDate),
-						inclusiveEndDate:
-							inclusiveEndDate === null
-								? undefined
-								: new Date(inclusiveEndDate),
+						inclusiveStartDate,
+						inclusiveEndDate,
 					},
 					authContext,
 				),

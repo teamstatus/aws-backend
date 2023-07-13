@@ -5,8 +5,8 @@ import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
-import { canReadProjects } from './canReadProjects.js'
 import { l } from './l.js'
+import { isProjectMember } from './getProjectMember.js'
 
 type SyncCreatedEvent = CoreEvent & {
 	type: CoreEventType.SYNC_CREATED
@@ -103,4 +103,22 @@ export const createSync =
 		}
 		notify(event)
 		return {}
+	}
+
+const canReadProjects =
+	(dbContext: DbContext) =>
+	async (
+		projectIds: Set<string>,
+		{ sub: userId }: UserAuthContext,
+	): Promise<boolean> => {
+		const memberCheck = isProjectMember(dbContext)
+		const allMember = await Promise.all(
+			[...projectIds].map(async (projectId) => ({
+				projectId,
+				isMember: await memberCheck(projectId, userId),
+			})),
+		)
+
+		const notMemberOf = allMember.find(({ isMember }) => isMember === false)
+		return notMemberOf === undefined
 	}

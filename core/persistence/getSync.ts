@@ -17,39 +17,24 @@ export type SerializedSync = Omit<Sync, 'projectIds'> & {
 export const getSync =
 	(dbContext: DbContext) =>
 	async (
-		{ syncId }: { syncId: string },
+		syncId: string,
 		authContext: UserAuthContext,
 	): Promise<{ sync: SerializedSync } | { error: ProblemDetail }> => {
 		const maybeSync = await getSyncById(dbContext)(syncId)
-		if ('error' in maybeSync) return { error: maybeSync.error }
+		if ('error' in maybeSync) return maybeSync
 		const { sync } = maybeSync
-		// If user is not the owner, check if they have relevant projects in the sync
-		if (sync.owner !== authContext.sub) {
-			const maybeProjects = await listProjects(dbContext)(authContext)
-			const userProjectIds = (
-				'projects' in maybeProjects ? maybeProjects.projects : []
-			).map(({ id }) => id)
-			const userProjectIdsInSync = [...sync.projectIds].filter((id) =>
-				userProjectIds.includes(id),
-			)
-			if (userProjectIdsInSync.length === 0)
-				return {
-					error: AccessDeniedError(
-						`Access to sync ${syncId} denied.`,
-						`Only members of the organizations referenced in this sync have access. Ask the owner of this sync (${sync.owner}) to invite you to the relevant organizations.`,
-					),
-				}
-
-			return {
-				sync: serialize({
-					...sync,
-					// Only show user the project IDs they have access to
-					projectIds: new Set(userProjectIdsInSync),
-				}),
-			}
+		const maybeProjectIds = await projectsInSyncForUser(dbContext)(
+			sync,
+			authContext,
+		)
+		if ('error' in maybeProjectIds) return maybeProjectIds
+		return {
+			sync: serialize({
+				...sync,
+				// Only show user the project IDs they have access to
+				projectIds: maybeProjectIds.projectIds,
+			}),
 		}
-
-		return { sync: serialize(sync) }
 	}
 
 export const serialize = (sync: Sync): SerializedSync => ({
@@ -94,4 +79,31 @@ export const getSyncById =
 			return { error: NotFoundError(`Sync ${id} not found!`) }
 		const sync = itemToSync(unmarshall(Item))
 		return { sync }
+	}
+
+/**
+ * Note: the check is done for all users (even the owner), because they may no longer be member of the project.
+ */
+export const projectsInSyncForUser =
+	(dbContext: DbContext) =>
+	async (
+		sync: Sync,
+		authContext: UserAuthContext,
+	): Promise<{ error: ProblemDetail } | { projectIds: Set<string> }> => {
+		const maybeProjects = await listProjects(dbContext)(authContext)
+		const userProjectIds = (
+			'projects' in maybeProjects ? maybeProjects.projects : []
+		).map(({ id }) => id)
+		const userProjectIdsInSync = [...sync.projectIds].filter((id) =>
+			userProjectIds.includes(id),
+		)
+		if (userProjectIdsInSync.length === 0)
+			return {
+				error: AccessDeniedError(
+					`Access to sync ${sync.id} denied.`,
+					`Only members of the organizations referenced in this sync have access. Ask the owner of this sync (${sync.owner}) to invite you to the relevant projects.`,
+				),
+			}
+
+		return { projectIds: new Set(userProjectIdsInSync) }
 	}
