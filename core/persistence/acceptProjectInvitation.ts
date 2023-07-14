@@ -10,6 +10,7 @@ import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
 import { createProjectMember } from './createProjectMember.js'
 import { l } from './l.js'
+import { createInvitationId } from './inviteToProject.js'
 
 export const acceptProjectInvitation =
 	(dbContext: DbContext, notify: Notify) =>
@@ -18,7 +19,7 @@ export const acceptProjectInvitation =
 		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { sub: userId } = authContext
-		const id = `${l(projectId)}:${l(userId)}`
+		const id = createInvitationId({ projectId, invitedUserId: userId })
 		const { db, TableName } = dbContext
 		const { Item } = await db.send(
 			new GetItemCommand({
@@ -41,7 +42,7 @@ export const acceptProjectInvitation =
 
 		const invitation = unmarshall(Item)
 
-		if (invitation.invitee !== l(userId)) {
+		if (invitation.projectInvitation__invitee !== l(userId)) {
 			return {
 				error: BadRequestError(`Invitation '${id}' is not for you!`),
 			}
@@ -50,7 +51,7 @@ export const acceptProjectInvitation =
 		await Promise.all([
 			createProjectMember(dbContext, notify)(
 				invitation.projectInvitation__project,
-				invitation.invitee,
+				invitation.projectInvitation__invitee,
 				invitation.role,
 			),
 			db.send(

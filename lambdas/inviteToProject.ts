@@ -78,13 +78,6 @@ export const handler = userAuthRequestPipe(
 				getUser({ db, TableName })(authContext.sub),
 			])
 
-			console.log(
-				JSON.stringify({
-					Inviter,
-					Invitee,
-				}),
-			)
-
 			const name = Invitee?.name
 			const email = Invitee?.user__email
 			const inviterName = Inviter?.name

@@ -158,6 +158,12 @@ export class RESTAPI extends Construct {
 				description: 'Invites a user to a project',
 				authContext: 'user',
 			},
+			listInvitations: {
+				routeKey: 'GET /invitations',
+				source: lambdaSources.listInvitations,
+				description: 'Lists project invitations for a user',
+				authContext: 'user',
+			},
 			acceptProjectInvitation: {
 				routeKey: 'POST /project/{projectId}/invitation',
 				source: lambdaSources.acceptProjectInvitation,

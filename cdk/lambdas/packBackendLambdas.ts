@@ -20,6 +20,7 @@ export type BackendLambdas = {
 	updateStatus: PackedLambda
 	createToken: PackedLambda
 	acceptProjectInvitation: PackedLambda
+	listInvitations: PackedLambda
 	inviteToProject: PackedLambda
 	wsOnConnect: PackedLambda
 	wsOnDisconnect: PackedLambda
@@ -88,6 +89,10 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	acceptProjectInvitation: await packLambdaFromPath(
 		'acceptProjectInvitation',
 		'lambdas/acceptProjectInvitation.ts',
+	),
+	listInvitations: await packLambdaFromPath(
+		'listInvitations',
+		'lambdas/listInvitations.ts',
 	),
 	inviteToProject: await packLambdaFromPath(
 		'inviteToProject',

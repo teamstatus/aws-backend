@@ -13,7 +13,7 @@ import {
 	type ProblemDetail,
 } from '../ProblemDetail.js'
 import { Role } from '../Role.js'
-import type { UserAuthContext } from '../auth.js'
+import { type UserAuthContext } from '../auth.js'
 import { parseProjectId } from '../ids.js'
 import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
@@ -25,6 +25,7 @@ export type MemberInvitedEvent = CoreEvent & {
 } & Invitation
 
 export type Invitation = {
+	id: string
 	project: string
 	invitee: string
 	inviter: string
@@ -77,7 +78,7 @@ export const inviteToProject =
 					error: NotFoundError(`User ${invitedUserId} does not exist.`),
 				}
 
-			const id = `${l(projectId)}:${l(invitedUserId)}`
+			const id = createInvitationId({ projectId, invitedUserId })
 			await db.send(
 				new PutItemCommand({
 					TableName,
@@ -91,10 +92,10 @@ export const inviteToProject =
 						projectInvitation__project: {
 							S: l(projectId),
 						},
-						invitee: {
+						projectInvitation__invitee: {
 							S: l(invitedUserId),
 						},
-						inviter: {
+						projectInvitation__inviter: {
 							S: l(userId),
 						},
 						role: {
@@ -106,6 +107,7 @@ export const inviteToProject =
 			)
 			const event: MemberInvitedEvent = {
 				type: CoreEventType.PROJECT_MEMBER_INVITED,
+				id: l(id),
 				project: projectId,
 				invitee: invitedUserId,
 				inviter: userId,
@@ -124,3 +126,11 @@ export const inviteToProject =
 			return { error: InternalError() }
 		}
 	}
+
+export const createInvitationId = ({
+	projectId,
+	invitedUserId,
+}: {
+	projectId: string
+	invitedUserId: string
+}): string => `${l(projectId)}${l(invitedUserId)}`

@@ -33,7 +33,10 @@ import {
 	type EmailLoginRequest,
 } from './persistence/emailLoginRequest.js'
 import { emailPINLogin } from './persistence/emailPINLogin.js'
-import type { MemberInvitedEvent } from './persistence/inviteToProject.js'
+import type {
+	Invitation,
+	MemberInvitedEvent,
+} from './persistence/inviteToProject.js'
 import { inviteToProject } from './persistence/inviteToProject.js'
 import { listOrganizationProjects } from './persistence/listOrganizationProjects.js'
 import { listOrganizations } from './persistence/listOrganizations.js'
@@ -44,6 +47,7 @@ import { aUlid } from './test/aUlid.js'
 import { createTestDb } from './test/createTestDb.js'
 import { isNotAnError } from './test/isNotAnError.js'
 import { testDb } from './test/testDb.js'
+import { listInvitations } from './persistence/listInvitations.js'
 
 describe('core', async () => {
 	const { TableName, db } = testDb()
@@ -331,6 +335,19 @@ describe('core', async () => {
 						error?.title,
 						`Only members of '$acme#teamstatus' are allowed to create status.`,
 					)
+				})
+
+				it('should list open invites for a user', async () => {
+					const { invitations } = (await listInvitations(dbContext)({
+						email: 'cameron@example.com',
+						sub: '@cameron',
+					})) as { invitations: Invitation[] }
+					assert.deepEqual(invitations, [
+						{
+							id: '$acme#teamstatus@cameron',
+							role: Role.MEMBER,
+						},
+					])
 				})
 
 				it('allows users to accept invitations', async () => {
