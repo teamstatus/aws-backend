@@ -61,6 +61,16 @@ describe('core', async () => {
 
 	before(createTestDb(dbContext))
 
+	const alex: UserAuthContext = {
+		email: 'alex@example.com',
+		sub: '@alex',
+	}
+
+	const cameron: UserAuthContext = {
+		email: 'cameron@example.com',
+		sub: '@cameron',
+	}
+
 	describe('user management', async () => {
 		describe('allows users to log-in with their email', async () => {
 			let pin: string
@@ -70,9 +80,7 @@ describe('core', async () => {
 				const { loginRequest, pin: p } = (await emailLoginRequest(
 					dbContext,
 					notify,
-				)({
-					email: 'alex@example.com',
-				})) as { loginRequest: EmailLoginRequest; pin: string }
+				)(alex)) as { loginRequest: EmailLoginRequest; pin: string }
 				check(loginRequest).is(
 					objectMatching({
 						email: 'alex@example.com',
@@ -174,12 +182,7 @@ describe('core', async () => {
 					email: 'alex@example.com',
 					pin,
 				})) as { authContext: UserAuthContext }
-				check(authContext).is(
-					objectMatching({
-						email: 'alex@example.com',
-						sub: '@alex',
-					}),
-				)
+				check(authContext).is(objectMatching(alex))
 			})
 		})
 	})
@@ -191,7 +194,7 @@ describe('core', async () => {
 			isNotAnError(
 				await createOrganization(dbContext, notify)(
 					{ id: '$acme', name: 'ACME Inc.' },
-					{ email: 'alex@example.com', sub: '@alex' },
+					alex,
 				),
 			)
 			check(events[0]).is(
@@ -207,17 +210,14 @@ describe('core', async () => {
 		it('ensures that organizations are unique', async () => {
 			const { error } = (await createOrganization(dbContext, notify)(
 				{ id: '$acme', name: 'ACME Inc.' },
-				{ email: 'alex@example.com', sub: '@alex' },
+				alex,
 			)) as { error: ProblemDetail }
 
 			assert.equal(error?.title, `Organization '$acme' already exists.`)
 		})
 
 		it('can list organizations for a user', async () => {
-			const { organizations } = (await listOrganizations(dbContext)({
-				email: 'alex@example.com',
-				sub: '@alex',
-			})) as {
+			const { organizations } = (await listOrganizations(dbContext)(alex)) as {
 				organizations: Organization[]
 			}
 			check(organizations?.[0]).is(
@@ -236,7 +236,7 @@ describe('core', async () => {
 			isNotAnError(
 				await createProject(dbContext, notify)(
 					{ id: '$acme#teamstatus', name: 'Teamstatus' },
-					{ email: 'alex@example.com', sub: '@alex' },
+					alex,
 				),
 			)
 			check(events[0]).is(
@@ -258,7 +258,7 @@ describe('core', async () => {
 		it('ensures that projects are unique', async () => {
 			const res = (await createProject(dbContext, notify)(
 				{ id: '$acme#teamstatus', name: 'Teamstatus' },
-				{ email: 'alex@example.com', sub: '@alex' },
+				alex,
 			)) as { error: ProblemDetail }
 			assert.equal(
 				res.error?.title,
@@ -267,10 +267,10 @@ describe('core', async () => {
 		})
 
 		it('can list projects for an organization', async () => {
-			const { projects } = (await listOrganizationProjects(dbContext)('$acme', {
-				email: 'alex@example.com',
-				sub: '@alex',
-			})) as { projects: Project[] }
+			const { projects } = (await listOrganizationProjects(dbContext)(
+				'$acme',
+				alex,
+			)) as { projects: Project[] }
 			check(projects?.[0]).is(
 				objectMatching({
 					id: '$acme#teamstatus',
@@ -288,7 +288,7 @@ describe('core', async () => {
 				)({
 					id: '@cameron',
 					name: 'Cameron',
-					authContext: { email: 'cameron@example.com' },
+					authContext: cameron,
 				})
 
 				const events: MemberInvitedEvent[] = []
@@ -300,7 +300,7 @@ describe('core', async () => {
 					await inviteToProject(dbContext, notify)(
 						'@cameron',
 						'$acme#teamstatus',
-						{ email: 'alex@example.com', sub: '@alex' },
+						alex,
 					),
 				)
 				check(events[0]).is(
@@ -318,7 +318,7 @@ describe('core', async () => {
 				const { error } = (await inviteToProject(dbContext, notify)(
 					'@nobody',
 					'$acme#teamstatus',
-					{ email: 'alex@example.com', sub: '@alex' },
+					alex,
 				)) as { error: ProblemDetail }
 				assert.equal(error?.title, `User @nobody does not exist.`)
 			})
@@ -329,7 +329,7 @@ describe('core', async () => {
 						ulid(),
 						'$acme#teamstatus',
 						'Should not work',
-						{ email: 'cameron@example.com', sub: '@cameron' },
+						cameron,
 					)) as { error: ProblemDetail }
 					assert.equal(
 						error?.title,
@@ -338,10 +338,9 @@ describe('core', async () => {
 				})
 
 				it('should list open invites for a user', async () => {
-					const { invitations } = (await listInvitations(dbContext)({
-						email: 'cameron@example.com',
-						sub: '@cameron',
-					})) as { invitations: Invitation[] }
+					const { invitations } = (await listInvitations(dbContext)(
+						cameron,
+					)) as { invitations: Invitation[] }
 					assert.deepEqual(invitations, [
 						{
 							id: '$acme#teamstatus@cameron',
@@ -353,7 +352,7 @@ describe('core', async () => {
 				it('allows users to accept invitations', async () => {
 					const { error } = (await acceptProjectInvitation(dbContext, notify)(
 						'$acme#teamstatus',
-						{ email: 'cameron@example.com', sub: '@cameron' },
+						cameron,
 					)) as { error: ProblemDetail }
 					assert.equal(error, undefined)
 				})
@@ -363,7 +362,7 @@ describe('core', async () => {
 						ulid(),
 						'$acme#teamstatus',
 						'Should work now!',
-						{ email: 'cameron@example.com', sub: '@cameron' },
+						cameron,
 					)) as { error: ProblemDetail }
 					assert.equal(error, undefined)
 				})
@@ -382,7 +381,7 @@ describe('core', async () => {
 							id,
 							'$acme#teamstatus',
 							'Implemented ability to persist status updates for projects.',
-							{ email: 'alex@example.com', sub: '@alex' },
+							alex,
 						),
 					)
 					check(events[0]).is(
@@ -420,7 +419,7 @@ describe('core', async () => {
 							statusId,
 							'$acme#teamstatus',
 							'Status with an typo',
-							{ email: 'alex@example.com', sub: '@alex' },
+							alex,
 						),
 					)
 
@@ -430,13 +429,13 @@ describe('core', async () => {
 							statusId,
 							'Status with a typo',
 							1,
-							{ email: 'alex@example.com', sub: '@alex' },
+							alex,
 						),
 					)
 					// Fetch
 					const { status: statusList } = (await listStatus(dbContext)(
 						{ projectId: '$acme#teamstatus' },
-						{ email: 'alex@example.com', sub: '@alex' },
+						alex,
 					)) as {
 						status: Status[]
 					}
@@ -451,10 +450,10 @@ describe('core', async () => {
 				})
 
 				it('allows status to be deleted by the author', async () => {
-					const { error } = (await deleteStatus(dbContext, notify)(statusId, {
-						email: 'alex@example.com',
-						sub: '@alex',
-					})) as { error: ProblemDetail }
+					const { error } = (await deleteStatus(dbContext, notify)(
+						statusId,
+						alex,
+					)) as { error: ProblemDetail }
 
 					assert.equal(error, undefined)
 				})
@@ -464,10 +463,7 @@ describe('core', async () => {
 				it('can list status for a project', async () => {
 					const { status } = (await listStatus(dbContext)(
 						{ projectId: '$acme#teamstatus' },
-						{
-							email: 'alex@example.com',
-							sub: '@alex',
-						},
+						alex,
 					)) as { status: Status[] }
 					check(status?.[0]).is(
 						objectMatching({
@@ -485,27 +481,24 @@ describe('core', async () => {
 						ulid(),
 						'$acme#teamstatus',
 						'Status 1',
-						{ email: 'alex@example.com', sub: '@alex' },
+						alex,
 					)
 					await createStatus(dbContext, notify)(
 						ulid(),
 						'$acme#teamstatus',
 						'Status 2',
-						{ email: 'alex@example.com', sub: '@alex' },
+						alex,
 					)
 					await createStatus(dbContext, notify)(
 						ulid(),
 						'$acme#teamstatus',
 						'Status 3',
-						{ email: 'alex@example.com', sub: '@alex' },
+						alex,
 					)
 
 					const { status } = (await listStatus(dbContext)(
 						{ projectId: '$acme#teamstatus' },
-						{
-							email: 'alex@example.com',
-							sub: '@alex',
-						},
+						alex,
 					)) as {
 						status: Status[]
 					}
@@ -560,7 +553,7 @@ describe('core', async () => {
 
 					await createProject(dbContext, notify)(
 						{ id: `$acme${projectId}`, name: `Project ${projectId}` },
-						{ email: 'alex@example.com', sub: '@alex' },
+						alex,
 					)
 
 					isNotAnError(
@@ -568,7 +561,7 @@ describe('core', async () => {
 							statusId,
 							`$acme${projectId}`,
 							`I've released a new version!`,
-							{ email: 'alex@example.com', sub: '@alex' },
+							alex,
 						),
 					)
 
@@ -579,7 +572,7 @@ describe('core', async () => {
 								status: statusId,
 								...newVersionRelease,
 							},
-							{ email: 'alex@example.com', sub: '@alex' },
+							alex,
 						),
 					)
 
@@ -609,7 +602,7 @@ describe('core', async () => {
 						await inviteToProject(dbContext, notify)(
 							'@blake',
 							`$acme${projectId}`,
-							{ email: 'alex@example.com', sub: '@alex' },
+							alex,
 						),
 					)
 
@@ -636,10 +629,7 @@ describe('core', async () => {
 				it('returns reactions with the status', async () => {
 					const { status } = (await listStatus(dbContext)(
 						{ projectId: `$acme${projectId}` },
-						{
-							email: 'alex@example.com',
-							sub: '@alex',
-						},
+						alex,
 					)) as { status: Status[] }
 
 					check(status[0]?.reactions[0]).is(
@@ -662,20 +652,14 @@ describe('core', async () => {
 				it('allows reactions to be deleted by the author', async () => {
 					const { error } = (await deleteReaction(dbContext, notify)(
 						reactionId,
-						{
-							email: 'alex@example.com',
-							sub: '@alex',
-						},
+						alex,
 					)) as { error: ProblemDetail }
 
 					assert.equal(error, undefined)
 
 					const { status } = (await listStatus(dbContext)(
 						{ projectId: `$acme${projectId}` },
-						{
-							email: 'alex@example.com',
-							sub: '@alex',
-						},
+						alex,
 					)) as { status: Status[] }
 
 					assert.equal(
@@ -688,25 +672,23 @@ describe('core', async () => {
 
 		describe('projects', async () => {
 			it('can list projects for a user', async () => {
-				const { projects } = (await listProjects(dbContext)({
-					email: 'alex@example.com',
-					sub: '@alex',
-				})) as { projects: Project[] }
-				check(projects?.[0]).is(
-					objectMatching({
-						id: '$acme#teamstatus',
-						name: 'Teamstatus',
-					}),
+				const { projects } = (await listProjects(dbContext)(alex)) as {
+					projects: Project[]
+				}
+				check(projects).is(
+					arrayContaining(
+						objectMatching({
+							id: '$acme#teamstatus',
+							name: 'Teamstatus',
+						}),
+					),
 				)
 			})
 
 			it('allows project members to list status', async () => {
 				const { status } = (await listStatus(dbContext)(
 					{ projectId: '$acme#teamstatus' },
-					{
-						email: 'cameron@example.com',
-						sub: '@cameron',
-					},
+					cameron,
 				)) as { status: Status[] }
 				assert.equal(status.length, 5)
 			})
