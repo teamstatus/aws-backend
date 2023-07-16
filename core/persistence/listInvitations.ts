@@ -12,7 +12,7 @@ export const listInvitations =
 		authContext: UserAuthContext,
 	): Promise<
 		| { error: ProblemDetail }
-		| { invitations: Pick<Invitation, 'id' | 'role'>[] }
+		| { invitations: Pick<Invitation, 'id' | 'role' | 'inviter'>[] }
 	> => {
 		const { sub: userId } = authContext
 
@@ -42,7 +42,8 @@ export const listInvitations =
 
 const serializeInvitation = (
 	item: Record<string, any>,
-): Pick<Invitation, 'id' | 'role'> => ({
+): Pick<Invitation, 'id' | 'role' | 'inviter'> => ({
 	id: item.id,
 	role: item.role,
+	inviter: item.projectInvitation__inviter,
 })

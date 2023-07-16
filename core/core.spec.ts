@@ -48,6 +48,7 @@ import { createTestDb } from './test/createTestDb.js'
 import { isNotAnError } from './test/isNotAnError.js'
 import { testDb } from './test/testDb.js'
 import { listInvitations } from './persistence/listInvitations.js'
+import { eventually } from './test/eventually.js'
 
 describe('core', async () => {
 	const { TableName, db } = testDb()
@@ -69,6 +70,11 @@ describe('core', async () => {
 	const cameron: UserAuthContext = {
 		email: 'cameron@example.com',
 		sub: '@cameron',
+	}
+
+	const emerson: UserAuthContext = {
+		email: 'emerson@example.com',
+		sub: '@emerson',
 	}
 
 	describe('user management', async () => {
@@ -153,7 +159,7 @@ describe('core', async () => {
 						dbContext,
 						notify,
 					)({
-						id: '@alex',
+						id: alex.sub,
 						name: 'Alex Doe',
 						authContext: { email: 'alex@example.com' },
 					}),
@@ -161,7 +167,7 @@ describe('core', async () => {
 				check(events[0]).is(
 					objectMatching({
 						type: CoreEventType.USER_CREATED,
-						id: '@alex',
+						id: alex.sub,
 						name: 'Alex Doe',
 						email: 'alex@example.com',
 					}),
@@ -202,7 +208,7 @@ describe('core', async () => {
 					type: CoreEventType.ORGANIZATION_CREATED,
 					id: '$acme',
 					name: 'ACME Inc.',
-					owner: '@alex',
+					owner: alex.sub,
 				}),
 			)
 		})
@@ -250,7 +256,7 @@ describe('core', async () => {
 				objectMatching({
 					type: CoreEventType.PROJECT_MEMBER_CREATED,
 					project: '$acme#teamstatus',
-					user: '@alex',
+					user: alex.sub,
 				}),
 			)
 		})
@@ -280,13 +286,13 @@ describe('core', async () => {
 		})
 
 		describe('member', async () => {
-			it('allows project owners to invite other users to a project', async () => {
+			it('allows project owners to invite other users as members to a project', async () => {
 				// Users have to exist to be invited
 				await createUser(
 					dbContext,
 					notify,
 				)({
-					id: '@cameron',
+					id: cameron.sub,
 					name: 'Cameron',
 					authContext: cameron,
 				})
@@ -298,8 +304,11 @@ describe('core', async () => {
 
 				isNotAnError(
 					await inviteToProject(dbContext, notify)(
-						'@cameron',
-						'$acme#teamstatus',
+						{
+							invitedUserId: cameron.sub,
+							projectId: '$acme#teamstatus',
+							role: Role.MEMBER,
+						},
 						alex,
 					),
 				)
@@ -307,8 +316,8 @@ describe('core', async () => {
 					objectMatching({
 						type: CoreEventType.PROJECT_MEMBER_INVITED,
 						project: '$acme#teamstatus',
-						invitee: '@cameron',
-						inviter: '@alex',
+						invitee: cameron.sub,
+						inviter: alex.sub,
 						role: Role.MEMBER,
 					}),
 				)
@@ -316,8 +325,11 @@ describe('core', async () => {
 
 			it('should not allow to invite non-existing users', async () => {
 				const { error } = (await inviteToProject(dbContext, notify)(
-					'@nobody',
-					'$acme#teamstatus',
+					{
+						invitedUserId: '@nobody',
+						projectId: '$acme#teamstatus',
+						role: Role.MEMBER,
+					},
 					alex,
 				)) as { error: ProblemDetail }
 				assert.equal(error?.title, `User @nobody does not exist.`)
@@ -345,6 +357,7 @@ describe('core', async () => {
 						{
 							id: '$acme#teamstatus@cameron',
 							role: Role.MEMBER,
+							inviter: alex.sub,
 						},
 					])
 				})
@@ -365,6 +378,99 @@ describe('core', async () => {
 						cameron,
 					)) as { error: ProblemDetail }
 					assert.equal(error, undefined)
+				})
+			})
+		})
+
+		describe('watcher', () => {
+			it('allows project owners to invite other users as watchers to a project', async () => {
+				// Users have to exist to be invited
+				await createUser(
+					dbContext,
+					notify,
+				)({
+					id: '@emerson',
+					name: 'Emerson',
+					authContext: emerson,
+				})
+
+				const events: MemberInvitedEvent[] = []
+				on(CoreEventType.PROJECT_MEMBER_INVITED, (e) =>
+					events.push(e as MemberInvitedEvent),
+				)
+
+				isNotAnError(
+					await inviteToProject(dbContext, notify)(
+						{
+							invitedUserId: emerson.sub,
+							projectId: '$acme#teamstatus',
+							role: Role.WATCHER,
+						},
+						alex,
+					),
+				)
+				check(events[0]).is(
+					objectMatching({
+						type: CoreEventType.PROJECT_MEMBER_INVITED,
+						project: '$acme#teamstatus',
+						invitee: emerson.sub,
+						inviter: alex.sub,
+						role: Role.WATCHER,
+					}),
+				)
+			})
+
+			it('should list open invites for a user', async () => {
+				const { invitations } = (await listInvitations(dbContext)(emerson)) as {
+					invitations: Invitation[]
+				}
+				assert.deepEqual(invitations, [
+					{
+						id: '$acme#teamstatus@emerson',
+						role: Role.WATCHER,
+						inviter: alex.sub,
+					},
+				])
+			})
+
+			it('allows users to accept invitations', async () => {
+				const { error } = (await acceptProjectInvitation(dbContext, notify)(
+					'$acme#teamstatus',
+					emerson,
+				)) as { error: ProblemDetail }
+				assert.equal(error, undefined)
+			})
+
+			it('should not allow watchers to post a status to a project', async () => {
+				const { error } = (await createStatus(dbContext, notify)(
+					ulid(),
+					'$acme#teamstatus',
+					'Should not work',
+					emerson,
+				)) as { error: ProblemDetail }
+				assert.equal(
+					error?.title,
+					`Only members of '$acme#teamstatus' are allowed to create status.`,
+				)
+			})
+
+			it('should allow watchers read status of a project', async () => {
+				eventually(async () => {
+					const { status } = (await listStatus(dbContext)(
+						{ projectId: '$acme#teamstatus' },
+						emerson,
+					)) as { status: Status[] }
+					check(status).is(
+						arrayContaining(
+							objectMatching({
+								id: aString,
+								message:
+									'Implemented ability to persist status updates for projects.',
+								author: alex.sub,
+								project: '$acme#teamstatus',
+							}),
+						),
+					)
 				})
 			})
 		})
@@ -390,7 +496,7 @@ describe('core', async () => {
 							project: '$acme#teamstatus',
 							message:
 								'Implemented ability to persist status updates for projects.',
-							author: '@alex',
+							author: alex.sub,
 							id,
 						}),
 					)
@@ -470,7 +576,7 @@ describe('core', async () => {
 							id: aString,
 							message:
 								'Implemented ability to persist status updates for projects.',
-							author: '@alex',
+							author: alex.sub,
 							project: '$acme#teamstatus',
 						}),
 					)
@@ -580,7 +686,7 @@ describe('core', async () => {
 						objectMatching({
 							type: CoreEventType.REACTION_CREATED,
 							status: statusId,
-							author: '@alex',
+							author: alex.sub,
 							id: reactionId,
 							...newVersionRelease,
 						}),
@@ -600,8 +706,11 @@ describe('core', async () => {
 
 					isNotAnError(
 						await inviteToProject(dbContext, notify)(
-							'@blake',
-							`$acme${projectId}`,
+							{
+								invitedUserId: '@blake',
+								projectId: `$acme${projectId}`,
+								role: Role.MEMBER,
+							},
 							alex,
 						),
 					)
@@ -634,7 +743,7 @@ describe('core', async () => {
 
 					check(status[0]?.reactions[0]).is(
 						objectMatching({
-							author: '@alex',
+							author: alex.sub,
 							id: aUlid(),
 							...newVersionRelease,
 						}),

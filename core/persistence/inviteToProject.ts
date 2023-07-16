@@ -35,8 +35,15 @@ export type Invitation = {
 export const inviteToProject =
 	(dbContext: DbContext, notify: Notify) =>
 	async (
-		invitedUserId: string,
-		projectId: string,
+		{
+			invitedUserId,
+			projectId,
+			role,
+		}: {
+			invitedUserId: string
+			projectId: string
+			role: Role
+		},
 		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | { id: string }> => {
 		try {
@@ -54,6 +61,12 @@ export const inviteToProject =
 					error: BadRequestError(
 						`Only members of ${organizationId} can view projects.`,
 					),
+				}
+			}
+
+			if (![Role.WATCHER, Role.MEMBER, Role.OWNER].includes(role)) {
+				return {
+					error: BadRequestError(`${role} is not a valid role.`),
 				}
 			}
 
@@ -99,7 +112,7 @@ export const inviteToProject =
 							S: l(userId),
 						},
 						role: {
-							S: Role.MEMBER,
+							S: role,
 						},
 					},
 					ConditionExpression: 'attribute_not_exists(id)',
@@ -111,7 +124,7 @@ export const inviteToProject =
 				project: projectId,
 				invitee: invitedUserId,
 				inviter: userId,
-				role: Role.MEMBER,
+				role,
 				timestamp: new Date(),
 			}
 			notify(event)

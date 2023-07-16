@@ -15,7 +15,7 @@ export const getProjectMember =
 	async (
 		projectId: string,
 		userId: string,
-	): Promise<{ error: ProblemDetail } | null | MemberInfo> => {
+	): Promise<{ error: ProblemDetail } | { member: MemberInfo | null }> => {
 		const { db, TableName } = dbContext
 		const res = await db.send(
 			new QueryCommand({
@@ -39,16 +39,38 @@ export const getProjectMember =
 		)
 
 		const memberInfo = res.Items?.[0]
-		if (memberInfo === undefined) return null
+		if (memberInfo === undefined) return { member: null }
 		const info = unmarshall(memberInfo)
 		return {
-			role: info.role,
-			project: info.projectMember__projectMember,
-			user: info.projectMember__user,
+			member: {
+				role: info.role,
+				project: info.projectMember__projectMember,
+				user: info.projectMember__user,
+			},
 		}
 	}
 
-export const isProjectMember =
+const getMemberRole =
 	(dbContext: DbContext) =>
-	async (projectId: string, userId: string): Promise<boolean> =>
-		(await getProjectMember(dbContext)(projectId, userId)) !== null
+	async (projectId: string, userId: string): Promise<Role | null> => {
+		const maybeMember = await getProjectMember(dbContext)(projectId, userId)
+		if ('error' in maybeMember) return null
+		const { member } = maybeMember
+		return member?.role ?? null
+	}
+
+export const canWriteToProject =
+	(dbContext: DbContext) =>
+	async (projectId: string, userId: string): Promise<boolean> => {
+		const role = await getMemberRole(dbContext)(projectId, userId)
+		if (role === null) return false
+		return [Role.OWNER, Role.MEMBER].includes(role)
+	}
+
+export const canReadProject =
+	(dbContext: DbContext) =>
+	async (projectId: string, userId: string): Promise<boolean> => {
+		const role = await getMemberRole(dbContext)(projectId, userId)
+		if (role === null) return false
+		return [Role.OWNER, Role.MEMBER, Role.WATCHER].includes(role)
+	}

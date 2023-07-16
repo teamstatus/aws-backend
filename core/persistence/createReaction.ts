@@ -10,7 +10,7 @@ import {
 import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
-import { isProjectMember } from './getProjectMember.js'
+import { canWriteToProject } from './getProjectMember.js'
 import { l } from './l.js'
 
 export type Reaction =
@@ -65,7 +65,10 @@ export const createReaction =
 		const status = unmarshall(Item)
 
 		if (
-			!(await isProjectMember(dbContext)(status.projectStatus__project, userId))
+			!(await canWriteToProject(dbContext)(
+				status.projectStatus__project,
+				userId,
+			))
 		) {
 			return {
 				error: BadRequestError(`Only project members can create reactions!`),

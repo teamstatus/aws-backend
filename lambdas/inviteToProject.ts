@@ -65,13 +65,15 @@ const getUser =
 
 export const handler = userAuthRequestPipe(
 	(event) => {
+		const { invitedUserId, role } = JSON.parse(event.body ?? '')
 		return {
-			invitedUserId: JSON.parse(event.body ?? '').invitedUserId,
+			invitedUserId,
+			role,
 			projectId: event.pathParameters?.projectId as string,
 		}
 	},
-	async ({ invitedUserId, projectId }, authContext) => {
-		const res = await invite(invitedUserId, projectId, authContext)
+	async ({ invitedUserId, projectId, role }, authContext) => {
+		const res = await invite({ invitedUserId, projectId, role }, authContext)
 		if ('id' in res) {
 			const [Invitee, Inviter] = await Promise.all([
 				getUser({ db, TableName })(invitedUserId),
@@ -95,7 +97,7 @@ export const handler = userAuthRequestPipe(
 								Text: {
 									Data: `Hei ${name ?? invitedUserId},\n\n${
 										inviterName ?? authContext.sub
-									} has invited you to the project ${projectId}.\n\nPlease go to your projects page to accept the invite using the code ${
+									} has invited you to the project ${projectId} as a ${role}.\n\nPlease go to your projects page to accept the invite using the code ${
 										res.id
 									}.`,
 								},

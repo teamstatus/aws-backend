@@ -26,6 +26,6 @@ export const indexes: Record<
 	},
 	invitationsForUser: {
 		keys: ['projectInvitation__invitee', 'id'],
-		include: ['role'],
+		include: ['role', 'projectInvitation__inviter'],
 	},
 }
