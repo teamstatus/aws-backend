@@ -10,7 +10,7 @@ import {
 import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
-import { canWriteToProject } from './getProjectMember.js'
+import { canWriteReaction } from './getProjectMember.js'
 import { l } from './l.js'
 
 export type Reaction =
@@ -65,7 +65,7 @@ export const createReaction =
 		const status = unmarshall(Item)
 
 		if (
-			!(await canWriteToProject(dbContext)(
+			!(await canWriteReaction(dbContext)(
 				status.projectStatus__project,
 				userId,
 			))

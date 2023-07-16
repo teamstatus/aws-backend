@@ -6,7 +6,7 @@ import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
 import type { Reaction } from './createReaction.js'
-import { canWriteToProject } from './getProjectMember.js'
+import { canWriteStatus } from './getProjectMember.js'
 import { l } from './l.js'
 
 type StatusCreatedEvent = CoreEvent & {
@@ -32,7 +32,7 @@ export const createStatus =
 		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { sub: userId } = authContext
-		if (!(await canWriteToProject(dbContext)(projectId, userId))) {
+		if (!(await canWriteStatus(dbContext)(projectId, userId))) {
 			return {
 				error: BadRequestError(
 					`Only members of '${projectId}' are allowed to create status.`,

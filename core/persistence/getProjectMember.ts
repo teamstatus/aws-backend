@@ -59,7 +59,7 @@ const getMemberRole =
 		return member?.role ?? null
 	}
 
-export const canWriteToProject =
+export const canWriteStatus =
 	(dbContext: DbContext) =>
 	async (projectId: string, userId: string): Promise<boolean> => {
 		const role = await getMemberRole(dbContext)(projectId, userId)
@@ -67,7 +67,15 @@ export const canWriteToProject =
 		return [Role.OWNER, Role.MEMBER].includes(role)
 	}
 
-export const canReadProject =
+export const canWriteReaction =
+	(dbContext: DbContext) =>
+	async (projectId: string, userId: string): Promise<boolean> => {
+		const role = await getMemberRole(dbContext)(projectId, userId)
+		if (role === null) return false
+		return [Role.OWNER, Role.MEMBER, Role.WATCHER].includes(role)
+	}
+
+export const canReadProjectStatus =
 	(dbContext: DbContext) =>
 	async (projectId: string, userId: string): Promise<boolean> => {
 		const role = await getMemberRole(dbContext)(projectId, userId)

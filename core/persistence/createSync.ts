@@ -6,7 +6,7 @@ import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
 import { l } from './l.js'
-import { canWriteToProject } from './getProjectMember.js'
+import { canWriteStatus } from './getProjectMember.js'
 
 type SyncCreatedEvent = CoreEvent & {
 	type: CoreEventType.SYNC_CREATED
@@ -111,7 +111,7 @@ const canReadProjects =
 		projectIds: Set<string>,
 		{ sub: userId }: UserAuthContext,
 	): Promise<boolean> => {
-		const memberCheck = canWriteToProject(dbContext)
+		const memberCheck = canWriteStatus(dbContext)
 		const allMember = await Promise.all(
 			[...projectIds].map(async (projectId) => ({
 				projectId,
