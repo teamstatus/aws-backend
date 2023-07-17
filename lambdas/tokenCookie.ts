@@ -24,3 +24,20 @@ export const tokenCookie = async ({
 	]
 		.filter((v) => v !== undefined)
 		.join('; ')
+
+export const expiredTokenCooked = async ({
+	cookieProps,
+}: {
+	cookieProps?: string[]
+}): Promise<string> =>
+	[
+		`token=`,
+		`Expires=${new Date(Date.now() - 60 * 1000).toString()}`,
+		`Path=/`,
+		`HttpOnly`,
+		`SameSite=None`,
+		`Secure`,
+		...(cookieProps ?? []),
+	]
+		.filter((v) => v !== undefined)
+		.join('; ')

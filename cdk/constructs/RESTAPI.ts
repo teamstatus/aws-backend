@@ -92,6 +92,12 @@ export class RESTAPI extends Construct {
 				description: 'Returns information about the authenticated user',
 				authContext: 'email',
 			},
+			logout: {
+				routeKey: 'POST /logout',
+				source: lambdaSources.logout,
+				description: 'Logs the user out',
+				authContext: 'email',
+			},
 			createUser: {
 				routeKey: 'PUT /me/user',
 				source: lambdaSources.createUser,
