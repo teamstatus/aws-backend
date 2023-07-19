@@ -246,7 +246,7 @@ export class RESTAPI extends Construct {
 		}
 
 		const api = new HttpApi.CfnApi(this, 'api', {
-			name: 'Teamstatus.space API',
+			name: 'teamstatus.space API',
 			protocolType: 'HTTP',
 			// This has no effect, maybe a bug?
 			/*

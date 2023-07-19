@@ -103,7 +103,7 @@ export const handler = userAuthRequestPipe(
 								},
 							},
 							Subject: {
-								Data: `[Teamstatus.space] You have been invited to the project ${projectId}`,
+								Data: `[teamstatus.space] You have been invited to the project ${projectId}`,
 							},
 						},
 						Source: fromEmail,

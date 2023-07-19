@@ -51,7 +51,7 @@ export const handler = async (
 						Text: { Data: `Your PIN: ${r.pin}` },
 					},
 					Subject: {
-						Data: `[Teamstatus.space] Please verify your email`,
+						Data: `[teamstatus.space] Please verify your email`,
 					},
 				},
 				Source: fromEmail,

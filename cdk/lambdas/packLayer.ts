@@ -5,6 +5,7 @@ import { glob } from 'glob'
 import path from 'path'
 import { ZipFile } from 'yazl'
 import { checkSumOfFiles } from './checksumOfFiles.js'
+import { checksum } from '../../lambdas/checksum.js'
 
 export type PackedLayer = { layerZipFile: string; hash: string }
 
@@ -100,6 +101,11 @@ export const packLayer = async ({
 
 	return {
 		layerZipFile: zipFileName,
-		hash: await checkSumOfFiles([packageJSON, packageLockJsonFile]),
+		hash: checksum(
+			[
+				...dependencies,
+				await checkSumOfFiles([packageJSON, packageLockJsonFile]),
+			].join('|'),
+		),
 	}
 }

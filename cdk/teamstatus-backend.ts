@@ -16,6 +16,7 @@ import {
 } from './lambdas/packBackendLambdas.js'
 import type { PackedLayer } from './lambdas/packLayer.js'
 import { packLayer } from './lambdas/packLayer.js'
+import { EmailReceiving } from './constructs/EmailReceiving.js'
 
 export const readKeyPolicy = (
 	stack: Stack,
@@ -88,6 +89,11 @@ class TeamStatusBackendStack extends Stack {
 			ws,
 		})
 
+		new EmailReceiving(this, {
+			lambdaSources,
+			layer: backendLayer,
+		})
+
 		new CfnOutput(this, 'tableName', {
 			exportName: `${this.stackName}:tableName`,
 			description: 'The name of the table',
@@ -116,6 +122,11 @@ new TeamStatusBackendApp({
 	lambdaSources: await packBackendLambdas(),
 	layer: await packLayer({
 		id: 'backendLayer',
-		dependencies: ['@nordicsemiconductor/from-env', 'jsonwebtoken', 'ulid'],
+		dependencies: [
+			'@nordicsemiconductor/from-env',
+			'jsonwebtoken',
+			'ulid',
+			'mailparser',
+		],
 	}),
 })

@@ -31,6 +31,7 @@ export type BackendLambdas = {
 	listStatusInSync: PackedLambda
 	listSyncs: PackedLambda
 	getSync: PackedLambda
+	emailForwarding: PackedLambda
 }
 
 export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
@@ -127,4 +128,8 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	),
 	listSyncs: await packLambdaFromPath('listSyncs', 'lambdas/listSyncs.ts'),
 	getSync: await packLambdaFromPath('getSync', 'lambdas/getSync.ts'),
+	emailForwarding: await packLambdaFromPath(
+		'emailForwarding',
+		'lambdas/emailForwarding.ts',
+	),
 })
