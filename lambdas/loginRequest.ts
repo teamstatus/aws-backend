@@ -9,28 +9,9 @@ import { BadRequestError } from '../core/ProblemDetail.js'
 import { StatusCode } from '../core/StatusCode.js'
 import { notifier } from '../core/notifier.js'
 import { emailLoginRequest } from '../core/persistence/emailLoginRequest.js'
-import { checksum } from './checksum.js'
 import { problem, result } from './response.js'
 
 const fromEmail = process.env.FROM_EMAIL ?? 'notification@teamstatus.space'
-
-// These email addresses (lowercase) are allowed to request logins
-const allowedEmails = [
-	// Me
-	'bc1dec741233ec9c27c8f48700337ffab729a7934d9d577697dd9f5794fe391b',
-	// Test-Account
-	'd13b7c9609444936a75d79f2b3119af39b581e9a3293b6cfe9bfa97e5d127760',
-]
-
-// These domains (lowercase, without @) are allowed to request logins
-const allowedDomains = [
-	// Nordic
-	'd82e75b328f982d9ea18f436113684e111d684908f5926d2f585fc26aed923ac',
-	// example.com
-	process.env.IS_TEST !== undefined
-		? 'a379a6f6eeafb9a55e378c118034e2751e682fab9f2d30ab13d2125586ce1947'
-		: '',
-]
 
 const { TableName } = fromEnv({
 	TableName: 'TABLE_NAME',
@@ -54,20 +35,6 @@ export const handler = async (
 	console.log(JSON.stringify({ event }))
 	try {
 		const { email } = JSON.parse(event.body ?? '')
-		const domain = email.split('@')[1]
-		const emailChecksum = checksum(email.toLowerCase())
-		const domainChecksum = checksum(domain?.toLowerCase() ?? '')
-
-		if (
-			!allowedDomains.includes(domainChecksum) &&
-			!allowedEmails.includes(emailChecksum)
-		)
-			return problem(event)(
-				BadRequestError(
-					`Checksum for email ${email} (${emailChecksum}) or domain ${domain} (${domainChecksum}) not in allowed list.`,
-				),
-			)
-
 		const r = await loginRequest({ email })
 
 		if ('error' in r) {
