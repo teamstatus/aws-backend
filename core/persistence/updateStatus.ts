@@ -85,7 +85,7 @@ export const updateStatus =
 				return {
 					error: ConflictError(`Failed to update status.`),
 				}
-			console.error((error as Error).message)
+			console.error(error)
 			return { error: InternalError() }
 		}
 	}

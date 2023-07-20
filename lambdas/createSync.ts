@@ -5,14 +5,19 @@ import { notifier } from '../core/notifier.js'
 import { createSync } from '../core/persistence/createSync.js'
 import { userAuthRequestPipe } from './requestPipe.js'
 import { verifyRecentULID } from './verifyULID.js'
+import { SNSClient } from '@aws-sdk/client-sns'
+import { snsNotifier } from './snsNotifier.js'
 
-const { TableName } = fromEnv({
+const { TableName, topicArn } = fromEnv({
 	TableName: 'TABLE_NAME',
+	topicArn: 'TOPIC_ARN',
 })(process.env)
 
 const db = new DynamoDBClient({})
+const sns = new SNSClient({})
 
-const { notify } = notifier()
+const { notify, on } = notifier()
+snsNotifier({ sns, topicArn })({ on })
 const create = createSync(
 	{
 		db,

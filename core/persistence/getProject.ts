@@ -28,5 +28,5 @@ export const getProject =
 
 export const itemToProject = (item: Record<string, any>): Project => ({
 	id: item.id,
-	name: item.name,
+	name: item.name ?? undefined,
 })

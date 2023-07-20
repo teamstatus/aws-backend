@@ -17,6 +17,8 @@ import {
 import type { PackedLayer } from './lambdas/packLayer.js'
 import { packLayer } from './lambdas/packLayer.js'
 import { EmailReceiving } from './constructs/EmailReceiving.js'
+import { Events } from './constructs/Events.js'
+import { EventEmailNotifications } from './constructs/EventEmailNotifications.js'
 
 export const readKeyPolicy = (
 	stack: Stack,
@@ -82,16 +84,24 @@ class TeamStatusBackendStack extends Stack {
 			layer: backendLayer,
 		})
 
+		const events = new Events(this)
+
 		const api = new RESTAPI(this, {
 			lambdaSources,
 			persistence,
 			layer: backendLayer,
 			ws,
+			events,
 		})
 
 		new EmailReceiving(this, {
 			lambdaSources,
 			layer: backendLayer,
+		})
+
+		new EventEmailNotifications(this, {
+			events,
+			lambdaSources,
 		})
 
 		new CfnOutput(this, 'tableName', {

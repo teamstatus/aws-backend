@@ -68,6 +68,7 @@ export const createUser =
 				name,
 				timestamp: new Date(),
 			}
+
 			notify(event)
 			return {}
 		} catch (error) {
@@ -75,7 +76,7 @@ export const createUser =
 				return {
 					error: ConflictError(`User '${userId}' already exists.`),
 				}
-			console.error((error as Error).message)
+			console.error(error)
 			return { error: InternalError() }
 		}
 	}

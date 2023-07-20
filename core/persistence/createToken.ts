@@ -39,7 +39,7 @@ export const createToken =
 				}),
 			}
 		} catch (error) {
-			console.error((error as Error).message)
+			console.error(error)
 			return { error: InternalError() }
 		}
 	}

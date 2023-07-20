@@ -5,7 +5,7 @@ import { glob } from 'glob'
 import path from 'path'
 import { ZipFile } from 'yazl'
 import { checkSumOfFiles } from './checksumOfFiles.js'
-import { checksum } from '../../lambdas/checksum.js'
+import { checksum } from './checksum.js'
 
 export type PackedLayer = { layerZipFile: string; hash: string }
 

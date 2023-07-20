@@ -92,7 +92,7 @@ export const emailLoginRequest =
 				return {
 					error: ConflictError(`Login requests for '${email}' already exists.`),
 				}
-			console.error((error as Error).message)
+			console.error(error)
 			return { error: InternalError() }
 		}
 	}

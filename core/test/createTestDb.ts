@@ -4,7 +4,7 @@ import { isCI } from './testDb.js'
 
 export const createTestDb =
 	({ TableName, db }: DbContext) =>
-	async () => {
+	async (): Promise<void> => {
 		if (isCI) {
 			console.log(`Using existing table ${TableName}.`)
 			return

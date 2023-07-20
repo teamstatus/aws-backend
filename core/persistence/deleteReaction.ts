@@ -69,7 +69,7 @@ export const deleteReaction =
 				return {
 					error: ConflictError(`Failed to delete reaction.`),
 				}
-			console.error((error as Error).message)
+			console.error(error)
 			return { error: InternalError() }
 		}
 	}

@@ -135,7 +135,7 @@ export const inviteToProject =
 				return {
 					error: ConflictError(`User '${invitedUserId}' already invited.`),
 				}
-			console.error((error as Error).message)
+			console.error(error)
 			return { error: InternalError() }
 		}
 	}

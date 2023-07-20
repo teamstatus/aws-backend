@@ -11,6 +11,7 @@ import { readKeyPolicy } from '../teamstatus-backend.js'
 import { LambdaSource } from './LambdaSource.js'
 import { Persistence } from './Persistence.js'
 import type { WebsocketAPI } from './WebsocketAPI.js'
+import type { Events } from './Events.js'
 
 export class CoreLambda extends Construct {
 	public readonly lambda: Lambda.Function
@@ -24,6 +25,7 @@ export class CoreLambda extends Construct {
 			layer,
 			persistence,
 			ws,
+			events,
 		}: {
 			stack: Stack
 			description: string
@@ -32,6 +34,7 @@ export class CoreLambda extends Construct {
 			persistence: Persistence
 			environment?: Record<string, string>
 			ws: WebsocketAPI
+			events: Events
 		},
 	) {
 		super(parent, id)
@@ -58,8 +61,10 @@ export class CoreLambda extends Construct {
 				TABLE_NAME: persistence.table.tableName,
 				STACK_NAME: stack.stackName,
 				WS_URL: ws.URL,
+				TOPIC_ARN: events.topic.topicArn,
 			},
 		})
 		persistence.table.grantFullAccess(this.lambda)
+		events.topic.grantPublish(this.lambda)
 	}
 }

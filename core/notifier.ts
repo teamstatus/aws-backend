@@ -3,6 +3,7 @@ import type { CoreEventType } from './CoreEventType'
 
 export type listenerFn = (event: CoreEvent) => unknown
 
+// FIXME: make this an async API so we can have async listeners
 export type Notify = (event: CoreEvent) => void
 
 export type onFn = (event: CoreEventType | '*', fn: listenerFn) => void
@@ -13,6 +14,7 @@ export const notifier = (): {
 } => {
 	const listeners: { event: CoreEventType | '*'; fn: listenerFn }[] = []
 	const notify = (event: CoreEvent) => {
+		console.log({ notify: JSON.stringify(event) })
 		for (const { fn } of [
 			...listeners.filter(({ event }) => event === '*'),
 			...listeners.filter(({ event: e }) => e === event.type),

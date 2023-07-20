@@ -24,7 +24,7 @@ export type ProjectCreatedEvent = CoreEvent & {
 
 export type Project = {
 	id: string
-	name: string
+	name?: string
 }
 export const createProject =
 	(dbContext: DbContext, notify: Notify) =>
@@ -60,9 +60,12 @@ export const createProject =
 						type: {
 							S: 'project',
 						},
-						name: {
-							S: name,
-						},
+						name:
+							name === undefined
+								? { NULL: true }
+								: {
+										S: name,
+								  },
 					},
 					ConditionExpression: 'attribute_not_exists(id)',
 				}),
@@ -87,7 +90,7 @@ export const createProject =
 				return {
 					error: ConflictError(`Project '${projectId}' already exists.`),
 				}
-			console.error((error as Error).message)
+			console.error(error)
 			return { error: InternalError() }
 		}
 	}

@@ -16,6 +16,7 @@ import { CoreLambda } from './CoreLambda.js'
 import { LambdaSource } from './LambdaSource.js'
 import { Persistence } from './Persistence.js'
 import type { WebsocketAPI } from './WebsocketAPI.js'
+import type { Events } from './Events.js'
 
 export class RESTAPI extends Construct {
 	public readonly URL: string
@@ -26,11 +27,13 @@ export class RESTAPI extends Construct {
 			persistence,
 			layer,
 			ws,
+			events,
 		}: {
 			lambdaSources: BackendLambdas
 			layer: Lambda.ILayerVersion
 			persistence: Persistence
 			ws: WebsocketAPI
+			events: Events
 		},
 	) {
 		super(parent, 'API')
@@ -53,9 +56,11 @@ export class RESTAPI extends Construct {
 			],
 			environment: {
 				TABLE_NAME: persistence.table.tableName,
+				TOPIC_ARN: events.topic.topicArn,
 			},
 		})
 		persistence.table.grantFullAccess(loginRequest)
+		events.topic.grantPublish(loginRequest)
 
 		const pinLogin = new Lambda.Function(this, 'pinLogin', {
 			description: 'Handle logins with PINs',
@@ -72,9 +77,11 @@ export class RESTAPI extends Construct {
 				STACK_NAME: parent.stackName,
 				TABLE_NAME: persistence.table.tableName,
 				WS_URL: ws.URL,
+				TOPIC_ARN: events.topic.topicArn,
 			},
 		})
 		persistence.table.grantFullAccess(pinLogin)
+		events.topic.grantPublish(pinLogin)
 
 		// Authorized lambdas
 		const coreFunctions: Record<
@@ -239,6 +246,7 @@ export class RESTAPI extends Construct {
 					persistence,
 					source,
 					ws,
+					events,
 				}).lambda,
 				routeKey,
 				authContext,

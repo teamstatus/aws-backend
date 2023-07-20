@@ -85,21 +85,24 @@ export const emailPINLogin =
 				email,
 				timestamp: new Date(),
 			}
-			notify(event)
+
 			const userId =
 				Items?.[0] !== undefined ? unmarshall(Items[0]).id : undefined
+			const authContext: UserAuthContext = {
+				email,
+				sub: userId,
+			}
+			notify(event)
+
 			return {
-				authContext: {
-					email,
-					sub: userId,
-				},
+				authContext,
 			}
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)
 				return {
 					error: ConflictError(`Login failed.`),
 				}
-			console.error((error as Error).message)
+			console.error(error)
 			return { error: InternalError() }
 		}
 	}

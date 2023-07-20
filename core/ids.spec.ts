@@ -19,7 +19,7 @@ describe('identifiers', async () => {
 			['@with space', false],
 		]) {
 			it(`ensures that ${JSON.stringify(id)} is ${
-				isValid ? 'valid' : 'invalid'
+				isValid === true ? 'valid' : 'invalid'
 			}`, () => assert.equal(isUserId(id as string), isValid))
 		}
 	})
@@ -33,7 +33,7 @@ describe('identifiers', async () => {
 			['$with space', false],
 		]) {
 			it(`ensures that ${JSON.stringify(id)} is ${
-				isValid ? 'valid' : 'invalid'
+				isValid === true ? 'valid' : 'invalid'
 			}`, () => assert.equal(isOrganizationId(id as string), isValid))
 		}
 	})
@@ -48,7 +48,7 @@ describe('identifiers', async () => {
 			['$ACME#With Space', false],
 		]) {
 			it(`ensures that ${JSON.stringify(id)} is ${
-				isValid ? 'valid' : 'invalid'
+				isValid === true ? 'valid' : 'invalid'
 			}`, () => assert.equal(isProjectId(id as string), isValid))
 		}
 		describe('parseProjectId()', () => {
