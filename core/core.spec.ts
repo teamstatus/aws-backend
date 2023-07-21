@@ -82,7 +82,7 @@ describe('core', async () => {
 			let pin: string
 			it('generates a login request', async () => {
 				const events: CoreEvent[] = []
-				on(CoreEventType.EMAIL_LOGIN_REQUESTED, (e) => events.push(e))
+				on(CoreEventType.EMAIL_LOGIN_REQUESTED, async (e) => events.push(e))
 				const { loginRequest, pin: p } = (await emailLoginRequest(
 					dbContext,
 					notify,
@@ -115,7 +115,7 @@ describe('core', async () => {
 
 			it('logs a user in using a PIN', async () => {
 				const events: CoreEvent[] = []
-				on(CoreEventType.EMAIL_LOGIN_PIN_SUCCESS, (e) => events.push(e))
+				on(CoreEventType.EMAIL_LOGIN_PIN_SUCCESS, async (e) => events.push(e))
 				const { authContext } = (await emailPINLogin(
 					dbContext,
 					notify,
@@ -153,7 +153,7 @@ describe('core', async () => {
 
 			it('allows users to claim a user ID', async () => {
 				const events: CoreEvent[] = []
-				on(CoreEventType.USER_CREATED, (e) => events.push(e))
+				on(CoreEventType.USER_CREATED, async (e) => events.push(e))
 				isNotAnError(
 					await createUser(
 						dbContext,
@@ -196,7 +196,7 @@ describe('core', async () => {
 	describe('organizations', async () => {
 		it('can create a new organization', async () => {
 			const events: CoreEvent[] = []
-			on(CoreEventType.ORGANIZATION_CREATED, (e) => events.push(e))
+			on(CoreEventType.ORGANIZATION_CREATED, async (e) => events.push(e))
 			isNotAnError(
 				await createOrganization(dbContext, notify)(
 					{ id: '$acme', name: 'ACME Inc.' },
@@ -237,8 +237,8 @@ describe('core', async () => {
 	describe('projects', async () => {
 		it('can create a new project', async () => {
 			const events: CoreEvent[] = []
-			on(CoreEventType.PROJECT_CREATED, (e) => events.push(e))
-			on(CoreEventType.PROJECT_MEMBER_CREATED, (e) => events.push(e))
+			on(CoreEventType.PROJECT_CREATED, async (e) => events.push(e))
+			on(CoreEventType.PROJECT_MEMBER_CREATED, async (e) => events.push(e))
 			isNotAnError(
 				await createProject(dbContext, notify)(
 					{ id: '$acme#teamstatus', name: 'Teamstatus' },
@@ -298,7 +298,7 @@ describe('core', async () => {
 				})
 
 				const events: MemberInvitedEvent[] = []
-				on(CoreEventType.PROJECT_MEMBER_INVITED, (e) =>
+				on(CoreEventType.PROJECT_MEMBER_INVITED, async (e) =>
 					events.push(e as MemberInvitedEvent),
 				)
 
@@ -395,7 +395,7 @@ describe('core', async () => {
 				})
 
 				const events: MemberInvitedEvent[] = []
-				on(CoreEventType.PROJECT_MEMBER_INVITED, (e) =>
+				on(CoreEventType.PROJECT_MEMBER_INVITED, async (e) =>
 					events.push(e as MemberInvitedEvent),
 				)
 
@@ -479,7 +479,7 @@ describe('core', async () => {
 			describe('create', async () => {
 				it('can post a new status update', async () => {
 					const events: CoreEvent[] = []
-					on(CoreEventType.STATUS_CREATED, (e) => events.push(e))
+					on(CoreEventType.STATUS_CREATED, async (e) => events.push(e))
 
 					const id = ulid()
 					isNotAnError(
@@ -655,7 +655,7 @@ describe('core', async () => {
 
 				it('allows authors to attach a reaction', async () => {
 					const events: CoreEvent[] = []
-					on(CoreEventType.REACTION_CREATED, (e) => events.push(e))
+					on(CoreEventType.REACTION_CREATED, async (e) => events.push(e))
 
 					await createProject(dbContext, notify)(
 						{ id: `$acme${projectId}`, name: `Project ${projectId}` },

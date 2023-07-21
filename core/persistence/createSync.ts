@@ -101,7 +101,7 @@ export const createSync =
 			inclusiveEndDate,
 			version: 1,
 		}
-		notify(event)
+		await notify(event)
 		return {}
 	}
 

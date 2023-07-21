@@ -62,7 +62,7 @@ export const deleteStatus =
 				id: statusId,
 				timestamp: new Date(),
 			}
-			notify(event)
+			await notify(event)
 			return { deleted: true }
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)

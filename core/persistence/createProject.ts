@@ -76,7 +76,7 @@ export const createProject =
 				name,
 				timestamp: new Date(),
 			}
-			notify(event)
+			await notify(event)
 
 			await createProjectMember(dbContext, notify)(
 				projectId,

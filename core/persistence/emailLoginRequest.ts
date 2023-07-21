@@ -85,7 +85,7 @@ export const emailLoginRequest =
 				pin,
 				timestamp: new Date(),
 			}
-			notify(event)
+			await notify(event)
 			return { loginRequest, pin }
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)

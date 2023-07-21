@@ -84,7 +84,7 @@ export const createOrganization =
 				name,
 				timestamp: new Date(),
 			}
-			notify(event)
+			await notify(event)
 			return {}
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)

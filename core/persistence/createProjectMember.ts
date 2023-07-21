@@ -52,5 +52,5 @@ export const createProjectMember =
 			role,
 			timestamp: new Date(),
 		}
-		notify(event)
+		await notify(event)
 	}

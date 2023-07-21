@@ -78,7 +78,7 @@ export const updateStatus =
 				version: updated.version,
 				timestamp: new Date(),
 			}
-			notify(event)
+			await notify(event)
 			return {}
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)

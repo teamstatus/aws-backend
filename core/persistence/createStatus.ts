@@ -77,6 +77,6 @@ export const createStatus =
 			reactions: [],
 			timestamp: new Date(),
 		}
-		notify(event)
+		await notify(event)
 		return {}
 	}

@@ -111,6 +111,6 @@ export const createReaction =
 			status: statusId,
 			timestamp: new Date(),
 		}
-		notify(event)
+		await notify(event)
 		return {}
 	}

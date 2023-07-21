@@ -113,7 +113,7 @@ describe('sync', async () => {
 	// which acts as a "view" on all the status
 	it('should create a new sync that contains all the status so far', async () => {
 		const events: CoreEvent[] = []
-		on(CoreEventType.SYNC_CREATED, (e) => events.push(e))
+		on(CoreEventType.SYNC_CREATED, async (e) => events.push(e))
 
 		isNotAnError(
 			await createSync(dbContext, notify)(

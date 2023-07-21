@@ -127,7 +127,7 @@ export const inviteToProject =
 				role,
 				timestamp: new Date(),
 			}
-			notify(event)
+			await notify(event)
 
 			return { id }
 		} catch (error) {

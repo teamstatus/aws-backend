@@ -8,6 +8,7 @@ const s3 = new S3Client({})
 const ses = new SESClient({})
 const Bucket = process.env.BUCKET_NAME ?? ''
 const fromEmail = process.env.FROM_EMAIL ?? 'notification@teamstatus.space'
+const adminEmail = process.env.ADMIN_EMAIL ?? 'm@coderbyheart.com'
 
 export const handler = async (event: SESEvent): Promise<void> => {
 	console.log(JSON.stringify({ event }, null, 2))
@@ -59,7 +60,7 @@ export const handler = async (event: SESEvent): Promise<void> => {
 		await ses.send(
 			new SendEmailCommand({
 				Destination: {
-					ToAddresses: ['m@coderbyheart.com'],
+					ToAddresses: [adminEmail],
 				},
 				Message: {
 					Body: {

@@ -92,7 +92,7 @@ export const emailPINLogin =
 				email,
 				sub: userId,
 			}
-			notify(event)
+			await notify(event)
 
 			return {
 				authContext,
