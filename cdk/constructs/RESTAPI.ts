@@ -111,10 +111,22 @@ export class RESTAPI extends Construct {
 				description: 'Creates a user account for the authenticated identity',
 				authContext: 'email',
 			},
+			createOrganization: {
+				routeKey: 'POST /organizations',
+				source: lambdaSources.createOrganization,
+				description: 'Creates a new organization',
+				authContext: 'user',
+			},
 			listOrganizations: {
 				routeKey: 'GET /organizations',
 				source: lambdaSources.listOrganizations,
 				description: 'Lists organizations accessible by the user',
+				authContext: 'user',
+			},
+			updateOrganization: {
+				routeKey: 'PATCH /organization/{id}',
+				source: lambdaSources.updateOrganization,
+				description: 'Updates an organization',
 				authContext: 'user',
 			},
 			listProjects: {
@@ -127,12 +139,6 @@ export class RESTAPI extends Construct {
 				routeKey: 'GET /organization/{organizationId}/projects',
 				source: lambdaSources.listOrganizationProjects,
 				description: 'Lists projects accessible by the user',
-				authContext: 'user',
-			},
-			createOrganization: {
-				routeKey: 'POST /organizations',
-				source: lambdaSources.createOrganization,
-				description: 'Creates a new organization',
 				authContext: 'user',
 			},
 			createProject: {
@@ -151,6 +157,12 @@ export class RESTAPI extends Construct {
 				routeKey: 'GET /project/{projectId}/status',
 				source: lambdaSources.listStatus,
 				description: 'Lists status accessible by the user',
+				authContext: 'user',
+			},
+			getStatus: {
+				routeKey: 'GET /project/{projectId}/status/{statusId}',
+				source: lambdaSources.getStatus,
+				description: 'Retrieves an individual status',
 				authContext: 'user',
 			},
 			createReaction: {

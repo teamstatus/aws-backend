@@ -49,6 +49,8 @@ import { isNotAnError } from './test/isNotAnError.js'
 import { testDb } from './test/testDb.js'
 import { listInvitations } from './persistence/listInvitations.js'
 import { eventually } from './test/eventually.js'
+import { updateOrganization } from './persistence/updateOrganization.js'
+import { getStatus } from './persistence/getStatus.js'
 
 describe('core', async () => {
 	const { TableName, db } = testDb()
@@ -65,6 +67,11 @@ describe('core', async () => {
 	const alex: UserAuthContext = {
 		email: 'alex@example.com',
 		sub: '@alex',
+	}
+
+	const blake: UserAuthContext = {
+		email: 'blake@example.com',
+		sub: '@blake',
 	}
 
 	const cameron: UserAuthContext = {
@@ -231,6 +238,30 @@ describe('core', async () => {
 					id: '$acme',
 				}),
 			)
+		})
+
+		describe('update', async () => {
+			it('allows organizations to be updated by an owner', async () => {
+				const events: CoreEvent[] = []
+				on(CoreEventType.ORGANIZATION_UPDATED, async (e) => events.push(e))
+				isNotAnError(
+					await updateOrganization(dbContext, notify)(
+						'$acme',
+						{ name: 'ACME Inc!' },
+						1,
+						alex,
+					),
+				)
+
+				check(events[0]).is(
+					objectMatching({
+						type: CoreEventType.ORGANIZATION_UPDATED,
+						id: '$acme',
+						name: 'ACME Inc!',
+						version: 2,
+					}),
+				)
+			})
 		})
 	})
 
@@ -507,7 +538,7 @@ describe('core', async () => {
 						ulid(),
 						'$acme#teamstatus',
 						'I am not a member of the $acme organization, so I should not be allowed to create a status.',
-						{ email: 'blake@example.com', sub: '@blake' },
+						blake,
 					)) as { error: ProblemDetail }
 					assert.equal(
 						error?.title,
@@ -516,9 +547,9 @@ describe('core', async () => {
 				})
 			})
 
-			describe('edit', async () => {
+			describe('update', async () => {
 				const statusId = ulid()
-				it('allows status to be edited by the author', async () => {
+				it('allows status to be updated by the author', async () => {
 					// Create the status
 					isNotAnError(
 						await createStatus(dbContext, notify)(
@@ -618,10 +649,53 @@ describe('core', async () => {
 				it('allows only organization members to list status', async () => {
 					const { error } = (await listStatus(dbContext)(
 						{ projectId: '$acme#teamstatus' },
+						blake,
+					)) as { error: ProblemDetail }
+					assert.equal(
+						error?.title,
+						`Only members of '$acme#teamstatus' are allowed to list status.`,
+					)
+				})
+			})
+
+			describe('get', () => {
+				const statusId = ulid()
+				it('allows getting individual status', async () => {
+					// useful if it is an older status, or in case we need the latest version
+
+					isNotAnError(
+						await createStatus(dbContext, notify)(
+							statusId,
+							'$acme#teamstatus',
+							`A new status!`,
+							alex,
+						),
+					)
+					const { status } = isNotAnError(
+						await getStatus(dbContext)(
+							{
+								statusId,
+								projectId: '$acme#teamstatus',
+							},
+							alex,
+						),
+					)
+					check(status).is(
+						objectMatching({
+							id: aString,
+							message: `A new status!`,
+							author: alex.sub,
+							project: '$acme#teamstatus',
+						}),
+					)
+				})
+				it('allows only organization members to get status', async () => {
+					const { error } = (await getStatus(dbContext)(
 						{
-							email: 'blake@example.com',
-							sub: '@blake',
+							statusId,
+							projectId: '$acme#teamstatus',
 						},
+						blake,
 					)) as { error: ProblemDetail }
 					assert.equal(
 						error?.title,
@@ -717,10 +791,7 @@ describe('core', async () => {
 
 					await acceptProjectInvitation(dbContext, notify)(
 						`$acme${projectId}`,
-						{
-							email: 'blake@example.com',
-							sub: '@blake',
-						},
+						blake,
 					)
 
 					const { error } = (await createReaction(dbContext, notify)(
@@ -729,7 +800,7 @@ describe('core', async () => {
 							status: statusId,
 							...thumbsUp,
 						},
-						{ email: 'blake@example.com', sub: '@blake' },
+						blake,
 					)) as { error: ProblemDetail }
 
 					assert.equal(error, undefined)
@@ -799,7 +870,7 @@ describe('core', async () => {
 					{ projectId: '$acme#teamstatus' },
 					cameron,
 				)) as { status: Status[] }
-				assert.equal(status.length, 5)
+				assert.equal(status.length, 6)
 			})
 		})
 	})

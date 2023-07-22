@@ -51,6 +51,9 @@ export const createOrganization =
 						name: {
 							S: name,
 						},
+						version: {
+							N: `1`,
+						},
 					},
 					ConditionExpression: 'attribute_not_exists(id)',
 				}),

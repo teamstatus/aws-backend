@@ -66,6 +66,9 @@ export const createProject =
 								: {
 										S: name,
 								  },
+						version: {
+							N: `1`,
+						},
 					},
 					ConditionExpression: 'attribute_not_exists(id)',
 				}),

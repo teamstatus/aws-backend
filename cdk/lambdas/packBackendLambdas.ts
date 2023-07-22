@@ -11,7 +11,9 @@ export type BackendLambdas = {
 	listOrganizationProjects: PackedLambda
 	listProjects: PackedLambda
 	listStatus: PackedLambda
+	getStatus: PackedLambda
 	createOrganization: PackedLambda
+	updateOrganization: PackedLambda
 	createProject: PackedLambda
 	createStatus: PackedLambda
 	createReaction: PackedLambda
@@ -64,6 +66,10 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 		'createOrganization',
 		'lambdas/createOrganization.ts',
 	),
+	updateOrganization: await packLambdaFromPath(
+		'updateOrganization',
+		'lambdas/updateOrganization.ts',
+	),
 	createProject: await packLambdaFromPath(
 		'createProject',
 		'lambdas/createProject.ts',
@@ -77,6 +83,7 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 		'lambdas/createReaction.ts',
 	),
 	listStatus: await packLambdaFromPath('listStatus', 'lambdas/listStatus.ts'),
+	getStatus: await packLambdaFromPath('getStatus', 'lambdas/getStatus.ts'),
 	cors: await packLambdaFromPath('cors', 'lambdas/cors.ts'),
 	deleteStatus: await packLambdaFromPath(
 		'deleteStatus',

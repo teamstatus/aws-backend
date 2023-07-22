@@ -1,12 +1,14 @@
-import { QueryCommand, type QueryCommandInput } from '@aws-sdk/client-dynamodb'
+import {
+	AttributeValue,
+	QueryCommand,
+	type QueryCommandInput,
+} from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { ulid } from 'ulid'
 import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
-import { parseProjectId } from '../ids.js'
 import { type DbContext } from './DbContext.js'
 import type { Status } from './createStatus.js'
-import { isOrganizationMember } from './getOrganizationMember.js'
 import { canReadProjectStatus } from './getProjectMember.js'
 import { getStatusReactions } from './getStatusReactions.js'
 import { l } from './l.js'
@@ -26,18 +28,7 @@ export const listStatus =
 		authContext: UserAuthContext,
 	): Promise<{ status: Status[] } | { error: ProblemDetail }> => {
 		const { sub: userId } = authContext
-		const { organization } = parseProjectId(projectId)
-
-		if (organization === null) {
-			return {
-				error: BadRequestError(`Not a valid project ID: ${projectId}`),
-			}
-		}
-
-		if (
-			!(await isOrganizationMember(dbContext)(organization, userId)) &&
-			!(await canReadProjectStatus(dbContext)(projectId, userId))
-		) {
+		if (!(await canReadProjectStatus(dbContext)(projectId, userId))) {
 			return {
 				error: BadRequestError(
 					`Only members of '${projectId}' are allowed to list status.`,
@@ -91,21 +82,23 @@ export const listStatus =
 
 		const res = await db.send(new QueryCommand(args))
 		return {
-			status: await Promise.all(
-				(res.Items ?? []).map(async (item) => {
-					const d = unmarshall(item)
-					return {
-						project: d.projectStatus__project,
-						author: d.author,
-						message: d.message,
-						id: d.id,
-						version: d.version,
-						reactions: await getStatusReactions({
-							db,
-							TableName,
-						})(d.id),
-					}
-				}),
-			),
+			status: await Promise.all((res.Items ?? []).map(itemToStatus(dbContext))),
+		}
+	}
+
+export const itemToStatus =
+	({ db, TableName }: DbContext) =>
+	async (item: Record<string, AttributeValue>): Promise<Status> => {
+		const d = unmarshall(item)
+		return {
+			project: d.projectStatus__project,
+			author: d.author,
+			message: d.message,
+			id: d.id,
+			version: d.version,
+			reactions: await getStatusReactions({
+				db,
+				TableName,
+			})(d.id),
 		}
 	}

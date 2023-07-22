@@ -59,7 +59,7 @@ export const inviteToProject =
 			if (!(await isOrganizationOwner(dbContext)(organizationId, userId))) {
 				return {
 					error: BadRequestError(
-						`Only members of ${organizationId} can view projects.`,
+						`Only owners of ${organizationId} can invite to projects.`,
 					),
 				}
 			}
