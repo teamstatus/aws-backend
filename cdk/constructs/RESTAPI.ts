@@ -106,7 +106,7 @@ export class RESTAPI extends Construct {
 				authContext: 'email',
 			},
 			createUser: {
-				routeKey: 'PUT /me/user',
+				routeKey: 'POST /me/user',
 				source: lambdaSources.createUser,
 				description: 'Creates a user account for the authenticated identity',
 				authContext: 'email',
