@@ -24,7 +24,8 @@ const del = deleteStatus(
 export const handler = userAuthRequestPipe(
 	(event) => ({
 		id: verifyOlderULID(event.pathParameters?.statusId as string),
+		version: parseInt(event.headers['if-match'] ?? '0', 10),
 	}),
-	async ({ id }, authContext) => del(id, authContext),
+	async ({ id, version }, authContext) => del(id, version, authContext),
 	() => StatusCode.ACCEPTED,
 )

@@ -22,6 +22,7 @@ export const deleteStatus =
 	(dbContext: DbContext, notify: Notify) =>
 	async (
 		statusId: string,
+		version: number,
 		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | { deleted: true }> => {
 		try {
@@ -39,13 +40,14 @@ export const deleteStatus =
 						},
 					},
 					UpdateExpression:
-						'SET #projectDeleted = #project, #deletedAt = :now REMOVE #project',
-					ConditionExpression: '#author = :author',
+						'SET #projectDeleted = #project, #deletedAt = :now, #version = :newVersion REMOVE #project',
+					ConditionExpression: '#author = :author AND #version = :version',
 					ExpressionAttributeNames: {
 						'#author': 'author',
 						'#deletedAt': 'deletedAt',
 						'#project': 'projectStatus__project',
 						'#projectDeleted': 'projectStatus__project__DELETED',
+						'#version': 'version',
 					},
 					ExpressionAttributeValues: {
 						':author': {
@@ -53,6 +55,12 @@ export const deleteStatus =
 						},
 						':now': {
 							S: new Date().toISOString(),
+						},
+						':version': {
+							N: `${version}`,
+						},
+						':newVersion': {
+							N: `${version + 1}`,
 						},
 					},
 				}),

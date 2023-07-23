@@ -589,6 +589,7 @@ describe('core', async () => {
 				it('allows status to be deleted by the author', async () => {
 					const { error } = (await deleteStatus(dbContext, notify)(
 						statusId,
+						2,
 						alex,
 					)) as { error: ProblemDetail }
 
