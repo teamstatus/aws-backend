@@ -27,13 +27,14 @@ export const listProjects =
 					'#user': 'projectMember__user',
 					'#project': 'projectMember__project',
 					'#role': 'role',
+					'#version': 'version',
 				},
 				ExpressionAttributeValues: {
 					':user': {
 						S: l(userId),
 					},
 				},
-				ProjectionExpression: '#user, #role, #project',
+				ProjectionExpression: '#user, #role, #project, #version',
 			}),
 		)
 

@@ -25,6 +25,7 @@ export type ProjectCreatedEvent = CoreEvent & {
 export type Project = {
 	id: string
 	name?: string
+	version: number
 }
 export const createProject =
 	(dbContext: DbContext, notify: Notify) =>
@@ -78,6 +79,7 @@ export const createProject =
 				id: projectId,
 				name,
 				timestamp: new Date(),
+				version: 1,
 			}
 			await notify(event)
 

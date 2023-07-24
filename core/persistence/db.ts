@@ -8,7 +8,7 @@ export const indexes: Record<
 	},
 	projectMember: {
 		keys: ['projectMember__user', 'projectMember__project'],
-		include: ['role', 'id'],
+		include: ['role', 'id', 'version'],
 	},
 	projectStatus: {
 		keys: ['projectStatus__project', 'id'],

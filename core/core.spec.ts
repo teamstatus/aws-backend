@@ -281,6 +281,7 @@ describe('core', async () => {
 					type: CoreEventType.PROJECT_CREATED,
 					id: '$acme#teamstatus',
 					name: 'Teamstatus',
+					version: 1,
 				}),
 			)
 			check(events[1]).is(
@@ -861,6 +862,7 @@ describe('core', async () => {
 						objectMatching({
 							id: '$acme#teamstatus',
 							name: 'Teamstatus',
+							version: 1,
 						}),
 					),
 				)
