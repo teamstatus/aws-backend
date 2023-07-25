@@ -6,6 +6,7 @@ export type BackendLambdas = {
 	pinLogin: PackedLambda
 	apiAuthorizer: PackedLambda
 	me: PackedLambda
+	updateUser: PackedLambda
 	createUser: PackedLambda
 	listOrganizations: PackedLambda
 	listOrganizationProjects: PackedLambda
@@ -50,6 +51,7 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 		'lambdas/apiAuthorizer.ts',
 	),
 	me: await packLambdaFromPath('me', 'lambdas/me.ts'),
+	updateUser: await packLambdaFromPath('updateUser', 'lambdas/updateUser.ts'),
 	createUser: await packLambdaFromPath('createUser', 'lambdas/createUser.ts'),
 	listOrganizations: await packLambdaFromPath(
 		'listOrganizations',
