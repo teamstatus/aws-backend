@@ -147,6 +147,12 @@ export class RESTAPI extends Construct {
 				description: 'Creates a new project',
 				authContext: 'user',
 			},
+			updateProject: {
+				routeKey: 'PATCH /project/{id}',
+				source: lambdaSources.updateProject,
+				description: 'Updates a project',
+				authContext: 'user',
+			},
 			createStatus: {
 				routeKey: 'POST /project/{projectId}/status',
 				source: lambdaSources.createStatus,

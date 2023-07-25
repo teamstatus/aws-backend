@@ -51,6 +51,7 @@ import { listInvitations } from './persistence/listInvitations.js'
 import { eventually } from './test/eventually.js'
 import { updateOrganization } from './persistence/updateOrganization.js'
 import { getStatus } from './persistence/getStatus.js'
+import { updateProject } from './persistence/updateProject.js'
 
 describe('core', async () => {
 	const { TableName, db } = testDb()
@@ -272,7 +273,7 @@ describe('core', async () => {
 			on(CoreEventType.PROJECT_MEMBER_CREATED, async (e) => events.push(e))
 			isNotAnError(
 				await createProject(dbContext, notify)(
-					{ id: '$acme#teamstatus', name: 'Teamstatus' },
+					{ id: '$acme#teamstatus', name: 'Teamstatus.' },
 					alex,
 				),
 			)
@@ -280,7 +281,7 @@ describe('core', async () => {
 				objectMatching({
 					type: CoreEventType.PROJECT_CREATED,
 					id: '$acme#teamstatus',
-					name: 'Teamstatus',
+					name: 'Teamstatus.',
 					version: 1,
 				}),
 			)
@@ -291,6 +292,30 @@ describe('core', async () => {
 					user: alex.sub,
 				}),
 			)
+		})
+
+		describe('update', async () => {
+			it('allows projects to be updated by an owner', async () => {
+				const events: CoreEvent[] = []
+				on(CoreEventType.PROJECT_UPDATED, async (e) => events.push(e))
+				isNotAnError(
+					await updateProject(dbContext, notify)(
+						'$acme#teamstatus',
+						{ name: 'Teamstatus' },
+						1,
+						alex,
+					),
+				)
+
+				check(events[0]).is(
+					objectMatching({
+						type: CoreEventType.PROJECT_UPDATED,
+						id: '$acme#teamstatus',
+						name: 'Teamstatus',
+						version: 2,
+					}),
+				)
+			})
 		})
 
 		it('ensures that projects are unique', async () => {
@@ -862,7 +887,7 @@ describe('core', async () => {
 						objectMatching({
 							id: '$acme#teamstatus',
 							name: 'Teamstatus',
-							version: 1,
+							version: 2,
 						}),
 					),
 				)

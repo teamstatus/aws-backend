@@ -5,7 +5,10 @@ import { Role } from '../Role.js'
 import { type DbContext } from './DbContext.js'
 import { l } from './l.js'
 import { parseProjectId } from '../ids.js'
-import { isOrganizationMember } from './getOrganizationMember.js'
+import {
+	isOrganizationMember,
+	isOrganizationOwner,
+} from './getOrganizationMember.js'
 
 type MemberInfo = {
 	role: Role
@@ -82,13 +85,29 @@ export const canReadProjectStatus =
 	async (projectId: string, userId: string): Promise<boolean> => {
 		const { organization } = parseProjectId(projectId)
 
-		// Organization members can read project status
 		if (organization === null) {
 			return false
 		}
+		// Organization members can read project status
 		if (await isOrganizationMember(dbContext)(organization, userId)) return true
 
 		const role = await getMemberRole(dbContext)(projectId, userId)
 		if (role === null) return false
 		return [Role.OWNER, Role.MEMBER, Role.WATCHER].includes(role)
+	}
+
+export const canUpdateProject =
+	(dbContext: DbContext) =>
+	async (projectId: string, userId: string): Promise<boolean> => {
+		const { organization } = parseProjectId(projectId)
+
+		if (organization === null) {
+			return false
+		}
+		// Organization owners can update projects
+		if (await isOrganizationOwner(dbContext)(organization, userId)) return true
+
+		const role = await getMemberRole(dbContext)(projectId, userId)
+		if (role === null) return false
+		return [Role.OWNER].includes(role)
 	}
