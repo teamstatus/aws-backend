@@ -99,6 +99,12 @@ export class RESTAPI extends Construct {
 				description: 'Returns information about the authenticated user',
 				authContext: 'email',
 			},
+			getUserProfile: {
+				routeKey: 'GET /user/{id}',
+				source: lambdaSources.getUserProfile,
+				description: 'Returns the public profile of a user',
+				authContext: 'user',
+			},
 			updateUser: {
 				routeKey: 'PATCH /me',
 				source: lambdaSources.updateUser,
