@@ -29,6 +29,7 @@ import type { ProblemDetail } from './ProblemDetail.js'
 import { createProjectMember } from './persistence/createProjectMember.js'
 import { Role } from './Role.js'
 import { l } from './persistence/l.js'
+import { deleteSync } from './persistence/deleteSync.js'
 
 describe('sync', async () => {
 	const { TableName, db } = testDb()
@@ -261,6 +262,47 @@ describe('sync', async () => {
 					check(status).is(arrayContaining(objectMatching({ id }))),
 				)
 			})
+		})
+	})
+
+	describe('deleting syncs', () => {
+		it('should allow deleting syncs', async () => {
+			const syncId = ulid()
+			const events: CoreEvent[] = []
+			on(CoreEventType.SYNC_DELETED, async (e) => events.push(e))
+
+			isNotAnError(
+				await createSync(dbContext, notify)(
+					{
+						id: syncId,
+						projectIds: new Set([projectA]),
+					},
+					user,
+				),
+			)
+
+			const { sync } = (await getSync(dbContext)(syncId, user)) as {
+				sync: SerializedSync
+			}
+			check(sync).is(
+				objectMatching({
+					id: syncId,
+				}),
+			)
+
+			isNotAnError(await deleteSync(dbContext, notify)(syncId, 1, user))
+
+			check(events[0]).is(
+				objectMatching({
+					type: CoreEventType.SYNC_DELETED,
+					id: syncId,
+				}),
+			)
+
+			const { error } = (await getSync(dbContext)(syncId, user)) as {
+				error: ProblemDetail
+			}
+			check(error?.title).is(`Sync ${syncId} not found!`)
 		})
 	})
 })

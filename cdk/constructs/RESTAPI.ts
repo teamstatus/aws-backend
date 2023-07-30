@@ -237,6 +237,12 @@ export class RESTAPI extends Construct {
 				description: 'Creates a new sync',
 				authContext: 'user',
 			},
+			deleteSync: {
+				routeKey: 'DELETE /sync/{id}',
+				source: lambdaSources.deleteSync,
+				description: 'Deletes a new sync',
+				authContext: 'user',
+			},
 			getSync: {
 				routeKey: 'GET /sync/{syncId}',
 				source: lambdaSources.getSync,

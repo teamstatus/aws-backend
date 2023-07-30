@@ -33,6 +33,7 @@ export type BackendLambdas = {
 	wsOnMessage: PackedLambda
 	wsAuthorizer: PackedLambda
 	createSync: PackedLambda
+	deleteSync: PackedLambda
 	listStatusInSync: PackedLambda
 	listSyncs: PackedLambda
 	getSync: PackedLambda
@@ -142,6 +143,7 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 		'lambdas/ws/authorizer.ts',
 	),
 	createSync: await packLambdaFromPath('createSync', 'lambdas/createSync.ts'),
+	deleteSync: await packLambdaFromPath('deleteSync', 'lambdas/deleteSync.ts'),
 	listStatusInSync: await packLambdaFromPath(
 		'listStatusInSync',
 		'lambdas/listStatusInSync.ts',
