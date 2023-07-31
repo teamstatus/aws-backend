@@ -19,8 +19,12 @@ export const handler = userAuthRequestPipe(
 		projectId: event.pathParameters?.projectId as string,
 		inclusiveStartDate: event.queryStringParameters?.inclusiveStartDate,
 		inclusiveEndDate: event.queryStringParameters?.inclusiveEndDate,
+		startKey: event.queryStringParameters?.startKey,
 	}),
-	async ({ projectId, inclusiveStartDate, inclusiveEndDate }, authContext) =>
+	async (
+		{ projectId, inclusiveStartDate, inclusiveEndDate, startKey },
+		authContext,
+	) =>
 		list(
 			{
 				projectId,
@@ -32,6 +36,7 @@ export const handler = userAuthRequestPipe(
 					inclusiveEndDate !== undefined
 						? new Date(inclusiveEndDate)
 						: undefined,
+				startKey,
 			},
 			authContext,
 		),
