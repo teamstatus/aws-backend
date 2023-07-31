@@ -52,6 +52,7 @@ import { eventually } from './test/eventually.js'
 import { updateOrganization } from './persistence/updateOrganization.js'
 import { getStatus } from './persistence/getStatus.js'
 import { updateProject } from './persistence/updateProject.js'
+import { l } from './persistence/l.js'
 
 describe('core', async () => {
 	const { TableName, db } = testDb()
@@ -682,6 +683,77 @@ describe('core', async () => {
 						error?.title,
 						`Only members of '$acme#teamstatus' are allowed to list status.`,
 					)
+				})
+
+				it('paginates', async () => {
+					const projectId = ulid()
+					const user: UserAuthContext = {
+						email: 'pagination@example.com',
+						sub: '@paginate',
+					}
+					isNotAnError(
+						await createOrganization(dbContext, notify)(
+							{ id: `$paginate`, name: 'Pagination test5' },
+							user,
+						),
+					)
+
+					isNotAnError(
+						await createProject(dbContext, notify)(
+							{
+								id: `$paginate#test-${projectId}`,
+								name: `Project ${projectId}`,
+							},
+							user,
+						),
+					)
+
+					await eventually(async () => {
+						const { projects } = (await listProjects(dbContext)(user)) as {
+							projects: Project[]
+						}
+
+						check(projects).is(
+							arrayContaining(
+								objectMatching({ id: l(`$paginate#test-${projectId}`) }),
+							),
+						)
+					})
+
+					for (let i = 0; i < 30; i++) {
+						isNotAnError(
+							await createStatus(dbContext, notify)(
+								ulid(),
+								`$paginate#test-${projectId}`,
+								`Status for pagination ${i}`,
+								user,
+							),
+						)
+					}
+
+					const { status, nextStartKey } = (await listStatus(dbContext)(
+						{
+							projectId: `$paginate#test-${projectId}`,
+						},
+						user,
+					)) as { status: Status[]; nextStartKey: string }
+
+					check(status.length).is(25)
+					check(nextStartKey).is(aString)
+
+					// Fetch next page
+
+					const { status: restStatus, nextStartKey: lastStartKey } =
+						(await listStatus(dbContext)(
+							{
+								projectId: `$paginate#test-${projectId}`,
+								startKey: nextStartKey,
+							},
+							user,
+						)) as { status: Status[]; nextStartKey: string }
+
+					check(restStatus.length).is(5)
+					check(lastStartKey).is(undefinedValue)
 				})
 			})
 

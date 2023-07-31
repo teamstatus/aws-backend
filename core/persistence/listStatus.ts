@@ -20,13 +20,17 @@ export const listStatus =
 			projectId,
 			inclusiveStartDate,
 			inclusiveEndDate,
+			startKey,
 		}: {
 			projectId: string
 			inclusiveStartDate?: Date
 			inclusiveEndDate?: Date
+			startKey?: string
 		},
 		authContext: UserAuthContext,
-	): Promise<{ status: Status[] } | { error: ProblemDetail }> => {
+	): Promise<
+		{ status: Status[]; nextStartKey?: string } | { error: ProblemDetail }
+	> => {
 		const { sub: userId } = authContext
 		if (!(await canReadProjectStatus(dbContext)(projectId, userId))) {
 			return {
@@ -78,11 +82,22 @@ export const listStatus =
 					: {}),
 			},
 			ScanIndexForward: false,
+			Limit: 25,
+			ExclusiveStartKey:
+				startKey === undefined
+					? undefined
+					: JSON.parse(Buffer.from(startKey, 'base64url').toString('utf-8')),
 		}
 
 		const res = await db.send(new QueryCommand(args))
 		return {
 			status: await Promise.all((res.Items ?? []).map(itemToStatus(dbContext))),
+			nextStartKey:
+				res.LastEvaluatedKey === undefined
+					? undefined
+					: Buffer.from(JSON.stringify(res.LastEvaluatedKey), 'utf-8').toString(
+							'base64url',
+					  ),
 		}
 	}
 
