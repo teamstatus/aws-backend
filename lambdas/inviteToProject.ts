@@ -97,9 +97,7 @@ export const handler = userAuthRequestPipe(
 								Text: {
 									Data: `Hei ${name ?? invitedUserId},\n\n${
 										inviterName ?? authContext.sub
-									} has invited you to the project ${projectId} as a ${role}.\n\nPlease go to your projects page to accept the invite using the code ${
-										res.id
-									}.`,
+									} has invited you to the project ${projectId} as a ${role}.\n\nPlease go to your dashboard to review this invitation.`,
 								},
 							},
 							Subject: {
