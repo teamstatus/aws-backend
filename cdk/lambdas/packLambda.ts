@@ -6,20 +6,18 @@ import { checkSumOfFiles } from './checksumOfFiles.js'
 import { commonParent } from './commonParent.js'
 import { findDependencies } from './findDependencies.js'
 
-const removeCommonAncestor =
-	(parentDir: string) =>
-	(file: string): string => {
-		const p = parse(file)
-		const jsFileName = [
-			p.dir.replace(parentDir.slice(0, parentDir.length - 1), ''),
-			`${p.name}.js`,
-		]
-			.join('/')
-			// Replace leading slash
-			.replace(/^\//, '')
+const removeCommonAncestor = (parentDir: string) => (file: string): string => {
+	const p = parse(file)
+	const jsFileName = [
+		p.dir.replace(parentDir.slice(0, parentDir.length - 1), ''),
+		`${p.name}.js`,
+	]
+		.join('/')
+		// Replace leading slash
+		.replace(/^\//, '')
 
-		return jsFileName
-	}
+	return jsFileName
+}
 
 /**
  * In the bundle we only include code that's not in the layer.

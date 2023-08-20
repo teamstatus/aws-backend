@@ -64,7 +64,6 @@ export const listStatusInSync =
 		return {
 			status: maybeStatus
 				.filter((res) => 'status' in res)
-				.map((res) => (res as { status: Status[] }).status)
-				.flat(),
+				.flatMap((res) => (res as { status: Status[] }).status),
 		}
 	}

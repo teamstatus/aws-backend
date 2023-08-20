@@ -33,20 +33,17 @@ export const packLayer = async ({
 
 	await mkdir(nodejsDir, { recursive: true })
 
-	const depsToBeInstalled = dependencies.reduce(
-		(resolved, dep) => {
-			const resolvedDependency = deps[dep] ?? devDeps[dep]
-			if (resolvedDependency === undefined)
-				throw new Error(
-					`Could not resolve dependency "${dep}" in ${packageJsonFile}!`,
-				)
-			return {
-				...resolved,
-				[dep]: resolvedDependency,
-			}
-		},
-		{} as Record<string, string>,
-	)
+	const depsToBeInstalled = dependencies.reduce((resolved, dep) => {
+		const resolvedDependency = deps[dep] ?? devDeps[dep]
+		if (resolvedDependency === undefined)
+			throw new Error(
+				`Could not resolve dependency "${dep}" in ${packageJsonFile}!`,
+			)
+		return {
+			...resolved,
+			[dep]: resolvedDependency,
+		}
+	}, {} as Record<string, string>)
 
 	const packageJSON = path.join(nodejsDir, 'package.json')
 	await writeFile(

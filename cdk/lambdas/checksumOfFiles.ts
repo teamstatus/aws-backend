@@ -48,7 +48,7 @@ const checkSum = async (
 			p.then(async () => {
 				hashes[file] = await hashFile(file)
 			}),
-		Promise.resolve() as Promise<any>,
+		Promise.resolve() as Promise<unknown>,
 	)
 	return hashes
 }

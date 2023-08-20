@@ -41,8 +41,7 @@ export const getUserProfile =
 	}
 
 export const itemToUserProfile =
-	() =>
-	async (item: Record<string, AttributeValue>): Promise<UserProfile> => {
+	() => async (item: Record<string, AttributeValue>): Promise<UserProfile> => {
 		const d = unmarshall(item)
 		return {
 			id: d.id,

@@ -5,7 +5,7 @@
 [![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://renovatebot.com)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier/)
-[![ESLint: TypeScript](https://img.shields.io/badge/ESLint-TypeScript-blue.svg)](https://github.com/typescript-eslint/typescript-eslint)
+[![code style: Rome](https://img.shields.io/badge/code_style-Rome-ffc905.svg)](https://rome.tools/)
 
 AWS backend for teamstatus developed using [AWS CDK](https://aws.amazon.com/cdk)
 in [TypeScript](https://www.typescriptlang.org/).

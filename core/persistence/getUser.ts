@@ -37,8 +37,7 @@ export const getUser =
 	}
 
 export const itemToUser =
-	() =>
-	async (item: Record<string, AttributeValue>): Promise<User> => {
+	() => async (item: Record<string, AttributeValue>): Promise<User> => {
 		const d = unmarshall(item)
 		return {
 			id: d.id,

@@ -30,9 +30,7 @@ export const createTable = async (
 				...new Set([
 					'id',
 					'type',
-					...Object.values(indexes)
-						.map(({ keys }) => keys)
-						.flat(),
+					...Object.values(indexes).flatMap(({ keys }) => keys),
 				]),
 			].map((AttributeName) => ({
 				AttributeName,

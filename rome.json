@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.rome.tools/schemas/12.1.3/schema.json",
+  "organizeImports": {
+    "enabled": false
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "all": true,
+      "style": {
+        "noUnusedTemplateLiteral": "off"
+      },
+      "nursery": {
+        "noConsoleLog": "off"
+      },
+      "correctness": {
+        "noUnreachableSuper": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "warn"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "semicolons": "asNeeded",
+      "quoteStyle": "single"
+    }
+  },
+  "files": {
+    "ignore": ["./cdk.out"]
+  }
+}
