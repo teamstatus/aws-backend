@@ -19,6 +19,7 @@ import { packLayer } from './lambdas/packLayer.js'
 import { EmailReceiving } from './constructs/EmailReceiving.js'
 import { Events } from './constructs/Events.js'
 import { EventEmailNotifications } from './constructs/EventEmailNotifications.js'
+import { Onboarding } from './constructs/Onboarding.js'
 
 export const readKeyPolicy = (
 	stack: Stack,
@@ -103,6 +104,12 @@ class TeamStatusBackendStack extends Stack {
 		new EventEmailNotifications(this, {
 			events,
 			lambdaSources,
+		})
+
+		new Onboarding(this, {
+			lambdaSources,
+			events,
+			persistence,
 		})
 
 		new CfnOutput(this, 'tableName', {

@@ -39,6 +39,7 @@ export type BackendLambdas = {
 	getSync: PackedLambda
 	emailForwarding: PackedLambda
 	eventEmailNotifications: PackedLambda
+	onboarding: PackedLambda
 }
 
 export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
@@ -158,4 +159,5 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 		'eventEmailNotifications',
 		'lambdas/eventEmailNotifications.ts',
 	),
+	onboarding: await packLambdaFromPath('onboarding', 'lambdas/onboarding.ts'),
 })
