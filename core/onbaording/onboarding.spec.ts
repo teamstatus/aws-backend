@@ -53,17 +53,17 @@ describe('Onboarding', async () => {
 		)
 
 		onboarding(dbContext, notify, on)
-		const finn: UserAuthContext = {
-			email: 'finn@example.com',
-			sub: '@finn',
+		const gray: UserAuthContext = {
+			email: 'gray@example.com',
+			sub: '@gray',
 		}
 		await createUser(
 			dbContext,
 			notify,
 		)({
-			id: '@finn',
-			name: 'Finn',
-			authContext: { email: 'finn@example.com' },
+			id: '@gray',
+			name: 'Gray',
+			authContext: { email: 'gray@example.com' },
 		})
 
 		check(events).is(
@@ -71,13 +71,13 @@ describe('Onboarding', async () => {
 				objectMatching({
 					type: CoreEventType.PROJECT_MEMBER_CREATED,
 					project: '$teamstatus#feedback',
-					user: finn.sub,
+					user: gray.sub,
 				}),
 			),
 		)
 
 		await eventually(async () => {
-			const { projects } = (await listProjects(dbContext)(finn)) as {
+			const { projects } = (await listProjects(dbContext)(gray)) as {
 				projects: Project[]
 			}
 
