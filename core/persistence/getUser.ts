@@ -32,18 +32,17 @@ export const getUser =
 			}
 
 		return {
-			user: await itemToUser()(Item),
+			user: itemToUser(Item),
 		}
 	}
 
-export const itemToUser =
-	() => async (item: Record<string, AttributeValue>): Promise<User> => {
-		const d = unmarshall(item)
-		return {
-			id: d.id,
-			email: d.user__email,
-			name: d.name,
-			version: d.version,
-			pronouns: d.pronouns ?? undefined,
-		}
+export const itemToUser = (item: Record<string, AttributeValue>): User => {
+	const d = unmarshall(item)
+	return {
+		id: d.id,
+		email: d.user__email,
+		name: d.name,
+		version: d.version,
+		pronouns: d.pronouns ?? undefined,
 	}
+}
