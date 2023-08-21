@@ -37,6 +37,9 @@ export class Onboarding extends Construct {
 			code: new LambdaSource(this, lambdaSources.onboarding).code,
 			layers: [layer],
 			logRetention: Logs.RetentionDays.ONE_DAY,
+			logRetentionRetryOptions: {
+				base: Duration.millis(200),
+			},
 			initialPolicy: [
 				new IAM.PolicyStatement({
 					actions: ['ses:SendEmail'],

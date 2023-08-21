@@ -36,6 +36,9 @@ export class EmailReceiving extends Construct {
 			memorySize: 256,
 			code: new LambdaSource(this, lambdaSources.emailForwarding).code,
 			logRetention: Logs.RetentionDays.ONE_DAY,
+			logRetentionRetryOptions: {
+				base: Duration.millis(200),
+			},
 			initialPolicy: [
 				new IAM.PolicyStatement({
 					actions: ['ses:SendEmail'],

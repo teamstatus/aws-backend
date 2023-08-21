@@ -38,6 +38,9 @@ abstract class APIAuthorizer extends Construct {
 			code: new LambdaSource(this, source).code,
 			layers: [layer],
 			logRetention: Logs.RetentionDays.ONE_WEEK,
+			logRetentionRetryOptions: {
+				base: Duration.millis(200),
+			},
 			initialPolicy: [readKeyPolicy(stack, 'publicKey')],
 			environment: {
 				STACK_NAME: stack.stackName,
