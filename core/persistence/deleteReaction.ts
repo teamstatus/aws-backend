@@ -1,6 +1,6 @@
 import {
 	ConditionalCheckFailedException,
-	UpdateItemCommand,
+	DeleteItemCommand,
 } from '@aws-sdk/client-dynamodb'
 import { type CoreEvent } from '../CoreEvent.js'
 import { CoreEventType } from '../CoreEventType.js'
@@ -28,7 +28,7 @@ export const deleteReaction =
 			const { sub: userId } = authContext
 			const { db, TableName } = dbContext
 			await db.send(
-				new UpdateItemCommand({
+				new DeleteItemCommand({
 					TableName,
 					Key: {
 						id: {
@@ -38,21 +38,13 @@ export const deleteReaction =
 							S: 'statusReaction',
 						},
 					},
-					UpdateExpression:
-						'SET #statusDeleted = #status, #deletedAt = :now REMOVE #status',
 					ConditionExpression: '#author = :author',
 					ExpressionAttributeNames: {
 						'#author': 'author',
-						'#deletedAt': 'deletedAt',
-						'#status': 'statusReaction__status',
-						'#statusDeleted': 'statusReaction__status__DELETED',
 					},
 					ExpressionAttributeValues: {
 						':author': {
 							S: userId,
-						},
-						':now': {
-							S: new Date().toISOString(),
 						},
 					},
 				}),
