@@ -165,6 +165,12 @@ export class RESTAPI extends Construct {
 				description: 'Updates a project',
 				authContext: 'user',
 			},
+			deleteProject: {
+				routeKey: 'DELETE /project/{id}',
+				source: lambdaSources.deleteProject,
+				description: 'Deletes a project',
+				authContext: 'user',
+			},
 			createStatus: {
 				routeKey: 'POST /project/{projectId}/status',
 				source: lambdaSources.createStatus,
@@ -240,7 +246,7 @@ export class RESTAPI extends Construct {
 			deleteSync: {
 				routeKey: 'DELETE /sync/{syncId}',
 				source: lambdaSources.deleteSync,
-				description: 'Deletes a new sync',
+				description: 'Deletes a sync',
 				authContext: 'user',
 			},
 			getSync: {

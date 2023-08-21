@@ -15,7 +15,7 @@ import { CoreEventType } from './CoreEventType.js'
 import type { ProblemDetail } from './ProblemDetail.js'
 import { Role } from './Role.js'
 import { type EmailAuthContext, type UserAuthContext } from './auth.js'
-import { notifier } from './notifier.js'
+import { notifier, type listenerFn } from './notifier.js'
 import type { DbContext } from './persistence/DbContext.js'
 import { acceptProjectInvitation } from './persistence/acceptProjectInvitation.js'
 import {
@@ -53,6 +53,7 @@ import { updateOrganization } from './persistence/updateOrganization.js'
 import { getStatus } from './persistence/getStatus.js'
 import { updateProject } from './persistence/updateProject.js'
 import { l } from './persistence/l.js'
+import { deleteProject } from './persistence/deleteProject.js'
 
 describe('core', async () => {
 	const { TableName, db } = testDb()
@@ -91,7 +92,7 @@ describe('core', async () => {
 			let pin: string
 			it('generates a login request', async () => {
 				const events: CoreEvent[] = []
-				on(CoreEventType.EMAIL_LOGIN_REQUESTED, async (e) => events.push(e))
+				on(CoreEventType.EMAIL_LOGIN_REQUESTED, storeEvent(events))
 				const { loginRequest, pin: p } = (await emailLoginRequest(
 					dbContext,
 					notify,
@@ -101,11 +102,13 @@ describe('core', async () => {
 						email: 'alex@example.com',
 					}),
 				)
-				check(events[0]).is(
-					objectMatching({
-						type: CoreEventType.EMAIL_LOGIN_REQUESTED,
-						email: 'alex@example.com',
-					}),
+				check(events).is(
+					arrayContaining(
+						objectMatching({
+							type: CoreEventType.EMAIL_LOGIN_REQUESTED,
+							email: 'alex@example.com',
+						}),
+					),
 				)
 				check(p).is(stringMatching(/^[0-9]{8}$/))
 				pin = p
@@ -124,7 +127,7 @@ describe('core', async () => {
 
 			it('logs a user in using a PIN', async () => {
 				const events: CoreEvent[] = []
-				on(CoreEventType.EMAIL_LOGIN_PIN_SUCCESS, async (e) => events.push(e))
+				on(CoreEventType.EMAIL_LOGIN_PIN_SUCCESS, storeEvent(events))
 				const { authContext } = (await emailPINLogin(
 					dbContext,
 					notify,
@@ -133,11 +136,13 @@ describe('core', async () => {
 					pin,
 				})) as { authContext: EmailAuthContext }
 
-				check(events[0]).is(
-					objectMatching({
-						type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS,
-						email: 'alex@example.com',
-					}),
+				check(events).is(
+					arrayContaining(
+						objectMatching({
+							type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS,
+							email: 'alex@example.com',
+						}),
+					),
 				)
 
 				check(authContext).is(
@@ -162,7 +167,7 @@ describe('core', async () => {
 
 			it('allows users to claim a user ID', async () => {
 				const events: CoreEvent[] = []
-				on(CoreEventType.USER_CREATED, async (e) => events.push(e))
+				on(CoreEventType.USER_CREATED, storeEvent(events))
 				isNotAnError(
 					await createUser(
 						dbContext,
@@ -173,13 +178,15 @@ describe('core', async () => {
 						authContext: { email: 'alex@example.com' },
 					}),
 				)
-				check(events[0]).is(
-					objectMatching({
-						type: CoreEventType.USER_CREATED,
-						id: alex.sub,
-						name: 'Alex Doe',
-						email: 'alex@example.com',
-					}),
+				check(events).is(
+					arrayContaining(
+						objectMatching({
+							type: CoreEventType.USER_CREATED,
+							id: alex.sub,
+							name: 'Alex Doe',
+							email: 'alex@example.com',
+						}),
+					),
 				)
 			})
 
@@ -205,20 +212,22 @@ describe('core', async () => {
 	describe('organizations', async () => {
 		it('can create a new organization', async () => {
 			const events: CoreEvent[] = []
-			on(CoreEventType.ORGANIZATION_CREATED, async (e) => events.push(e))
+			on(CoreEventType.ORGANIZATION_CREATED, storeEvent(events))
 			isNotAnError(
 				await createOrganization(dbContext, notify)(
 					{ id: '$acme', name: 'ACME Inc.' },
 					alex,
 				),
 			)
-			check(events[0]).is(
-				objectMatching({
-					type: CoreEventType.ORGANIZATION_CREATED,
-					id: '$acme',
-					name: 'ACME Inc.',
-					owner: alex.sub,
-				}),
+			check(events).is(
+				arrayContaining(
+					objectMatching({
+						type: CoreEventType.ORGANIZATION_CREATED,
+						id: '$acme',
+						name: 'ACME Inc.',
+						owner: alex.sub,
+					}),
+				),
 			)
 		})
 
@@ -245,7 +254,7 @@ describe('core', async () => {
 		describe('update', async () => {
 			it('allows organizations to be updated by an owner', async () => {
 				const events: CoreEvent[] = []
-				on(CoreEventType.ORGANIZATION_UPDATED, async (e) => events.push(e))
+				on(CoreEventType.ORGANIZATION_UPDATED, storeEvent(events))
 				isNotAnError(
 					await updateOrganization(dbContext, notify)(
 						'$acme',
@@ -255,13 +264,15 @@ describe('core', async () => {
 					),
 				)
 
-				check(events[0]).is(
-					objectMatching({
-						type: CoreEventType.ORGANIZATION_UPDATED,
-						id: '$acme',
-						name: 'ACME Inc!',
-						version: 2,
-					}),
+				check(events).is(
+					arrayContaining(
+						objectMatching({
+							type: CoreEventType.ORGANIZATION_UPDATED,
+							id: '$acme',
+							name: 'ACME Inc!',
+							version: 2,
+						}),
+					),
 				)
 			})
 		})
@@ -270,35 +281,39 @@ describe('core', async () => {
 	describe('projects', async () => {
 		it('can create a new project', async () => {
 			const events: CoreEvent[] = []
-			on(CoreEventType.PROJECT_CREATED, async (e) => events.push(e))
-			on(CoreEventType.PROJECT_MEMBER_CREATED, async (e) => events.push(e))
+			on(CoreEventType.PROJECT_CREATED, storeEvent(events))
+			on(CoreEventType.PROJECT_MEMBER_CREATED, storeEvent(events))
 			isNotAnError(
 				await createProject(dbContext, notify)(
 					{ id: '$acme#teamstatus', name: 'Teamstatus.' },
 					alex,
 				),
 			)
-			check(events[0]).is(
-				objectMatching({
-					type: CoreEventType.PROJECT_CREATED,
-					id: '$acme#teamstatus',
-					name: 'Teamstatus.',
-					version: 1,
-				}),
+			check(events).is(
+				arrayContaining(
+					objectMatching({
+						type: CoreEventType.PROJECT_CREATED,
+						id: '$acme#teamstatus',
+						name: 'Teamstatus.',
+						version: 1,
+					}),
+				),
 			)
-			check(events[1]).is(
-				objectMatching({
-					type: CoreEventType.PROJECT_MEMBER_CREATED,
-					project: '$acme#teamstatus',
-					user: alex.sub,
-				}),
+			check(events).is(
+				arrayContaining(
+					objectMatching({
+						type: CoreEventType.PROJECT_MEMBER_CREATED,
+						project: '$acme#teamstatus',
+						user: alex.sub,
+					}),
+				),
 			)
 		})
 
 		describe('update', async () => {
 			it('allows projects to be updated by an owner', async () => {
 				const events: CoreEvent[] = []
-				on(CoreEventType.PROJECT_UPDATED, async (e) => events.push(e))
+				on(CoreEventType.PROJECT_UPDATED, storeEvent(events))
 				isNotAnError(
 					await updateProject(dbContext, notify)(
 						'$acme#teamstatus',
@@ -308,13 +323,15 @@ describe('core', async () => {
 					),
 				)
 
-				check(events[0]).is(
-					objectMatching({
-						type: CoreEventType.PROJECT_UPDATED,
-						id: '$acme#teamstatus',
-						name: 'Teamstatus',
-						version: 2,
-					}),
+				check(events).is(
+					arrayContaining(
+						objectMatching({
+							type: CoreEventType.PROJECT_UPDATED,
+							id: '$acme#teamstatus',
+							name: 'Teamstatus',
+							version: 2,
+						}),
+					),
 				)
 			})
 		})
@@ -327,6 +344,34 @@ describe('core', async () => {
 			assert.equal(
 				res.error?.title,
 				`Project '$acme#teamstatus' already exists.`,
+			)
+		})
+
+		it('allows owners to delete projects', async () => {
+			const events: CoreEvent[] = []
+			on(CoreEventType.PROJECT_DELETED, storeEvent(events))
+			isNotAnError(
+				await createProject(dbContext, notify)(
+					{ id: '$acme#teamstatus-to-be-deleted-by-owner', name: 'Teamstatus' },
+					alex,
+				),
+			)
+
+			isNotAnError(
+				await deleteProject(dbContext, notify)(
+					'$acme#teamstatus-to-be-deleted-by-owner',
+					1,
+					alex,
+				),
+			)
+
+			check(events).is(
+				arrayContaining(
+					objectMatching({
+						type: CoreEventType.PROJECT_DELETED,
+						id: '$acme#teamstatus-to-be-deleted-by-owner',
+					}),
+				),
 			)
 		})
 
@@ -355,7 +400,7 @@ describe('core', async () => {
 					authContext: cameron,
 				})
 
-				const events: MemberInvitedEvent[] = []
+				const events: CoreEvent[] = []
 				on(CoreEventType.PROJECT_MEMBER_INVITED, async (e) =>
 					events.push(e as MemberInvitedEvent),
 				)
@@ -370,14 +415,16 @@ describe('core', async () => {
 						alex,
 					),
 				)
-				check(events[0]).is(
-					objectMatching({
-						type: CoreEventType.PROJECT_MEMBER_INVITED,
-						project: '$acme#teamstatus',
-						invitee: cameron.sub,
-						inviter: alex.sub,
-						role: Role.MEMBER,
-					}),
+				check(events).is(
+					arrayContaining(
+						objectMatching({
+							type: CoreEventType.PROJECT_MEMBER_INVITED,
+							project: '$acme#teamstatus',
+							invitee: cameron.sub,
+							inviter: alex.sub,
+							role: Role.MEMBER,
+						}),
+					),
 				)
 			})
 
@@ -452,7 +499,7 @@ describe('core', async () => {
 					authContext: emerson,
 				})
 
-				const events: MemberInvitedEvent[] = []
+				const events: CoreEvent[] = []
 				on(CoreEventType.PROJECT_MEMBER_INVITED, async (e) =>
 					events.push(e as MemberInvitedEvent),
 				)
@@ -467,14 +514,16 @@ describe('core', async () => {
 						alex,
 					),
 				)
-				check(events[0]).is(
-					objectMatching({
-						type: CoreEventType.PROJECT_MEMBER_INVITED,
-						project: '$acme#teamstatus',
-						invitee: emerson.sub,
-						inviter: alex.sub,
-						role: Role.WATCHER,
-					}),
+				check(events).is(
+					arrayContaining(
+						objectMatching({
+							type: CoreEventType.PROJECT_MEMBER_INVITED,
+							project: '$acme#teamstatus',
+							invitee: emerson.sub,
+							inviter: alex.sub,
+							role: Role.WATCHER,
+						}),
+					),
 				)
 			})
 
@@ -537,7 +586,7 @@ describe('core', async () => {
 			describe('create', async () => {
 				it('can post a new status update', async () => {
 					const events: CoreEvent[] = []
-					on(CoreEventType.STATUS_CREATED, async (e) => events.push(e))
+					on(CoreEventType.STATUS_CREATED, storeEvent(events))
 
 					const id = ulid()
 					isNotAnError(
@@ -548,15 +597,17 @@ describe('core', async () => {
 							alex,
 						),
 					)
-					check(events[0]).is(
-						objectMatching({
-							type: CoreEventType.STATUS_CREATED,
-							project: '$acme#teamstatus',
-							message:
-								'Implemented ability to persist status updates for projects.',
-							author: alex.sub,
-							id,
-						}),
+					check(events).is(
+						arrayContaining(
+							objectMatching({
+								type: CoreEventType.STATUS_CREATED,
+								project: '$acme#teamstatus',
+								message:
+									'Implemented ability to persist status updates for projects.',
+								author: alex.sub,
+								id,
+							}),
+						),
 					)
 				})
 
@@ -828,7 +879,7 @@ describe('core', async () => {
 
 				it('allows authors to attach a reaction', async () => {
 					const events: CoreEvent[] = []
-					on(CoreEventType.REACTION_CREATED, async (e) => events.push(e))
+					on(CoreEventType.REACTION_CREATED, storeEvent(events))
 
 					await createProject(dbContext, notify)(
 						{ id: `$acme${projectId}`, name: `Project ${projectId}` },
@@ -855,14 +906,16 @@ describe('core', async () => {
 						),
 					)
 
-					check(events[0]).is(
-						objectMatching({
-							type: CoreEventType.REACTION_CREATED,
-							status: statusId,
-							author: alex.sub,
-							id: reactionId,
-							...newVersionRelease,
-						}),
+					check(events).is(
+						arrayContaining(
+							objectMatching({
+								type: CoreEventType.REACTION_CREATED,
+								status: statusId,
+								author: alex.sub,
+								id: reactionId,
+								...newVersionRelease,
+							}),
+						),
 					)
 				})
 
@@ -975,3 +1028,9 @@ describe('core', async () => {
 		})
 	})
 })
+
+const storeEvent =
+	(events: CoreEvent[]): listenerFn =>
+	async (e: CoreEvent) => {
+		events.push(e)
+	}
