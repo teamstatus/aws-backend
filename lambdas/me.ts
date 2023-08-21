@@ -20,7 +20,9 @@ export const handler = emailAuthRequestPipe(
 	async (_, authContext) => {
 		if ((authContext as UserAuthContext).sub === undefined)
 			return {
-				email: authContext.email,
+				user: {
+					email: authContext.email,
+				},
 			}
 
 		return await get(authContext as UserAuthContext)
