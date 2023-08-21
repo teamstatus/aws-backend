@@ -97,6 +97,7 @@ class TeamStatusBackendStack extends Stack {
 		new EmailReceiving(this, {
 			lambdaSources,
 			layer: backendLayer,
+			isTest,
 		})
 
 		new EventEmailNotifications(this, {

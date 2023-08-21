@@ -6,6 +6,7 @@ import {
 	aws_logs as Logs,
 	aws_s3 as S3,
 	aws_iam as IAM,
+	RemovalPolicy,
 } from 'aws-cdk-lib'
 import type { BackendLambdas } from '../lambdas/packBackendLambdas'
 import { LambdaSource } from './LambdaSource.js'
@@ -16,14 +17,19 @@ export class EmailReceiving extends Construct {
 		{
 			lambdaSources,
 			layer,
+			isTest,
 		}: {
 			lambdaSources: BackendLambdas
 			layer: Lambda.ILayerVersion
+			isTest: boolean
 		},
 	) {
 		super(parent, 'emailReceiving')
 
-		const bucket = new S3.Bucket(this, 'bucket')
+		const bucket = new S3.Bucket(this, 'bucket', {
+			removalPolicy: isTest ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
+			autoDeleteObjects: true,
+		})
 
 		const lambda = new Lambda.Function(this, 'fn', {
 			description: 'Forward incoming emails',
