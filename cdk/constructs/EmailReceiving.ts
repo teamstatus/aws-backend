@@ -28,7 +28,7 @@ export class EmailReceiving extends Construct {
 
 		const bucket = new S3.Bucket(this, 'bucket', {
 			removalPolicy: isTest ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
-			autoDeleteObjects: true,
+			autoDeleteObjects: isTest ? true : false,
 		})
 
 		const lambda = new Lambda.Function(this, 'fn', {
