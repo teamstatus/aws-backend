@@ -17,18 +17,15 @@ export class EmailReceiving extends Construct {
 		{
 			lambdaSources,
 			layer,
-			isTest,
 		}: {
 			lambdaSources: BackendLambdas
 			layer: Lambda.ILayerVersion
-			isTest: boolean
 		},
 	) {
 		super(parent, 'emailReceiving')
 
 		const bucket = new S3.Bucket(this, 'bucket', {
-			removalPolicy: isTest ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
-			autoDeleteObjects: isTest ? true : false,
+			removalPolicy: RemovalPolicy.RETAIN,
 		})
 
 		const lambda = new Lambda.Function(this, 'fn', {
