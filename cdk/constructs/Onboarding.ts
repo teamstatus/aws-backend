@@ -17,8 +17,11 @@ export class Onboarding extends Construct {
 			lambdaSources,
 			events,
 			persistence,
+			layer,
 		}: {
 			lambdaSources: BackendLambdas
+
+			layer: Lambda.ILayerVersion
 			events: Events
 			persistence: Persistence
 		},
@@ -32,6 +35,7 @@ export class Onboarding extends Construct {
 			runtime: Lambda.Runtime.NODEJS_18_X,
 			memorySize: 256,
 			code: new LambdaSource(this, lambdaSources.onboarding).code,
+			layers: [layer],
 			logRetention: Logs.RetentionDays.ONE_DAY,
 			initialPolicy: [
 				new IAM.PolicyStatement({

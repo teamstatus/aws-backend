@@ -111,6 +111,7 @@ class TeamStatusBackendStack extends Stack {
 			lambdaSources,
 			events,
 			persistence,
+			layer: backendLayer,
 		})
 
 		new CfnOutput(this, 'tableName', {
