@@ -1,5 +1,5 @@
-import type { CoreEvent } from './CoreEvent'
-import type { CoreEventType } from './CoreEventType'
+import type { CoreEvent } from './CoreEvent.js'
+import type { CoreEventType } from './CoreEventType.js'
 
 export type listenerFn = (event: CoreEvent) => Promise<unknown>
 
