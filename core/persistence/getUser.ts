@@ -41,7 +41,7 @@ export const itemToUser = (item: Record<string, AttributeValue>): User => {
 	return {
 		id: d.id,
 		email: d.user__email,
-		name: d.name,
+		name: d.name ?? undefined,
 		version: d.version,
 		pronouns: d.pronouns ?? undefined,
 	}

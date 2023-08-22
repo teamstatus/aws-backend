@@ -19,7 +19,7 @@ import { l } from './l.js'
 export type User = {
 	id: string
 	email: string
-	name: string
+	name?: string
 	version: number
 	pronouns?: string
 }
@@ -37,7 +37,7 @@ export const createUser =
 		authContext,
 	}: {
 		id: string
-		name: string
+		name?: string
 		pronouns?: string
 		authContext: EmailAuthContext
 	}): Promise<{ error: ProblemDetail } | Record<string, never>> => {
@@ -59,9 +59,12 @@ export const createUser =
 							S: 'user',
 						},
 						user__email: { S: l(email) },
-						name: {
-							S: name,
-						},
+						name:
+							name !== undefined
+								? {
+										S: name,
+								  }
+								: { NULL: true },
 						pronouns:
 							pronouns !== undefined
 								? {

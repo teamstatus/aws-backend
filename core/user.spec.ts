@@ -42,7 +42,6 @@ describe('user', async () => {
 				notify,
 			)({
 				id: demi.sub,
-				name: 'Demi Doe',
 				authContext: { email: 'demi@example.com' },
 			}),
 		)
@@ -52,7 +51,6 @@ describe('user', async () => {
 			objectMatching({
 				id: demi.sub,
 				email: demi.email,
-				name: 'Demi Doe',
 				version: 1,
 			}),
 		)

@@ -45,7 +45,7 @@ export const itemToUserProfile =
 		const d = unmarshall(item)
 		return {
 			id: d.id,
-			name: d.name,
+			name: d.name ?? undefined,
 			pronouns: d.pronouns ?? undefined,
 		}
 	}

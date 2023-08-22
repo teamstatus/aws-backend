@@ -174,7 +174,6 @@ describe('core', async () => {
 						notify,
 					)({
 						id: alex.sub,
-						name: 'Alex Doe',
 						authContext: { email: 'alex@example.com' },
 					}),
 				)
@@ -183,7 +182,6 @@ describe('core', async () => {
 						objectMatching({
 							type: CoreEventType.USER_CREATED,
 							id: alex.sub,
-							name: 'Alex Doe',
 							email: 'alex@example.com',
 						}),
 					),
@@ -396,7 +394,6 @@ describe('core', async () => {
 					notify,
 				)({
 					id: cameron.sub,
-					name: 'Cameron',
 					authContext: cameron,
 				})
 
@@ -495,7 +492,6 @@ describe('core', async () => {
 					notify,
 				)({
 					id: '@emerson',
-					name: 'Emerson',
 					authContext: emerson,
 				})
 
@@ -926,7 +922,6 @@ describe('core', async () => {
 						notify,
 					)({
 						id: '@blake',
-						name: 'Blake',
 						authContext: { email: 'blake@example.com' },
 					})
 
