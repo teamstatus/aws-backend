@@ -3,7 +3,7 @@ import { SNSClient } from '@aws-sdk/client-sns'
 import { fromEnv } from '@nordicsemiconductor/from-env'
 import type { SNSEvent } from 'aws-lambda'
 import { notifier } from '../core/notifier.js'
-import { onboarding } from '../core/onbaording/onboarding'
+import { onboarding } from '../core/onboarding/onboarding.js'
 import { snsNotifier } from './snsNotifier.js'
 
 const { TableName, topicArn } = fromEnv({
