@@ -7,6 +7,7 @@ import {
 	aws_s3 as S3,
 	aws_iam as IAM,
 	RemovalPolicy,
+	Duration,
 } from 'aws-cdk-lib'
 import type { BackendLambdas } from '../lambdas/packBackendLambdas'
 import { LambdaSource } from './LambdaSource.js'

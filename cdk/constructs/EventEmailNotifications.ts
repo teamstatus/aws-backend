@@ -4,6 +4,7 @@ import {
 	aws_lambda as Lambda,
 	aws_logs as Logs,
 	aws_iam as IAM,
+	Duration,
 } from 'aws-cdk-lib'
 import type { BackendLambdas } from '../lambdas/packBackendLambdas'
 import { LambdaSource } from './LambdaSource.js'
