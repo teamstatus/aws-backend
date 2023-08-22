@@ -9,7 +9,8 @@ import type { ProjectCreatedEvent } from '../core/persistence/createProject'
 export const snsNotifier =
 	({ sns, topicArn }: { sns: SNSClient; topicArn: string }) =>
 	({ on }: { on: onFn }): void => {
-		on('*', async (event) => {
+		on('*', async (event, replay) => {
+			if (replay) return
 			if (
 				isUserCreatedEvent(event) ||
 				isOrganizationCreatedEvent(event) ||

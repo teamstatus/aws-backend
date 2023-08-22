@@ -27,9 +27,12 @@ export const handler = async ({ Records }: SNSEvent): Promise<void> => {
 
 	for (const { Sns } of Records) {
 		const event = JSON.parse(Sns.Message)
-		await notify({
-			...event,
-			timestamp: new Date(event.timestamp),
-		})
+		await notify(
+			{
+				...event,
+				timestamp: new Date(event.timestamp),
+			},
+			true,
+		)
 	}
 }
