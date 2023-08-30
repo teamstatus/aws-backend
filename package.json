@@ -94,7 +94,7 @@
   },
   "dependencies": {
     "@nordicsemiconductor/from-env": "2.0.0",
-    "jsonwebtoken": "9.0.1",
+    "jsonwebtoken": "9.0.2",
     "mailparser": "3.6.5"
   }
 }
