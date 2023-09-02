@@ -38,7 +38,8 @@ const privateKeyPromise = getPrivateKey({ ssm, stackName })
 
 export const handler = emailAuthRequestPipe(
 	(event) => JSON.parse(event.body ?? ''),
-	async ({ id, name }, authContext) => create({ id, name, authContext }),
+	async ({ id, name, pronouns }, authContext) =>
+		create({ id, name, pronouns, authContext }),
 	() => StatusCode.CREATED,
 	async (input, authContext) => [
 		await tokenCookie({
