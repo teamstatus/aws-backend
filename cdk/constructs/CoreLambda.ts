@@ -49,9 +49,6 @@ export class CoreLambda extends Construct {
 			code: new LambdaSource(this, source).code,
 			layers: [layer],
 			logRetention: Logs.RetentionDays.ONE_WEEK,
-			logRetentionRetryOptions: {
-				base: Duration.millis(200),
-			},
 			initialPolicy: [
 				readKeyPolicy(stack, 'privateKey'),
 				readKeyPolicy(stack, 'publicKey'),

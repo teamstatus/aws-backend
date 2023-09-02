@@ -48,9 +48,6 @@ export class RESTAPI extends Construct {
 			code: new LambdaSource(this, lambdaSources.loginRequest).code,
 			layers: [layer],
 			logRetention: Logs.RetentionDays.ONE_WEEK,
-			logRetentionRetryOptions: {
-				base: Duration.millis(200),
-			},
 			initialPolicy: [
 				new IAM.PolicyStatement({
 					actions: ['ses:SendEmail'],
@@ -75,9 +72,6 @@ export class RESTAPI extends Construct {
 			code: new LambdaSource(this, lambdaSources.pinLogin).code,
 			layers: [layer],
 			logRetention: Logs.RetentionDays.ONE_WEEK,
-			logRetentionRetryOptions: {
-				base: Duration.millis(200),
-			},
 			initialPolicy: [readKeyPolicy(parent, 'privateKey')],
 			environment: {
 				STACK_NAME: parent.stackName,
@@ -326,9 +320,6 @@ export class RESTAPI extends Construct {
 			memorySize: 256,
 			code: new LambdaSource(this, lambdaSources.cors).code,
 			logRetention: Logs.RetentionDays.ONE_DAY,
-			logRetentionRetryOptions: {
-				base: Duration.millis(200),
-			},
 		})
 
 		const stage = new HttpApi.CfnStage(this, 'stage', {

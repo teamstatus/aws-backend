@@ -7,7 +7,6 @@ import {
 	aws_s3 as S3,
 	aws_iam as IAM,
 	RemovalPolicy,
-	Duration,
 } from 'aws-cdk-lib'
 import type { BackendLambdas } from '../lambdas/packBackendLambdas'
 import { LambdaSource } from './LambdaSource.js'
@@ -37,9 +36,6 @@ export class EmailReceiving extends Construct {
 			memorySize: 256,
 			code: new LambdaSource(this, lambdaSources.emailForwarding).code,
 			logRetention: Logs.RetentionDays.ONE_DAY,
-			logRetentionRetryOptions: {
-				base: Duration.millis(200),
-			},
 			initialPolicy: [
 				new IAM.PolicyStatement({
 					actions: ['ses:SendEmail'],
