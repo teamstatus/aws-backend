@@ -54,6 +54,8 @@ import { getStatus } from './persistence/getStatus.js'
 import { updateProject } from './persistence/updateProject.js'
 import { l } from './persistence/l.js'
 import { deleteProject } from './persistence/deleteProject.js'
+import type { ProjectMember } from './persistence/createProjectMember.js'
+import { listProjectMembers } from './persistence/listProjectMembers.js'
 
 describe('core', async () => {
 	const { TableName, db } = testDb()
@@ -481,6 +483,22 @@ describe('core', async () => {
 					)) as { error: ProblemDetail }
 					assert.equal(error, undefined)
 				})
+			})
+
+			it('allows owners to list project members', async () => {
+				const { members } = (await listProjectMembers(dbContext)(
+					'$acme#teamstatus',
+					alex,
+				)) as { members: ProjectMember[] }
+				check(members).is(
+					arrayContaining(
+						objectMatching({
+							project: '$acme#teamstatus',
+							user: cameron.sub,
+							role: Role.MEMBER,
+						}),
+					),
+				)
 			})
 		})
 

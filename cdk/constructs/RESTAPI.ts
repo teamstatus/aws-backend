@@ -171,6 +171,12 @@ export class RESTAPI extends Construct {
 				description: 'Deletes a project',
 				authContext: 'user',
 			},
+			listProjectMembers: {
+				routeKey: 'GET /project/{id}/members',
+				source: lambdaSources.listProjectMembers,
+				description: 'Lists members of a project',
+				authContext: 'user',
+			},
 			createStatus: {
 				routeKey: 'POST /project/{projectId}/status',
 				source: lambdaSources.createStatus,

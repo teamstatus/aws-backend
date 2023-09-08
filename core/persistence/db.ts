@@ -10,6 +10,10 @@ export const indexes: Record<
 		keys: ['projectMember__user', 'projectMember__project'],
 		include: ['role', 'id', 'version'],
 	},
+	projectMembers: {
+		keys: ['projectMember__project', 'id'],
+		include: ['role', 'projectMember__user', 'version'],
+	},
 	projectStatus: {
 		keys: ['projectStatus__project', 'id'],
 		include: ['author', 'message', 'version'],
