@@ -13,9 +13,12 @@ import { problem, result } from './response.js'
 
 const fromEmail = process.env.FROM_EMAIL ?? 'notification@teamstatus.space'
 
-const { TableName } = fromEnv({
+const { TableName, IS_TEST } = fromEnv({
 	TableName: 'TABLE_NAME',
+	IS_TEST: 'IS_TEST',
 })(process.env)
+
+const isTest = IS_TEST === '1'
 
 const ses = new SESClient({})
 const db = new DynamoDBClient({})
@@ -27,6 +30,7 @@ const loginRequest = emailLoginRequest(
 		TableName,
 	},
 	notify,
+	isTest ? () => `12345678` : undefined,
 )
 
 export const handler = async (
@@ -41,22 +45,23 @@ export const handler = async (
 			return problem(event)(r.error)
 		}
 
-		await ses.send(
-			new SendEmailCommand({
-				Destination: {
-					ToAddresses: [email],
-				},
-				Message: {
-					Body: {
-						Text: { Data: `Your PIN: ${r.pin}` },
+		if (!isTest)
+			await ses.send(
+				new SendEmailCommand({
+					Destination: {
+						ToAddresses: [email],
 					},
-					Subject: {
-						Data: `[teamstatus.space] Please verify your email`,
+					Message: {
+						Body: {
+							Text: { Data: `Your PIN: ${r.pin}` },
+						},
+						Subject: {
+							Data: `[teamstatus.space] Please verify your email`,
+						},
 					},
-				},
-				Source: fromEmail,
-			}),
-		)
+					Source: fromEmail,
+				}),
+			)
 
 		return result(event)(StatusCode.ACCEPTED)
 	} catch (error) {

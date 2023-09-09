@@ -11,7 +11,7 @@ import {
 } from '../ProblemDetail.js'
 import type { Notify } from '../notifier.js'
 import { type DbContext } from './DbContext.js'
-import { generatePIN } from '../generatePIN.js'
+import { generatePIN as randomPIN } from '../generatePIN.js'
 
 export type EmailLoginRequestedEvent = CoreEvent & {
 	type: CoreEventType.EMAIL_LOGIN_REQUESTED
@@ -24,7 +24,7 @@ export type EmailLoginRequest = {
 }
 
 export const emailLoginRequest =
-	(dbContext: DbContext, notify: Notify) =>
+	(dbContext: DbContext, notify: Notify, generatePIN?: () => string) =>
 	async ({
 		email,
 	}: {
@@ -34,7 +34,7 @@ export const emailLoginRequest =
 	> => {
 		try {
 			const { db, TableName } = dbContext
-			const pin = generatePIN()
+			const pin = (generatePIN ?? randomPIN)()
 			// Expires in 5 Minutes
 			const expires = new Date(Date.now() + 5 * 60 * 1000)
 			// Rerequest after 1 Minute

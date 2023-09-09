@@ -26,4 +26,12 @@ describe('commonParent()', () => {
 			]),
 			'/',
 		))
+	it('should return the common ancestor only up until the directory level', () =>
+		assert.equal(
+			commonParent([
+				'/home/m/teamstatus.space/backend/lambdas/cors.ts',
+				'/home/m/teamstatus.space/backend/lambdas/corsHeaders.ts',
+			]),
+			'/home/m/teamstatus.space/backend/lambdas/',
+		))
 })

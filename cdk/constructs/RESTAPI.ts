@@ -38,6 +38,8 @@ export class RESTAPI extends Construct {
 	) {
 		super(parent, 'API')
 
+		const isTest = this.node.tryGetContext('isTest') === '1'
+
 		const loginRequest = new Lambda.Function(this, 'loginRequest', {
 			description: 'Handle login requests',
 			handler: lambdaSources.loginRequest.handler,
@@ -57,6 +59,7 @@ export class RESTAPI extends Construct {
 			environment: {
 				TABLE_NAME: persistence.table.tableName,
 				TOPIC_ARN: events.topic.topicArn,
+				IS_TEST: isTest ? '1' : '0',
 			},
 		})
 		persistence.table.grantFullAccess(loginRequest)
@@ -78,6 +81,7 @@ export class RESTAPI extends Construct {
 				TABLE_NAME: persistence.table.tableName,
 				WS_URL: ws.URL,
 				TOPIC_ARN: events.topic.topicArn,
+				IS_TEST: isTest ? '1' : '0',
 			},
 		})
 		persistence.table.grantFullAccess(pinLogin)
@@ -295,6 +299,7 @@ export class RESTAPI extends Construct {
 					source,
 					ws,
 					events,
+					isTest,
 				}).lambda,
 				routeKey,
 				authContext,

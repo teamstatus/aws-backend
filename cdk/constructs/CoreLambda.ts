@@ -26,6 +26,7 @@ export class CoreLambda extends Construct {
 			persistence,
 			ws,
 			events,
+			isTest,
 		}: {
 			stack: Stack
 			description: string
@@ -35,6 +36,7 @@ export class CoreLambda extends Construct {
 			environment?: Record<string, string>
 			ws: WebsocketAPI
 			events: Events
+			isTest: boolean
 		},
 	) {
 		super(parent, id)
@@ -62,6 +64,7 @@ export class CoreLambda extends Construct {
 				STACK_NAME: stack.stackName,
 				WS_URL: ws.URL,
 				TOPIC_ARN: events.topic.topicArn,
+				IS_TEST: isTest ? '1' : '0',
 			},
 		})
 		persistence.table.grantFullAccess(this.lambda)

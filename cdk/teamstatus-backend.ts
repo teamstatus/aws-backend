@@ -100,12 +100,12 @@ class TeamStatusBackendStack extends Stack {
 				lambdaSources,
 				layer: backendLayer,
 			})
-		}
 
-		new EventEmailNotifications(this, {
-			events,
-			lambdaSources,
-		})
+			new EventEmailNotifications(this, {
+				events,
+				lambdaSources,
+			})
+		}
 
 		new Onboarding(this, {
 			lambdaSources,
@@ -136,7 +136,10 @@ class TeamStatusBackendStack extends Stack {
 
 new TeamStatusBackendApp({
 	context: {
-		isTest: process.env.CI !== undefined ? '1' : '0',
+		isTest:
+			process.env.CI !== undefined || process.env.IS_TEST !== undefined
+				? '1'
+				: '0',
 		stackNamePrefix: process.env.STACK_NAME_PREFIX ?? 'teamstatus',
 	},
 	lambdaSources: await packBackendLambdas(),
