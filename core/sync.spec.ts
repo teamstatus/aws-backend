@@ -183,23 +183,91 @@ describe('sync', async () => {
 		})
 	})
 
-	it('should list syncs', async () => {
-		const { syncs } = (await listSyncs(dbContext)(user)) as {
-			syncs: SerializedSync[]
-		}
+	describe('list syncs', () => {
+		it('should list syncs owned by the user', async () => {
+			const { syncs } = (await listSyncs(dbContext)(user)) as {
+				syncs: SerializedSync[]
+			}
 
-		check(syncs?.[0]).is(
-			objectMatching({
-				id: aString,
-				title: 'My sync',
-				owner: user.sub,
-			}),
-		)
-		check(syncs?.[0]?.projectIds.sort((a, b) => a.localeCompare(b))).is(
-			arrayMatching(
-				[projectA, projectB].sort((a, b) => a.localeCompare(b)).map(l),
-			),
-		)
+			check(syncs?.[0]).is(
+				objectMatching({
+					id: aString,
+					title: 'My sync',
+					owner: user.sub,
+				}),
+			)
+			check(syncs?.[0]?.projectIds.sort((a, b) => a.localeCompare(b))).is(
+				arrayMatching(
+					[projectA, projectB].sort((a, b) => a.localeCompare(b)).map(l),
+				),
+			)
+		})
+
+		it('should list syncs that the user has access to', async () => {
+			const organizationId = `$test-user-sync-${ulid()}`
+			const projectA = `${organizationId}#test-${ulid()}`
+			const projectB = `${organizationId}#test-${ulid()}`
+			const projectC = `${organizationId}#test-${ulid()}`
+			const projectIds = [projectA, projectB, projectC]
+
+			// This user will be invited to the projects as a member and should see the syncs
+			const jo: UserAuthContext = {
+				email: 'jo@example.com',
+				sub: '@jo',
+			}
+
+			// Create the organization
+			isNotAnError(
+				await createOrganization(dbContext, notify)(
+					{
+						id: organizationId,
+						name: `Organization ${organizationId}`,
+					},
+					user,
+				),
+			)
+
+			// Create the projects
+			const syncIds: string[] = []
+			for (const projectId of projectIds) {
+				// Create the project
+				isNotAnError(
+					await createProject(dbContext, notify)(
+						{
+							id: projectId,
+							name: `Project ${projectId}`,
+						},
+						user,
+					),
+				)
+				// Create a sync
+				const id = ulid()
+				syncIds.push(id)
+				isNotAnError(
+					await createSync(dbContext, notify)(
+						{
+							id,
+							projectIds: new Set([projectId]),
+						},
+						user,
+					),
+				)
+				// Create a member
+				await createProjectMember(dbContext, notify)(
+					projectId,
+					jo.sub,
+					Role.WATCHER,
+				)
+			}
+			eventually(async () => {
+				const { syncs } = (await listSyncs(dbContext)(jo)) as {
+					syncs: SerializedSync[]
+				}
+				for (const syncId of syncIds) {
+					check(syncs).is(arrayContaining(objectMatching({ id: syncId })))
+				}
+			})
+		})
 	})
 
 	describe('accessing syncs', async () => {

@@ -61,6 +61,9 @@ export const deleteSync =
 				timestamp: new Date(),
 			}
 			await notify(event)
+
+			// FIXME: Delete project index
+
 			return { deleted: true }
 		} catch (error) {
 			if ((error as Error).name === ConditionalCheckFailedException.name)

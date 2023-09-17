@@ -274,7 +274,7 @@ export class RESTAPI extends Construct {
 			listSyncs: {
 				routeKey: 'GET /syncs',
 				source: lambdaSources.listSyncs,
-				description: 'Lists syncs a user has created',
+				description: 'Lists syncs a user is participating in',
 				authContext: 'user',
 			},
 		}

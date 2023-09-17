@@ -90,6 +90,29 @@ export const createSync =
 				ConditionExpression: 'attribute_not_exists(id)',
 			}),
 		)
+
+		// Store all related projects
+		await Promise.all(
+			[...projectIds].map((projectId) =>
+				db.send(
+					new PutItemCommand({
+						TableName,
+						Item: {
+							id: {
+								S: id,
+							},
+							type: {
+								S: `project|${projectId}`,
+							},
+							sync__project: {
+								S: l(projectId),
+							},
+						},
+					}),
+				),
+			),
+		)
+
 		const event: SyncCreatedEvent = {
 			type: CoreEventType.SYNC_CREATED,
 			title,

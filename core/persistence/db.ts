@@ -28,6 +28,7 @@ export const indexes: Record<
 	syncOwner: {
 		keys: ['sync__owner', 'id'],
 	},
+	projectSyncProject: { keys: ['sync__project', 'id'] },
 	invitationsForUser: {
 		keys: ['projectInvitation__invitee', 'id'],
 		include: ['role', 'projectInvitation__inviter'],
