@@ -30,7 +30,7 @@
     "@aws-sdk/client-s3": "3.418.0",
     "@aws-sdk/client-ses": "3.418.0",
     "@aws-sdk/client-sns": "3.418.0",
-    "@aws-sdk/client-ssm": "3.418.0",
+    "@aws-sdk/client-ssm": "3.419.0",
     "@aws-sdk/s3-request-presigner": "3.418.0",
     "@aws-sdk/util-dynamodb": "3.418.0",
     "@commitlint/config-angular": "17.7.0",
