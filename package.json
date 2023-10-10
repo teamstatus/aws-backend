@@ -40,7 +40,7 @@
     "@types/aws-lambda": "8.10.124",
     "@types/glob": "8.1.0",
     "@types/jsonwebtoken": "^9.0.3",
-    "@types/mailparser": "3.4.1",
+    "@types/mailparser": "3.4.2",
     "@types/yazl": "2.4.3",
     "@typescript-eslint/eslint-plugin": "6.7.5",
     "aws-cdk": "2.100.0",
