@@ -10,14 +10,12 @@
       "style": {
         "noUnusedTemplateLiteral": "off"
       },
-      "nursery": {
-        "noConsoleLog": "off"
-      },
       "correctness": {
         "noUnreachableSuper": "off"
       },
       "suspicious": {
-        "noExplicitAny": "warn"
+        "noExplicitAny": "warn",
+        "noConsoleLog": "off"
       }
     }
   },
