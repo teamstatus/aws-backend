@@ -4,7 +4,6 @@ import {
 	arrayContaining,
 	arrayMatching,
 	check,
-	either,
 	not,
 	objectMatching,
 } from 'tsmatchers'
@@ -151,25 +150,20 @@ describe('sync', async () => {
 				.sort((a, b) => a.localeCompare(b))
 
 			check(statusIdsInSync).is(
-				either(
-					arrayMatching(
-						[
-							...(recentStatus[projectA] ?? []),
-							...(recentStatus[projectB] ?? []),
-						].sort((a, b) => a.localeCompare(b)),
-					),
-				)
-					.and(
-						not(
-							arrayMatching(
-								[
-									...(olderStatus[projectA] ?? []),
-									...(olderStatus[projectB] ?? []),
-								].sort((a, b) => a.localeCompare(b)),
-							),
+				arrayMatching(
+					[
+						...(recentStatus[projectA] ?? []),
+						...(recentStatus[projectB] ?? []),
+					].sort((a, b) => a.localeCompare(b)),
+				).or(
+					not(
+						arrayMatching(
+							[
+								...(olderStatus[projectA] ?? []),
+								...(olderStatus[projectB] ?? []),
+							].sort((a, b) => a.localeCompare(b)),
 						),
-					)
-					.and(
+					).and(
 						not(
 							arrayMatching(
 								[
@@ -179,6 +173,7 @@ describe('sync', async () => {
 							),
 						),
 					),
+				),
 			)
 		})
 	})
