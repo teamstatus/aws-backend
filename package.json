@@ -52,6 +52,7 @@
     "constructs": "10.3.0",
     "glob": "10.3.10",
     "husky": "8.0.3",
+    "lint-staged": "15.0.1",
     "prettier": "3.0.3",
     "tsmatchers": "5.0.0",
     "tsx": "3.13.0",
