@@ -2,7 +2,7 @@ import { QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import type { ProblemDetail } from '../ProblemDetail.js'
 import { Role } from '../Role.js'
-import { type DbContext } from './DbContext.js'
+import type { DbContext } from './DbContext.js'
 import { l } from './l.js'
 import { parseProjectId } from '../ids.js'
 import {

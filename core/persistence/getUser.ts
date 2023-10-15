@@ -1,7 +1,7 @@
 import { AttributeValue, GetItemCommand } from '@aws-sdk/client-dynamodb'
 import { NotFoundError, type ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
-import { type DbContext } from './DbContext.js'
+import type { DbContext } from './DbContext.js'
 import type { User } from './createUser.js'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 

@@ -1,8 +1,8 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { type ProblemDetail } from '../ProblemDetail.js'
+import type { ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
-import { type DbContext } from './DbContext.js'
+import type { DbContext } from './DbContext.js'
 import { l } from './l.js'
 import type { Invitation } from './inviteToProject.js'
 

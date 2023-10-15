@@ -1,6 +1,6 @@
 import { before, describe, test as it } from 'node:test'
 import { check, objectMatching, undefinedValue } from 'tsmatchers'
-import { type UserAuthContext } from './auth.js'
+import type { UserAuthContext } from './auth.js'
 import { notifier } from './notifier.js'
 import type { DbContext } from './persistence/DbContext.js'
 import { createUser } from './persistence/createUser.js'

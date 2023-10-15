@@ -3,7 +3,7 @@ import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import { Role } from '../Role.js'
 import { isOrganizationId, isUserId } from '../ids.js'
-import { type DbContext } from './DbContext.js'
+import type { DbContext } from './DbContext.js'
 import { l } from './l.js'
 
 export const getOrganizationMember =

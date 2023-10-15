@@ -1,5 +1,8 @@
+import { Type } from '@sinclair/typebox'
+
 const slugPart = '[a-z0-9_-]+'
 const userIdRegex = new RegExp(`^@${slugPart}$`, 'i')
+export const UserId = Type.RegExp(userIdRegex, { title: 'User ID' })
 /**
  * A user ID is a slug that starts with an `@` sign
  */
@@ -15,6 +18,7 @@ const projectIdRegex = new RegExp(
 	`^(?<organization>\\$${slugPart})(?<project>#${slugPart})$`,
 	'i',
 )
+export const ProjectId = Type.RegExp(projectIdRegex, { title: 'Project ID' })
 /**
  * A project ID is a slug that starts with a `#` sign, prefixed with the organization ID it belongs to.
  */

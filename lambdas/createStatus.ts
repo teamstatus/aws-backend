@@ -4,7 +4,10 @@ import { StatusCode } from '../core/StatusCode.js'
 import { notifier } from '../core/notifier.js'
 import { createStatus } from '../core/persistence/createStatus.js'
 import { userAuthRequestPipe } from './requestPipe.js'
-import { verifyRecentULID } from './verifyULID.js'
+import { ULID, verifyRecentULID } from './verifyULID.js'
+import { validate } from './validate.js'
+import { Type } from '@sinclair/typebox'
+import { ProjectId } from '../core/ids.js'
 
 const { TableName } = fromEnv({
 	TableName: 'TABLE_NAME',
@@ -21,16 +24,28 @@ const create = createStatus(
 	notify,
 )
 
+const Message = Type.String({ minLength: 1, title: 'Message' })
+
 export const handler = userAuthRequestPipe(
 	(event) => {
-		const { id, message } = JSON.parse(event.body ?? '')
-		return {
+		const { id, message, attributeTo } = JSON.parse(event.body ?? '')
+		return validate(
+			Type.Object({
+				id: ULID,
+				message: Message,
+				projectId: ProjectId,
+				attributeTo: Type.Optional(
+					Type.String({ minLength: 1, title: 'Non-empty string' }),
+				),
+			}),
+		)({
 			id: verifyRecentULID(id),
 			message,
+			attributeTo,
 			projectId: event.pathParameters?.projectId as string,
-		}
+		})
 	},
-	async ({ id, message, projectId }, authContext) =>
-		create(id, projectId, message, authContext),
+	async ({ id, message, projectId, attributeTo }, authContext) =>
+		create({ id, projectId, message, attributeTo }, authContext),
 	() => StatusCode.CREATED,
 )

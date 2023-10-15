@@ -150,6 +150,8 @@ new TeamStatusBackendApp({
 			'jsonwebtoken',
 			'ulid',
 			'mailparser',
+			'@sinclair/typebox',
+			'ajv',
 		],
 	}),
 })

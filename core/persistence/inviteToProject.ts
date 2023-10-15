@@ -3,7 +3,7 @@ import {
 	GetItemCommand,
 	PutItemCommand,
 } from '@aws-sdk/client-dynamodb'
-import { type CoreEvent } from '../CoreEvent.js'
+import type { CoreEvent } from '../CoreEvent.js'
 import { CoreEventType } from '../CoreEventType.js'
 import {
 	BadRequestError,
@@ -13,10 +13,10 @@ import {
 	type ProblemDetail,
 } from '../ProblemDetail.js'
 import { Role } from '../Role.js'
-import { type UserAuthContext } from '../auth.js'
+import type { UserAuthContext } from '../auth.js'
 import { parseProjectId } from '../ids.js'
 import type { Notify } from '../notifier.js'
-import { type DbContext } from './DbContext.js'
+import type { DbContext } from './DbContext.js'
 import { isOrganizationOwner } from './getOrganizationMember.js'
 import { l } from './l.js'
 

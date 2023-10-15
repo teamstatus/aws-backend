@@ -7,7 +7,7 @@ import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { ulid } from 'ulid'
 import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
-import { type DbContext } from './DbContext.js'
+import type { DbContext } from './DbContext.js'
 import type { Status } from './createStatus.js'
 import { canReadProjectStatus } from './getProjectMember.js'
 import { getStatusReactions } from './getStatusReactions.js'
@@ -109,6 +109,7 @@ export const itemToStatus =
 			project: d.projectStatus__project,
 			author: d.author,
 			message: d.message,
+			attributeTo: d.attributeTo === null ? undefined : d.attributeTo,
 			id: d.id,
 			version: d.version,
 			reactions: await getStatusReactions({

@@ -1,7 +1,7 @@
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
-import { type DbContext } from './DbContext.js'
+import type { DbContext } from './DbContext.js'
 import { l } from './l.js'
 import { canUpdateProject } from './getProjectMember.js'
 import type { ProjectMember } from './createProjectMember.js'

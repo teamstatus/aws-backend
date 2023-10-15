@@ -10,3 +10,4 @@ dist/
 .envrc
 dynamodb_local_latest/
 dynamodb_local_latest.zip
+test_suite_analysis/

@@ -4,15 +4,14 @@ import { testDb } from '../test/testDb'
 import type { DbContext } from '../persistence/DbContext'
 import { notifier } from '../notifier'
 import { createTestDb } from '../test/createTestDb'
-import { eventually } from '../test/eventually'
-import { listProjects } from '../persistence/listProjects'
 import type { UserAuthContext } from '../auth'
 import { arrayContaining, check, objectMatching } from 'tsmatchers'
-import { createProject, type Project } from '../persistence/createProject'
+import { createProject } from '../persistence/createProject'
 import type { CoreEvent } from '../CoreEvent'
 import { CoreEventType } from '../CoreEventType'
 import { createOrganization } from '../persistence/createOrganization'
 import { onboarding } from './onboarding'
+import { ensureUserIsMember } from '../core.spec'
 
 describe('Onboarding', async () => {
 	const { TableName, db } = testDb()
@@ -76,14 +75,6 @@ describe('Onboarding', async () => {
 			),
 		)
 
-		await eventually(async () => {
-			const { projects } = (await listProjects(dbContext)(gray)) as {
-				projects: Project[]
-			}
-
-			check(projects).is(
-				arrayContaining(objectMatching({ id: `$teamstatus#feedback` })),
-			)
-		})
+		await ensureUserIsMember(dbContext, gray, `$teamstatus#feedback`)
 	})
 })

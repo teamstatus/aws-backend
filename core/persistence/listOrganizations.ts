@@ -2,7 +2,7 @@ import { BatchGetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import type { ProblemDetail } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
-import { type DbContext } from './DbContext.js'
+import type { DbContext } from './DbContext.js'
 import type { Organization } from './createOrganization'
 import { l } from './l.js'
 

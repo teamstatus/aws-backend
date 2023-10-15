@@ -69,9 +69,11 @@ describe('sync', async () => {
 						]
 						isNotAnError(
 							await createStatus(dbContext, notify)(
-								statusId,
-								projectId,
-								`Status ${i} for project ${projectId}`,
+								{
+									id: statusId,
+									projectId: projectId,
+									message: `Status ${i} for project ${projectId}`,
+								},
 								user,
 							),
 						)
@@ -85,9 +87,11 @@ describe('sync', async () => {
 				]
 				isNotAnError(
 					await createStatus(dbContext, notify)(
-						olderStatusId,
-						projectId,
-						`Older status for project ${projectId}`,
+						{
+							id: olderStatusId,
+							projectId: projectId,
+							message: `Older status for project ${projectId}`,
+						},
 						user,
 					),
 				)
@@ -99,9 +103,11 @@ describe('sync', async () => {
 				]
 				isNotAnError(
 					await createStatus(dbContext, notify)(
-						newerStatusId,
-						projectId,
-						`Newer status for project ${projectId}`,
+						{
+							id: newerStatusId,
+							projectId: projectId,
+							message: `Newer status for project ${projectId}`,
+						},
 						user,
 					),
 				)

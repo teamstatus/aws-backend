@@ -5,7 +5,7 @@ import {
 	type ProblemDetail,
 } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
-import { type DbContext } from './DbContext.js'
+import type { DbContext } from './DbContext.js'
 import type { Status } from './createStatus.js'
 import { canReadProjectStatus } from './getProjectMember.js'
 import { itemToStatus } from './listStatus.js'

@@ -1,6 +1,6 @@
 import { GetItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { type DbContext } from './DbContext.js'
+import type { DbContext } from './DbContext.js'
 import type { Sync } from './createSync.js'
 import type { UserAuthContext } from '../auth.js'
 import {

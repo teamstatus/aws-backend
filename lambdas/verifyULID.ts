@@ -1,10 +1,14 @@
 import { decodeTime } from 'ulid'
+import { Type } from '@sinclair/typebox'
 
 const fiveMinutes = 5 * 60 * 1000
 
+const ULIDRegExp = /^[0-7][0-9A-HJKMNP-TV-Z]{25}$/
+
+export const ULID = Type.RegExp(ULIDRegExp, { title: 'ULID' })
+
 export const verifyRecentULID = (id: string): string => {
-	if (!/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm.test(id))
-		throw new Error(`Not a ULID: ${id}`)
+	if (!ULIDRegExp.test(id)) throw new Error(`Not a ULID: ${id}`)
 
 	const ts = decodeTime(id)
 	const diff = ts - Date.now()
@@ -17,8 +21,7 @@ export const verifyRecentULID = (id: string): string => {
 }
 
 export const verifyOlderULID = (id: string): string => {
-	if (!/[0-7][0-9A-HJKMNP-TV-Z]{25}/gm.test(id))
-		throw new Error(`Not a ULID: ${id}`)
+	if (!ULIDRegExp.test(id)) throw new Error(`Not a ULID: ${id}`)
 
 	const ts = decodeTime(id)
 	const diff = ts - Date.now()

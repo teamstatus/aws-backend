@@ -16,7 +16,7 @@ export const indexes: Record<
 	},
 	projectStatus: {
 		keys: ['projectStatus__project', 'id'],
-		include: ['author', 'message', 'version'],
+		include: ['author', 'message', 'attributeTo', 'version'],
 	},
 	statusReaction: {
 		keys: ['statusReaction__status', 'id'],

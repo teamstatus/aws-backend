@@ -16,6 +16,9 @@
       "suspicious": {
         "noExplicitAny": "warn",
         "noConsoleLog": "off"
+      },
+      "nursery": {
+        "noAccumulatingSpread": "off"
       }
     }
   },

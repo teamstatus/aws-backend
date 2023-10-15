@@ -7,7 +7,7 @@ import {
 } from '../ProblemDetail.js'
 import type { UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
-import { type DbContext } from './DbContext.js'
+import type { DbContext } from './DbContext.js'
 import { createProjectMember } from './createProjectMember.js'
 import { l } from './l.js'
 import { createInvitationId } from './inviteToProject.js'

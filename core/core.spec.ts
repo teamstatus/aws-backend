@@ -10,7 +10,7 @@ import {
 	undefinedValue,
 } from 'tsmatchers'
 import { ulid } from 'ulid'
-import { type CoreEvent } from './CoreEvent.js'
+import type { CoreEvent } from './CoreEvent.js'
 import { CoreEventType } from './CoreEventType.js'
 import type { ProblemDetail } from './ProblemDetail.js'
 import { Role } from './Role.js'
@@ -442,9 +442,11 @@ describe('core', async () => {
 			describe('invited member', async () => {
 				it('should not allow an uninvited user to post a status to a project', async () => {
 					const { error } = (await createStatus(dbContext, notify)(
-						ulid(),
-						'$acme#teamstatus',
-						'Should not work',
+						{
+							id: ulid(),
+							projectId: '$acme#teamstatus',
+							message: 'Should not work',
+						},
 						cameron,
 					)) as { error: ProblemDetail }
 					assert.equal(
@@ -476,9 +478,11 @@ describe('core', async () => {
 
 				it('should allow user after accepting their invitation to post a status to a project', async () => {
 					const { error } = (await createStatus(dbContext, notify)(
-						ulid(),
-						'$acme#teamstatus',
-						'Should work now!',
+						{
+							id: ulid(),
+							projectId: '$acme#teamstatus',
+							message: 'Should work now!',
+						},
 						cameron,
 					)) as { error: ProblemDetail }
 					assert.equal(error, undefined)
@@ -564,9 +568,11 @@ describe('core', async () => {
 
 			it('should not allow watchers to post a status to a project', async () => {
 				const { error } = (await createStatus(dbContext, notify)(
-					ulid(),
-					'$acme#teamstatus',
-					'Should not work',
+					{
+						id: ulid(),
+						projectId: '$acme#teamstatus',
+						message: 'Should not work',
+					},
 					emerson,
 				)) as { error: ProblemDetail }
 				assert.equal(
@@ -605,9 +611,12 @@ describe('core', async () => {
 					const id = ulid()
 					isNotAnError(
 						await createStatus(dbContext, notify)(
-							id,
-							'$acme#teamstatus',
-							'Implemented ability to persist status updates for projects.',
+							{
+								id: id,
+								projectId: '$acme#teamstatus',
+								message:
+									'Implemented ability to persist status updates for projects.',
+							},
 							alex,
 						),
 					)
@@ -627,9 +636,12 @@ describe('core', async () => {
 
 				it('allows posting status only for organization members', async () => {
 					const { error } = (await createStatus(dbContext, notify)(
-						ulid(),
-						'$acme#teamstatus',
-						'I am not a member of the $acme organization, so I should not be allowed to create a status.',
+						{
+							id: ulid(),
+							projectId: '$acme#teamstatus',
+							message:
+								'I am not a member of the $acme organization, so I should not be allowed to create a status.',
+						},
 						blake,
 					)) as { error: ProblemDetail }
 					assert.equal(
@@ -645,9 +657,11 @@ describe('core', async () => {
 					// Create the status
 					isNotAnError(
 						await createStatus(dbContext, notify)(
-							statusId,
-							'$acme#teamstatus',
-							'Status with an typo',
+							{
+								id: statusId,
+								projectId: '$acme#teamstatus',
+								message: 'Status with an typo',
+							},
 							alex,
 						),
 					)
@@ -708,21 +722,27 @@ describe('core', async () => {
 
 				it('sorts status by creation time', async () => {
 					await createStatus(dbContext, notify)(
-						ulid(),
-						'$acme#teamstatus',
-						'Status 1',
+						{
+							id: ulid(),
+							projectId: '$acme#teamstatus',
+							message: 'Status 1',
+						},
 						alex,
 					)
 					await createStatus(dbContext, notify)(
-						ulid(),
-						'$acme#teamstatus',
-						'Status 2',
+						{
+							id: ulid(),
+							projectId: '$acme#teamstatus',
+							message: 'Status 2',
+						},
 						alex,
 					)
 					await createStatus(dbContext, notify)(
-						ulid(),
-						'$acme#teamstatus',
-						'Status 3',
+						{
+							id: ulid(),
+							projectId: '$acme#teamstatus',
+							message: 'Status 3',
+						},
 						alex,
 					)
 
@@ -773,24 +793,20 @@ describe('core', async () => {
 						),
 					)
 
-					await eventually(async () => {
-						const { projects } = (await listProjects(dbContext)(user)) as {
-							projects: Project[]
-						}
-
-						check(projects).is(
-							arrayContaining(
-								objectMatching({ id: l(`$paginate#test-${projectId}`) }),
-							),
-						)
-					})
+					await ensureUserIsMember(
+						dbContext,
+						user,
+						`$paginate#test-${projectId}`,
+					)
 
 					for (let i = 0; i < 30; i++) {
 						isNotAnError(
 							await createStatus(dbContext, notify)(
-								ulid(),
-								`$paginate#test-${projectId}`,
-								`Status for pagination ${i}`,
+								{
+									id: ulid(),
+									projectId: `$paginate#test-${projectId}`,
+									message: `Status for pagination ${i}`,
+								},
 								user,
 							),
 						)
@@ -829,9 +845,11 @@ describe('core', async () => {
 
 					isNotAnError(
 						await createStatus(dbContext, notify)(
-							statusId,
-							'$acme#teamstatus',
-							`A new status!`,
+							{
+								id: statusId,
+								projectId: '$acme#teamstatus',
+								message: `A new status!`,
+							},
 							alex,
 						),
 					)
@@ -902,9 +920,11 @@ describe('core', async () => {
 
 					isNotAnError(
 						await createStatus(dbContext, notify)(
-							statusId,
-							`$acme${projectId}`,
-							`I've released a new version!`,
+							{
+								id: statusId,
+								projectId: `$acme${projectId}`,
+								message: `I've released a new version!`,
+							},
 							alex,
 						),
 					)
@@ -1042,8 +1062,21 @@ describe('core', async () => {
 	})
 })
 
-const storeEvent =
+export const storeEvent =
 	(events: CoreEvent[]): listenerFn =>
 	async (e: CoreEvent) => {
 		events.push(e)
 	}
+
+export const ensureUserIsMember = async (
+	dbContext: DbContext,
+	user: UserAuthContext,
+	projectId: string,
+) =>
+	eventually(async () => {
+		const { projects } = (await listProjects(dbContext)(user)) as {
+			projects: Project[]
+		}
+
+		check(projects).is(arrayContaining(objectMatching({ id: l(projectId) })))
+	})
