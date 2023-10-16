@@ -32,7 +32,7 @@ export class EmailReceiving extends Construct {
 			description: 'Forward incoming emails',
 			handler: lambdaSources.emailForwarding.handler,
 			architecture: Lambda.Architecture.ARM_64,
-			runtime: Lambda.Runtime.NODEJS_18_X,
+			runtime: Lambda.Runtime.NODEJS_LATEST,
 			memorySize: 256,
 			code: new LambdaSource(this, lambdaSources.emailForwarding).code,
 			logRetention: Logs.RetentionDays.ONE_DAY,

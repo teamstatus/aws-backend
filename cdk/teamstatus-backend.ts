@@ -77,7 +77,7 @@ class TeamStatusBackendStack extends Stack {
 				id: 'backendLayer',
 			}).code,
 			compatibleArchitectures: [Lambda.Architecture.ARM_64],
-			compatibleRuntimes: [Lambda.Runtime.NODEJS_18_X],
+			compatibleRuntimes: [Lambda.Runtime.NODEJS_LATEST],
 		})
 
 		const ws = new WebsocketAPI(this, {

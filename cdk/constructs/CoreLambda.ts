@@ -45,7 +45,7 @@ export class CoreLambda extends Construct {
 			description,
 			handler: source.handler,
 			architecture: Lambda.Architecture.ARM_64,
-			runtime: Lambda.Runtime.NODEJS_18_X,
+			runtime: Lambda.Runtime.NODEJS_LATEST,
 			timeout: Duration.seconds(10),
 			memorySize: 1792,
 			code: new LambdaSource(this, source).code,

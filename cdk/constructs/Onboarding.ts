@@ -32,7 +32,7 @@ export class Onboarding extends Construct {
 			description: 'Handle onboarding task',
 			handler: lambdaSources.onboarding.handler,
 			architecture: Lambda.Architecture.ARM_64,
-			runtime: Lambda.Runtime.NODEJS_18_X,
+			runtime: Lambda.Runtime.NODEJS_LATEST,
 			memorySize: 256,
 			code: new LambdaSource(this, lambdaSources.onboarding).code,
 			layers: [layer],

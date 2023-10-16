@@ -26,7 +26,7 @@ export class EventEmailNotifications extends Construct {
 			description: 'Notify admins about important events',
 			handler: lambdaSources.eventEmailNotifications.handler,
 			architecture: Lambda.Architecture.ARM_64,
-			runtime: Lambda.Runtime.NODEJS_18_X,
+			runtime: Lambda.Runtime.NODEJS_LATEST,
 			memorySize: 256,
 			code: new LambdaSource(this, lambdaSources.eventEmailNotifications).code,
 			logRetention: Logs.RetentionDays.ONE_DAY,
