@@ -35,7 +35,7 @@ describe('user', async () => {
 		sub: '@finn',
 	}
 
-	it('allows users to get their profile', async () => {
+	await it('allows users to get their profile', async () => {
 		isNotAnError(
 			await createUser(
 				dbContext,
@@ -56,7 +56,7 @@ describe('user', async () => {
 		)
 	})
 
-	it('allows users to update their profile', async () => {
+	await it('allows users to update their profile', async () => {
 		const events: CoreEvent[] = []
 		on(CoreEventType.USER_UPDATED, async (e) => events.push(e))
 		isNotAnError(
@@ -89,7 +89,7 @@ describe('user', async () => {
 		)
 	})
 
-	it('allows users to get the profile of another user', async () => {
+	await it('allows users to get the profile of another user', async () => {
 		isNotAnError(
 			await createUser(
 				dbContext,

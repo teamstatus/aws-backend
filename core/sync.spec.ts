@@ -117,7 +117,7 @@ describe('sync', async () => {
 
 	// For now, syncs are just a saved query ... a start and end date and a given set of projects
 	// which acts as a "view" on all the status
-	it('should create a new sync that contains all the status so far', async () => {
+	await it('should create a new sync that contains all the status so far', async () => {
 		const events: CoreEvent[] = []
 		on(CoreEventType.SYNC_CREATED, async (e) => events.push(e))
 
@@ -184,8 +184,8 @@ describe('sync', async () => {
 		})
 	})
 
-	describe('list syncs', () => {
-		it('should list syncs owned by the user', async () => {
+	await describe('list syncs', async () => {
+		await it('should list syncs owned by the user', async () => {
 			const { syncs } = (await listSyncs(dbContext)(user)) as {
 				syncs: SerializedSync[]
 			}
@@ -204,7 +204,7 @@ describe('sync', async () => {
 			)
 		})
 
-		it('should list syncs that the user has access to', async () => {
+		await it('should list syncs that the user has access to', async () => {
 			const organizationId = `$test-user-sync-${ulid()}`
 			const projectA = `${organizationId}#test-${ulid()}`
 			const projectB = `${organizationId}#test-${ulid()}`
@@ -271,8 +271,8 @@ describe('sync', async () => {
 		})
 	})
 
-	describe('accessing syncs', async () => {
-		it('should allow owners to access a sync', async () => {
+	await describe('accessing syncs', async () => {
+		await it('should allow owners to access a sync', async () => {
 			const { sync } = (await getSync(dbContext)(syncId, user)) as {
 				sync: SerializedSync
 			}
@@ -289,14 +289,14 @@ describe('sync', async () => {
 			sub: '@blake',
 		}
 
-		it('users who have not related project should not be allowed to access a sync', async () => {
+		await it('users who have not related project should not be allowed to access a sync', async () => {
 			const { error } = (await getSync(dbContext)(syncId, blake)) as {
 				error: ProblemDetail
 			}
 			check(error?.title).is(`Access to sync ${syncId} denied.`)
 		})
 
-		it('should allow users to access the sync if they have at least one project in the sync', async () => {
+		await it('should allow users to access the sync if they have at least one project in the sync', async () => {
 			await createProjectMember(dbContext, notify)(
 				projectA,
 				blake.sub,
@@ -318,7 +318,7 @@ describe('sync', async () => {
 			})
 		})
 
-		it('should allow users to fetch status in the sync if they have at least one project in the sync', () => {
+		await it('should allow users to fetch status in the sync if they have at least one project in the sync', () => {
 			eventually(async () => {
 				const { status } = (await listStatusInSync(dbContext)(
 					syncId,
@@ -334,8 +334,8 @@ describe('sync', async () => {
 		})
 	})
 
-	describe('deleting syncs', () => {
-		it('should allow deleting syncs', async () => {
+	await describe('deleting syncs', async () => {
+		await it('should allow deleting syncs', async () => {
 			const syncId = ulid()
 			const events: CoreEvent[] = []
 			on(CoreEventType.SYNC_DELETED, async (e) => events.push(e))

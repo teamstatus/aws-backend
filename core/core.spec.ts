@@ -89,10 +89,10 @@ describe('core', async () => {
 		sub: '@emerson',
 	}
 
-	describe('user management', async () => {
-		describe('allows users to log-in with their email', async () => {
+	await describe('user management', async () => {
+		await describe('allows users to log-in with their email', async () => {
 			let pin: string
-			it('generates a login request', async () => {
+			await it('generates a login request', async () => {
 				const events: CoreEvent[] = []
 				on(CoreEventType.EMAIL_LOGIN_REQUESTED, storeEvent(events))
 				const { loginRequest, pin: p } = (await emailLoginRequest(
@@ -116,7 +116,7 @@ describe('core', async () => {
 				pin = p
 			})
 
-			it('prevents spamming log-in requests', async () => {
+			await it('prevents spamming log-in requests', async () => {
 				const { error } = (await emailLoginRequest(
 					dbContext,
 					notify,
@@ -127,7 +127,7 @@ describe('core', async () => {
 				check(error).is(definedValue)
 			})
 
-			it('logs a user in using a PIN', async () => {
+			await it('logs a user in using a PIN', async () => {
 				const events: CoreEvent[] = []
 				on(CoreEventType.EMAIL_LOGIN_PIN_SUCCESS, storeEvent(events))
 				const { authContext } = (await emailPINLogin(
@@ -155,7 +155,7 @@ describe('core', async () => {
 				)
 			})
 
-			it('prevents re-using PINs', async () => {
+			await it('prevents re-using PINs', async () => {
 				const { error } = (await emailPINLogin(
 					dbContext,
 					notify,
@@ -167,7 +167,7 @@ describe('core', async () => {
 				check(error).is(definedValue)
 			})
 
-			it('allows users to claim a user ID', async () => {
+			await it('allows users to claim a user ID', async () => {
 				const events: CoreEvent[] = []
 				on(CoreEventType.USER_CREATED, storeEvent(events))
 				isNotAnError(
@@ -190,7 +190,7 @@ describe('core', async () => {
 				)
 			})
 
-			it(`adds the user's ID to the token after they have claimed a user ID`, async () => {
+			await it(`adds the user's ID to the token after they have claimed a user ID`, async () => {
 				const { pin } = (await emailLoginRequest(
 					dbContext,
 					notify,
@@ -209,8 +209,8 @@ describe('core', async () => {
 		})
 	})
 
-	describe('organizations', async () => {
-		it('can create a new organization', async () => {
+	await describe('organizations', async () => {
+		await it('can create a new organization', async () => {
 			const events: CoreEvent[] = []
 			on(CoreEventType.ORGANIZATION_CREATED, storeEvent(events))
 			isNotAnError(
@@ -231,7 +231,7 @@ describe('core', async () => {
 			)
 		})
 
-		it('ensures that organizations are unique', async () => {
+		await it('ensures that organizations are unique', async () => {
 			const { error } = (await createOrganization(dbContext, notify)(
 				{ id: '$acme', name: 'ACME Inc.' },
 				alex,
@@ -240,7 +240,7 @@ describe('core', async () => {
 			assert.equal(error?.title, `Organization '$acme' already exists.`)
 		})
 
-		it('can list organizations for a user', async () => {
+		await it('can list organizations for a user', async () => {
 			const { organizations } = (await listOrganizations(dbContext)(alex)) as {
 				organizations: Organization[]
 			}
@@ -251,8 +251,8 @@ describe('core', async () => {
 			)
 		})
 
-		describe('update', async () => {
-			it('allows organizations to be updated by an owner', async () => {
+		await describe('update', async () => {
+			await it('allows organizations to be updated by an owner', async () => {
 				const events: CoreEvent[] = []
 				on(CoreEventType.ORGANIZATION_UPDATED, storeEvent(events))
 				isNotAnError(
@@ -278,8 +278,8 @@ describe('core', async () => {
 		})
 	})
 
-	describe('projects', async () => {
-		it('can create a new project', async () => {
+	await describe('projects', async () => {
+		await it('can create a new project', async () => {
 			const events: CoreEvent[] = []
 			on(CoreEventType.PROJECT_CREATED, storeEvent(events))
 			on(CoreEventType.PROJECT_MEMBER_CREATED, storeEvent(events))
@@ -310,8 +310,8 @@ describe('core', async () => {
 			)
 		})
 
-		describe('update', async () => {
-			it('allows projects to be updated by an owner', async () => {
+		await describe('update', async () => {
+			await it('allows projects to be updated by an owner', async () => {
 				const events: CoreEvent[] = []
 				on(CoreEventType.PROJECT_UPDATED, storeEvent(events))
 				isNotAnError(
@@ -336,7 +336,7 @@ describe('core', async () => {
 			})
 		})
 
-		it('ensures that projects are unique', async () => {
+		await it('ensures that projects are unique', async () => {
 			const res = (await createProject(dbContext, notify)(
 				{ id: '$acme#teamstatus', name: 'Teamstatus' },
 				alex,
@@ -347,7 +347,7 @@ describe('core', async () => {
 			)
 		})
 
-		it('allows owners to delete projects', async () => {
+		await it('allows owners to delete projects', async () => {
 			const events: CoreEvent[] = []
 			on(CoreEventType.PROJECT_DELETED, storeEvent(events))
 			isNotAnError(
@@ -375,7 +375,7 @@ describe('core', async () => {
 			)
 		})
 
-		it('can list projects for an organization', async () => {
+		await it('can list projects for an organization', async () => {
 			const { projects } = (await listOrganizationProjects(dbContext)(
 				'$acme',
 				alex,
@@ -388,8 +388,8 @@ describe('core', async () => {
 			)
 		})
 
-		describe('member', async () => {
-			it('allows project owners to invite other users as members to a project', async () => {
+		await describe('member', async () => {
+			await it('allows project owners to invite other users as members to a project', async () => {
 				// Users have to exist to be invited
 				await createUser(
 					dbContext,
@@ -427,7 +427,7 @@ describe('core', async () => {
 				)
 			})
 
-			it('should not allow to invite non-existing users', async () => {
+			await it('should not allow to invite non-existing users', async () => {
 				const { error } = (await inviteToProject(dbContext, notify)(
 					{
 						invitedUserId: '@nobody',
@@ -439,8 +439,8 @@ describe('core', async () => {
 				assert.equal(error?.title, `User @nobody does not exist.`)
 			})
 
-			describe('invited member', async () => {
-				it('should not allow an uninvited user to post a status to a project', async () => {
+			await describe('invited member', async () => {
+				await it('should not allow an uninvited user to post a status to a project', async () => {
 					const { error } = (await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
@@ -455,7 +455,7 @@ describe('core', async () => {
 					)
 				})
 
-				it('should list open invites for a user', async () => {
+				await it('should list open invites for a user', async () => {
 					const { invitations } = (await listInvitations(dbContext)(
 						cameron,
 					)) as { invitations: Invitation[] }
@@ -468,7 +468,7 @@ describe('core', async () => {
 					])
 				})
 
-				it('allows users to accept invitations', async () => {
+				await it('allows users to accept invitations', async () => {
 					const { error } = (await acceptProjectInvitation(dbContext, notify)(
 						'$acme#teamstatus',
 						cameron,
@@ -476,7 +476,7 @@ describe('core', async () => {
 					assert.equal(error, undefined)
 				})
 
-				it('should allow user after accepting their invitation to post a status to a project', async () => {
+				await it('should allow user after accepting their invitation to post a status to a project', async () => {
 					const { error } = (await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
@@ -489,7 +489,7 @@ describe('core', async () => {
 				})
 			})
 
-			it('allows owners to list project members', async () => {
+			await it('allows owners to list project members', async () => {
 				const { members } = (await listProjectMembers(dbContext)(
 					'$acme#teamstatus',
 					alex,
@@ -506,8 +506,8 @@ describe('core', async () => {
 			})
 		})
 
-		describe('watcher', () => {
-			it('allows project owners to invite other users as watchers to a project', async () => {
+		await describe('watcher', async () => {
+			await it('allows project owners to invite other users as watchers to a project', async () => {
 				// Users have to exist to be invited
 				await createUser(
 					dbContext,
@@ -545,7 +545,7 @@ describe('core', async () => {
 				)
 			})
 
-			it('should list open invites for a user', async () => {
+			await it('should list open invites for a user', async () => {
 				const { invitations } = (await listInvitations(dbContext)(emerson)) as {
 					invitations: Invitation[]
 				}
@@ -558,7 +558,7 @@ describe('core', async () => {
 				])
 			})
 
-			it('allows users to accept invitations', async () => {
+			await it('allows users to accept invitations', async () => {
 				const { error } = (await acceptProjectInvitation(dbContext, notify)(
 					'$acme#teamstatus',
 					emerson,
@@ -566,7 +566,7 @@ describe('core', async () => {
 				assert.equal(error, undefined)
 			})
 
-			it('should not allow watchers to post a status to a project', async () => {
+			await it('should not allow watchers to post a status to a project', async () => {
 				const { error } = (await createStatus(dbContext, notify)(
 					{
 						id: ulid(),
@@ -581,7 +581,7 @@ describe('core', async () => {
 				)
 			})
 
-			it('should allow watchers read status of a project', async () => {
+			await it('should allow watchers read status of a project', async () => {
 				eventually(async () => {
 					const { status } = (await listStatus(dbContext)(
 						{ projectId: '$acme#teamstatus' },
@@ -602,9 +602,9 @@ describe('core', async () => {
 			})
 		})
 
-		describe('status', async () => {
-			describe('create', async () => {
-				it('can post a new status update', async () => {
+		await describe('status', async () => {
+			await describe('create', async () => {
+				await it('can post a new status update', async () => {
 					const events: CoreEvent[] = []
 					on(CoreEventType.STATUS_CREATED, storeEvent(events))
 
@@ -634,7 +634,7 @@ describe('core', async () => {
 					)
 				})
 
-				it('allows posting status only for organization members', async () => {
+				await it('allows posting status only for organization members', async () => {
 					const { error } = (await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
@@ -651,9 +651,9 @@ describe('core', async () => {
 				})
 			})
 
-			describe('update', async () => {
+			await describe('update', async () => {
 				const statusId = ulid()
-				it('allows status to be updated by the author', async () => {
+				await it('allows status to be updated by the author', async () => {
 					// Create the status
 					isNotAnError(
 						await createStatus(dbContext, notify)(
@@ -692,7 +692,7 @@ describe('core', async () => {
 					)
 				})
 
-				it('allows status to be deleted by the author', async () => {
+				await it('allows status to be deleted by the author', async () => {
 					const { error } = (await deleteStatus(dbContext, notify)(
 						statusId,
 						2,
@@ -703,8 +703,8 @@ describe('core', async () => {
 				})
 			})
 
-			describe('list', async () => {
-				it('can list status for a project', async () => {
+			await describe('list', async () => {
+				await it('can list status for a project', async () => {
 					const { status } = (await listStatus(dbContext)(
 						{ projectId: '$acme#teamstatus' },
 						alex,
@@ -720,7 +720,7 @@ describe('core', async () => {
 					)
 				})
 
-				it('sorts status by creation time', async () => {
+				await it('sorts status by creation time', async () => {
 					await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
@@ -759,7 +759,7 @@ describe('core', async () => {
 					assert.equal(status?.[0]?.message, 'Status 3')
 				})
 
-				it('allows only organization members to list status', async () => {
+				await it('allows only organization members to list status', async () => {
 					const { error } = (await listStatus(dbContext)(
 						{ projectId: '$acme#teamstatus' },
 						blake,
@@ -770,7 +770,7 @@ describe('core', async () => {
 					)
 				})
 
-				it('paginates', async () => {
+				await it('paginates', async () => {
 					const projectId = ulid()
 					const user: UserAuthContext = {
 						email: 'pagination@example.com',
@@ -838,9 +838,9 @@ describe('core', async () => {
 				})
 			})
 
-			describe('get', () => {
+			await describe('get', async () => {
 				const statusId = ulid()
-				it('allows getting individual status', async () => {
+				await it('allows getting individual status', async () => {
 					// useful if it is an older status, or in case we need the latest version
 
 					isNotAnError(
@@ -871,7 +871,7 @@ describe('core', async () => {
 						}),
 					)
 				})
-				it('allows only organization members to get status', async () => {
+				await it('allows only organization members to get status', async () => {
 					const { error } = (await getStatus(dbContext)(
 						{
 							statusId,
@@ -886,7 +886,7 @@ describe('core', async () => {
 				})
 			})
 
-			describe('reactions', async () => {
+			await describe('reactions', async () => {
 				// Reactions can have special roles
 				enum ReactionRole {
 					// A significant thing happened, makes the status stand out from others in the list of status
@@ -909,7 +909,7 @@ describe('core', async () => {
 				const statusId = ulid()
 				const reactionId = ulid()
 
-				it('allows authors to attach a reaction', async () => {
+				await it('allows authors to attach a reaction', async () => {
 					const events: CoreEvent[] = []
 					on(CoreEventType.REACTION_CREATED, storeEvent(events))
 
@@ -953,7 +953,7 @@ describe('core', async () => {
 					)
 				})
 
-				it('allows project members to attach a reaction', async () => {
+				await it('allows project members to attach a reaction', async () => {
 					// Users have to exist to be invited
 					await createUser(
 						dbContext,
@@ -991,7 +991,7 @@ describe('core', async () => {
 					assert.equal(error, undefined)
 				})
 
-				it('returns reactions with the status', async () => {
+				await it('returns reactions with the status', async () => {
 					const { status } = (await listStatus(dbContext)(
 						{ projectId: `$acme${projectId}` },
 						alex,
@@ -1014,7 +1014,7 @@ describe('core', async () => {
 					)
 				})
 
-				it('allows reactions to be deleted by the author', async () => {
+				await it('allows reactions to be deleted by the author', async () => {
 					const { error } = (await deleteReaction(dbContext, notify)(
 						reactionId,
 						alex,
@@ -1035,8 +1035,8 @@ describe('core', async () => {
 			})
 		})
 
-		describe('projects', async () => {
-			it('can list projects for a user', async () => {
+		await describe('projects', async () => {
+			await it('can list projects for a user', async () => {
 				const { projects } = (await listProjects(dbContext)(alex)) as {
 					projects: Project[]
 				}
@@ -1051,7 +1051,7 @@ describe('core', async () => {
 				)
 			})
 
-			it('allows project members to list status', async () => {
+			await it('allows project members to list status', async () => {
 				const { status } = (await listStatus(dbContext)(
 					{ projectId: '$acme#teamstatus' },
 					cameron,

@@ -3,8 +3,8 @@ import path from 'node:path'
 import { describe, test as it } from 'node:test'
 import { checkSumOfFiles } from './checksumOfFiles.js'
 
-describe('checkSumOfFiles()', () => {
-	it('should calculate a checksum of files', async () =>
+describe('checkSumOfFiles()', async () => {
+	await it('should calculate a checksum of files', async () =>
 		assert.equal(
 			await checkSumOfFiles([
 				// sha1sum cdk/lambdas/test-data/1.txt

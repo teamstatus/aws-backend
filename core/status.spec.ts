@@ -17,7 +17,7 @@ import { createProject } from './persistence/createProject'
 import { getStatus } from './persistence/getStatus'
 const chance = new Chance()
 
-describe('status', () => {
+describe('status', async () => {
 	const { TableName, db } = testDb()
 
 	const dbContext: DbContext = {
@@ -29,7 +29,7 @@ describe('status', () => {
 
 	before(createTestDb(dbContext))
 
-	it("can be created on behalf of other's", async () => {
+	await it("can be created on behalf of other's", async () => {
 		const events: CoreEvent[] = []
 		on(CoreEventType.STATUS_CREATED, storeEvent(events))
 

@@ -25,7 +25,7 @@ describe('Onboarding', async () => {
 
 	before(createTestDb(dbContext))
 
-	test('that users are automatically added to the $teamstatus#feedback project', async () => {
+	await test('that users are automatically added to the $teamstatus#feedback project', async () => {
 		const events: CoreEvent[] = []
 		on(CoreEventType.PROJECT_MEMBER_CREATED, async (e) => events.push(e))
 
