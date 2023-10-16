@@ -5,6 +5,7 @@ import type { UserAuthContext } from '../auth.js'
 import type { DbContext } from './DbContext.js'
 import type { Organization } from './createOrganization'
 import { l } from './l.js'
+import { organizationMemberIndex } from './db.js'
 
 export const listOrganizations =
 	(dbContext: DbContext) =>
@@ -16,7 +17,7 @@ export const listOrganizations =
 		const { Items } = await db.send(
 			new QueryCommand({
 				TableName,
-				IndexName: 'organizationMember',
+				IndexName: organizationMemberIndex,
 				KeyConditionExpression: '#user = :user',
 				ExpressionAttributeNames: {
 					'#user': 'organizationMember__user',

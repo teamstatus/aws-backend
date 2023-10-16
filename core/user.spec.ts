@@ -1,6 +1,5 @@
 import { before, describe, test as it } from 'node:test'
 import { check, objectMatching, undefinedValue } from 'tsmatchers'
-import type { UserAuthContext } from './auth.js'
 import { notifier } from './notifier.js'
 import type { DbContext } from './persistence/DbContext.js'
 import { createUser } from './persistence/createUser.js'
@@ -12,6 +11,7 @@ import type { CoreEvent } from './CoreEvent.js'
 import { CoreEventType } from './CoreEventType.js'
 import { updateUser } from './persistence/updateUser.js'
 import { getUserProfile } from './persistence/getUserProfile.js'
+import { randomUser } from './randomEntities.js'
 
 describe('user', async () => {
 	const { TableName, db } = testDb()
@@ -25,15 +25,9 @@ describe('user', async () => {
 
 	before(createTestDb(dbContext))
 
-	const demi: UserAuthContext = {
-		email: 'demi@example.com',
-		sub: '@demi',
-	}
+	const demi = randomUser()
 
-	const finn: UserAuthContext = {
-		email: 'finn@example.com',
-		sub: '@finn',
-	}
+	const finn = randomUser()
 
 	await it('allows users to get their profile', async () => {
 		isNotAnError(
@@ -42,7 +36,7 @@ describe('user', async () => {
 				notify,
 			)({
 				id: demi.sub,
-				authContext: { email: 'demi@example.com' },
+				authContext: demi,
 			}),
 		)
 
@@ -98,7 +92,7 @@ describe('user', async () => {
 				id: finn.sub,
 				name: 'Finn Finnley',
 				pronouns: 'xey/xem',
-				authContext: { email: 'finn@example.com' },
+				authContext: finn,
 			}),
 		)
 

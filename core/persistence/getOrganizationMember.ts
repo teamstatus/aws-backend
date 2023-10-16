@@ -5,6 +5,7 @@ import { Role } from '../Role.js'
 import { isOrganizationId, isUserId } from '../ids.js'
 import type { DbContext } from './DbContext.js'
 import { l } from './l.js'
+import { organizationMemberIndex } from './db.js'
 
 export const getOrganizationMember =
 	({ db, TableName }: DbContext) =>
@@ -38,7 +39,7 @@ export const getOrganizationMember =
 		const res = await db.send(
 			new QueryCommand({
 				TableName,
-				IndexName: 'organizationMember',
+				IndexName: organizationMemberIndex,
 				KeyConditionExpression:
 					'#user = :user AND #organization = :organization',
 				ExpressionAttributeNames: {

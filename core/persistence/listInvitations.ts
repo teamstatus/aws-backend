@@ -5,6 +5,7 @@ import type { UserAuthContext } from '../auth.js'
 import type { DbContext } from './DbContext.js'
 import { l } from './l.js'
 import type { Invitation } from './inviteToProject.js'
+import { invitationsForUserIndex } from './db.js'
 
 export const listInvitations =
 	(dbContext: DbContext) =>
@@ -20,7 +21,7 @@ export const listInvitations =
 		const { Items } = await db.send(
 			new QueryCommand({
 				TableName,
-				IndexName: 'invitationsForUser',
+				IndexName: invitationsForUserIndex,
 				KeyConditionExpression: '#invitee = :user',
 				ExpressionAttributeNames: {
 					'#invitee': 'projectInvitation__invitee',

@@ -7,6 +7,7 @@ import type { DbContext } from './DbContext.js'
 import type { Project } from './createProject.js'
 import { itemToProject } from './getProject.js'
 import { l } from './l.js'
+import { projectMemberIndex } from './db.js'
 
 type UserProject = Project & { role: Role }
 
@@ -21,7 +22,7 @@ export const listProjects =
 		const { Items } = await db.send(
 			new QueryCommand({
 				TableName,
-				IndexName: 'projectMember',
+				IndexName: projectMemberIndex,
 				KeyConditionExpression: '#user = :user',
 				ExpressionAttributeNames: {
 					'#user': 'projectMember__user',

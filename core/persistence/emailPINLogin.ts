@@ -15,6 +15,7 @@ import { type EmailAuthContext, type UserAuthContext } from '../auth.js'
 import type { Notify } from '../notifier.js'
 import type { DbContext } from './DbContext.js'
 import { l } from './l.js'
+import { emailUserIndex } from './db.js'
 
 export type LoggedInWithEmailAndPin = CoreEvent & {
 	type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS
@@ -67,7 +68,7 @@ export const emailPINLogin =
 				new QueryCommand({
 					TableName,
 					Limit: 1,
-					IndexName: 'emailUser',
+					IndexName: emailUserIndex,
 					KeyConditionExpression: '#email = :email',
 					ExpressionAttributeNames: {
 						'#email': 'user__email',

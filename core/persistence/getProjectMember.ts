@@ -9,6 +9,7 @@ import {
 	isOrganizationMember,
 	isOrganizationOwner,
 } from './getOrganizationMember.js'
+import { projectMemberIndex } from './db.js'
 
 type MemberInfo = {
 	role: Role
@@ -25,7 +26,7 @@ export const getProjectMember =
 		const res = await db.send(
 			new QueryCommand({
 				TableName,
-				IndexName: 'projectMember',
+				IndexName: projectMemberIndex,
 				KeyConditionExpression: '#user = :user AND #project = :project',
 				ExpressionAttributeNames: {
 					'#user': 'projectMember__user',

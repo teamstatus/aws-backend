@@ -1,6 +1,7 @@
 import { DynamoDBClient, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import type { Reaction, StatusReaction } from './createReaction.js'
+import { statusReactionIndex } from './db.js'
 
 export const getStatusReactions =
 	({ db, TableName }: { db: DynamoDBClient; TableName: string }) =>
@@ -9,7 +10,7 @@ export const getStatusReactions =
 			.send(
 				new QueryCommand({
 					TableName,
-					IndexName: 'statusReaction',
+					IndexName: statusReactionIndex,
 					KeyConditionExpression: '#status = :status',
 					ExpressionAttributeNames: {
 						'#status': 'statusReaction__status',

@@ -15,7 +15,7 @@ import { CoreEventType } from './CoreEventType.js'
 import type { ProblemDetail } from './ProblemDetail.js'
 import { Role } from './Role.js'
 import { type EmailAuthContext, type UserAuthContext } from './auth.js'
-import { notifier, type listenerFn } from './notifier.js'
+import { notifier } from './notifier.js'
 import type { DbContext } from './persistence/DbContext.js'
 import { acceptProjectInvitation } from './persistence/acceptProjectInvitation.js'
 import {
@@ -52,10 +52,12 @@ import { eventually } from './test/eventually.js'
 import { updateOrganization } from './persistence/updateOrganization.js'
 import { getStatus } from './persistence/getStatus.js'
 import { updateProject } from './persistence/updateProject.js'
-import { l } from './persistence/l.js'
 import { deleteProject } from './persistence/deleteProject.js'
 import type { ProjectMember } from './persistence/createProjectMember.js'
 import { listProjectMembers } from './persistence/listProjectMembers.js'
+import { randomOrganization, randomUser } from './randomEntities.js'
+import { ensureUserIsMember } from './test/ensureUserIsMember.js'
+import { storeEvent } from './test/storeEvent.js'
 
 describe('core', async () => {
 	const { TableName, db } = testDb()
@@ -69,25 +71,11 @@ describe('core', async () => {
 
 	before(createTestDb(dbContext))
 
-	const alex: UserAuthContext = {
-		email: 'alex@example.com',
-		sub: '@alex',
-	}
-
-	const blake: UserAuthContext = {
-		email: 'blake@example.com',
-		sub: '@blake',
-	}
-
-	const cameron: UserAuthContext = {
-		email: 'cameron@example.com',
-		sub: '@cameron',
-	}
-
-	const emerson: UserAuthContext = {
-		email: 'emerson@example.com',
-		sub: '@emerson',
-	}
+	const acme = randomOrganization()
+	const alex = randomUser()
+	const blake = randomUser()
+	const cameron = randomUser()
+	const emerson = randomUser()
 
 	await describe('user management', async () => {
 		await describe('allows users to log-in with their email', async () => {
@@ -101,14 +89,14 @@ describe('core', async () => {
 				)(alex)) as { loginRequest: EmailLoginRequest; pin: string }
 				check(loginRequest).is(
 					objectMatching({
-						email: 'alex@example.com',
+						email: alex.email,
 					}),
 				)
 				check(events).is(
 					arrayContaining(
 						objectMatching({
 							type: CoreEventType.EMAIL_LOGIN_REQUESTED,
-							email: 'alex@example.com',
+							email: alex.email,
 						}),
 					),
 				)
@@ -121,7 +109,7 @@ describe('core', async () => {
 					dbContext,
 					notify,
 				)({
-					email: 'alex@example.com',
+					email: alex.email,
 				})) as { error: ProblemDetail }
 
 				check(error).is(definedValue)
@@ -134,7 +122,7 @@ describe('core', async () => {
 					dbContext,
 					notify,
 				)({
-					email: 'alex@example.com',
+					email: alex.email,
 					pin,
 				})) as { authContext: EmailAuthContext }
 
@@ -142,14 +130,14 @@ describe('core', async () => {
 					arrayContaining(
 						objectMatching({
 							type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS,
-							email: 'alex@example.com',
+							email: alex.email,
 						}),
 					),
 				)
 
 				check(authContext).is(
 					objectMatching({
-						email: 'alex@example.com',
+						email: alex.email,
 						sub: undefinedValue,
 					}),
 				)
@@ -160,7 +148,7 @@ describe('core', async () => {
 					dbContext,
 					notify,
 				)({
-					email: 'alex@example.com',
+					email: alex.email,
 					pin,
 				})) as { error: ProblemDetail }
 
@@ -176,7 +164,7 @@ describe('core', async () => {
 						notify,
 					)({
 						id: alex.sub,
-						authContext: { email: 'alex@example.com' },
+						authContext: { email: alex.email },
 					}),
 				)
 				check(events).is(
@@ -184,7 +172,7 @@ describe('core', async () => {
 						objectMatching({
 							type: CoreEventType.USER_CREATED,
 							id: alex.sub,
-							email: 'alex@example.com',
+							email: alex.email,
 						}),
 					),
 				)
@@ -195,13 +183,13 @@ describe('core', async () => {
 					dbContext,
 					notify,
 				)({
-					email: 'alex@example.com',
+					email: alex.email,
 				})) as { loginRequest: EmailLoginRequest; pin: string }
 				const { authContext } = (await emailPINLogin(
 					dbContext,
 					notify,
 				)({
-					email: 'alex@example.com',
+					email: alex.email,
 					pin,
 				})) as { authContext: UserAuthContext }
 				check(authContext).is(objectMatching(alex))
@@ -215,7 +203,7 @@ describe('core', async () => {
 			on(CoreEventType.ORGANIZATION_CREATED, storeEvent(events))
 			isNotAnError(
 				await createOrganization(dbContext, notify)(
-					{ id: '$acme', name: 'ACME Inc.' },
+					{ id: acme.id, name: 'ACME Inc.' },
 					alex,
 				),
 			)
@@ -223,7 +211,7 @@ describe('core', async () => {
 				arrayContaining(
 					objectMatching({
 						type: CoreEventType.ORGANIZATION_CREATED,
-						id: '$acme',
+						id: acme.id,
 						name: 'ACME Inc.',
 						owner: alex.sub,
 					}),
@@ -233,11 +221,11 @@ describe('core', async () => {
 
 		await it('ensures that organizations are unique', async () => {
 			const { error } = (await createOrganization(dbContext, notify)(
-				{ id: '$acme', name: 'ACME Inc.' },
+				{ id: acme.id, name: 'ACME Inc.' },
 				alex,
 			)) as { error: ProblemDetail }
 
-			assert.equal(error?.title, `Organization '$acme' already exists.`)
+			assert.equal(error?.title, `Organization '${acme.id}' already exists.`)
 		})
 
 		await it('can list organizations for a user', async () => {
@@ -246,7 +234,7 @@ describe('core', async () => {
 			}
 			check(organizations?.[0]).is(
 				objectMatching({
-					id: '$acme',
+					id: acme.id,
 				}),
 			)
 		})
@@ -257,7 +245,7 @@ describe('core', async () => {
 				on(CoreEventType.ORGANIZATION_UPDATED, storeEvent(events))
 				isNotAnError(
 					await updateOrganization(dbContext, notify)(
-						'$acme',
+						acme.id,
 						{ name: 'ACME Inc!' },
 						1,
 						alex,
@@ -268,7 +256,7 @@ describe('core', async () => {
 					arrayContaining(
 						objectMatching({
 							type: CoreEventType.ORGANIZATION_UPDATED,
-							id: '$acme',
+							id: acme.id,
 							name: 'ACME Inc!',
 							version: 2,
 						}),
@@ -285,7 +273,7 @@ describe('core', async () => {
 			on(CoreEventType.PROJECT_MEMBER_CREATED, storeEvent(events))
 			isNotAnError(
 				await createProject(dbContext, notify)(
-					{ id: '$acme#teamstatus', name: 'Teamstatus.' },
+					{ id: `${acme.id}#teamstatus`, name: 'Teamstatus.' },
 					alex,
 				),
 			)
@@ -293,7 +281,7 @@ describe('core', async () => {
 				arrayContaining(
 					objectMatching({
 						type: CoreEventType.PROJECT_CREATED,
-						id: '$acme#teamstatus',
+						id: `${acme.id}#teamstatus`,
 						name: 'Teamstatus.',
 						version: 1,
 					}),
@@ -303,7 +291,7 @@ describe('core', async () => {
 				arrayContaining(
 					objectMatching({
 						type: CoreEventType.PROJECT_MEMBER_CREATED,
-						project: '$acme#teamstatus',
+						project: `${acme.id}#teamstatus`,
 						user: alex.sub,
 					}),
 				),
@@ -316,7 +304,7 @@ describe('core', async () => {
 				on(CoreEventType.PROJECT_UPDATED, storeEvent(events))
 				isNotAnError(
 					await updateProject(dbContext, notify)(
-						'$acme#teamstatus',
+						`${acme.id}#teamstatus`,
 						{ name: 'Teamstatus' },
 						1,
 						alex,
@@ -327,7 +315,7 @@ describe('core', async () => {
 					arrayContaining(
 						objectMatching({
 							type: CoreEventType.PROJECT_UPDATED,
-							id: '$acme#teamstatus',
+							id: `${acme.id}#teamstatus`,
 							name: 'Teamstatus',
 							version: 2,
 						}),
@@ -338,12 +326,12 @@ describe('core', async () => {
 
 		await it('ensures that projects are unique', async () => {
 			const res = (await createProject(dbContext, notify)(
-				{ id: '$acme#teamstatus', name: 'Teamstatus' },
+				{ id: `${acme.id}#teamstatus`, name: 'Teamstatus' },
 				alex,
 			)) as { error: ProblemDetail }
 			assert.equal(
 				res.error?.title,
-				`Project '$acme#teamstatus' already exists.`,
+				`Project '${acme.id}#teamstatus' already exists.`,
 			)
 		})
 
@@ -352,14 +340,17 @@ describe('core', async () => {
 			on(CoreEventType.PROJECT_DELETED, storeEvent(events))
 			isNotAnError(
 				await createProject(dbContext, notify)(
-					{ id: '$acme#teamstatus-to-be-deleted-by-owner', name: 'Teamstatus' },
+					{
+						id: `${acme.id}#teamstatus-to-be-deleted-by-owner`,
+						name: 'Teamstatus',
+					},
 					alex,
 				),
 			)
 
 			isNotAnError(
 				await deleteProject(dbContext, notify)(
-					'$acme#teamstatus-to-be-deleted-by-owner',
+					`${acme.id}#teamstatus-to-be-deleted-by-owner`,
 					1,
 					alex,
 				),
@@ -369,7 +360,7 @@ describe('core', async () => {
 				arrayContaining(
 					objectMatching({
 						type: CoreEventType.PROJECT_DELETED,
-						id: '$acme#teamstatus-to-be-deleted-by-owner',
+						id: `${acme.id}#teamstatus-to-be-deleted-by-owner`,
 					}),
 				),
 			)
@@ -377,12 +368,12 @@ describe('core', async () => {
 
 		await it('can list projects for an organization', async () => {
 			const { projects } = (await listOrganizationProjects(dbContext)(
-				'$acme',
+				acme.id,
 				alex,
 			)) as { projects: Project[] }
 			check(projects?.[0]).is(
 				objectMatching({
-					id: '$acme#teamstatus',
+					id: `${acme.id}#teamstatus`,
 					name: 'Teamstatus',
 				}),
 			)
@@ -408,7 +399,7 @@ describe('core', async () => {
 					await inviteToProject(dbContext, notify)(
 						{
 							invitedUserId: cameron.sub,
-							projectId: '$acme#teamstatus',
+							projectId: `${acme.id}#teamstatus`,
 							role: Role.MEMBER,
 						},
 						alex,
@@ -418,7 +409,7 @@ describe('core', async () => {
 					arrayContaining(
 						objectMatching({
 							type: CoreEventType.PROJECT_MEMBER_INVITED,
-							project: '$acme#teamstatus',
+							project: `${acme.id}#teamstatus`,
 							invitee: cameron.sub,
 							inviter: alex.sub,
 							role: Role.MEMBER,
@@ -431,7 +422,7 @@ describe('core', async () => {
 				const { error } = (await inviteToProject(dbContext, notify)(
 					{
 						invitedUserId: '@nobody',
-						projectId: '$acme#teamstatus',
+						projectId: `${acme.id}#teamstatus`,
 						role: Role.MEMBER,
 					},
 					alex,
@@ -444,14 +435,14 @@ describe('core', async () => {
 					const { error } = (await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
-							projectId: '$acme#teamstatus',
+							projectId: `${acme.id}#teamstatus`,
 							message: 'Should not work',
 						},
 						cameron,
 					)) as { error: ProblemDetail }
 					assert.equal(
 						error?.title,
-						`Only members of '$acme#teamstatus' are allowed to create status.`,
+						`Only members of '${acme.id}#teamstatus' are allowed to create status.`,
 					)
 				})
 
@@ -461,7 +452,7 @@ describe('core', async () => {
 					)) as { invitations: Invitation[] }
 					assert.deepEqual(invitations, [
 						{
-							id: '$acme#teamstatus@cameron',
+							id: `${acme.id}#teamstatus${cameron.sub}`,
 							role: Role.MEMBER,
 							inviter: alex.sub,
 						},
@@ -470,7 +461,7 @@ describe('core', async () => {
 
 				await it('allows users to accept invitations', async () => {
 					const { error } = (await acceptProjectInvitation(dbContext, notify)(
-						'$acme#teamstatus',
+						`${acme.id}#teamstatus`,
 						cameron,
 					)) as { error: ProblemDetail }
 					assert.equal(error, undefined)
@@ -480,7 +471,7 @@ describe('core', async () => {
 					const { error } = (await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
-							projectId: '$acme#teamstatus',
+							projectId: `${acme.id}#teamstatus`,
 							message: 'Should work now!',
 						},
 						cameron,
@@ -491,13 +482,13 @@ describe('core', async () => {
 
 			await it('allows owners to list project members', async () => {
 				const { members } = (await listProjectMembers(dbContext)(
-					'$acme#teamstatus',
+					`${acme.id}#teamstatus`,
 					alex,
 				)) as { members: ProjectMember[] }
 				check(members).is(
 					arrayContaining(
 						objectMatching({
-							project: '$acme#teamstatus',
+							project: `${acme.id}#teamstatus`,
 							user: cameron.sub,
 							role: Role.MEMBER,
 						}),
@@ -513,7 +504,7 @@ describe('core', async () => {
 					dbContext,
 					notify,
 				)({
-					id: '@emerson',
+					id: emerson.sub,
 					authContext: emerson,
 				})
 
@@ -526,7 +517,7 @@ describe('core', async () => {
 					await inviteToProject(dbContext, notify)(
 						{
 							invitedUserId: emerson.sub,
-							projectId: '$acme#teamstatus',
+							projectId: `${acme.id}#teamstatus`,
 							role: Role.WATCHER,
 						},
 						alex,
@@ -536,7 +527,7 @@ describe('core', async () => {
 					arrayContaining(
 						objectMatching({
 							type: CoreEventType.PROJECT_MEMBER_INVITED,
-							project: '$acme#teamstatus',
+							project: `${acme.id}#teamstatus`,
 							invitee: emerson.sub,
 							inviter: alex.sub,
 							role: Role.WATCHER,
@@ -551,7 +542,7 @@ describe('core', async () => {
 				}
 				assert.deepEqual(invitations, [
 					{
-						id: '$acme#teamstatus@emerson',
+						id: `${acme.id}#teamstatus${emerson.sub}`,
 						role: Role.WATCHER,
 						inviter: alex.sub,
 					},
@@ -560,7 +551,7 @@ describe('core', async () => {
 
 			await it('allows users to accept invitations', async () => {
 				const { error } = (await acceptProjectInvitation(dbContext, notify)(
-					'$acme#teamstatus',
+					`${acme.id}#teamstatus`,
 					emerson,
 				)) as { error: ProblemDetail }
 				assert.equal(error, undefined)
@@ -570,21 +561,21 @@ describe('core', async () => {
 				const { error } = (await createStatus(dbContext, notify)(
 					{
 						id: ulid(),
-						projectId: '$acme#teamstatus',
+						projectId: `${acme.id}#teamstatus`,
 						message: 'Should not work',
 					},
 					emerson,
 				)) as { error: ProblemDetail }
 				assert.equal(
 					error?.title,
-					`Only members of '$acme#teamstatus' are allowed to create status.`,
+					`Only members of '${acme.id}#teamstatus' are allowed to create status.`,
 				)
 			})
 
 			await it('should allow watchers read status of a project', async () => {
 				eventually(async () => {
 					const { status } = (await listStatus(dbContext)(
-						{ projectId: '$acme#teamstatus' },
+						{ projectId: `${acme.id}#teamstatus` },
 						emerson,
 					)) as { status: Status[] }
 					check(status).is(
@@ -594,7 +585,7 @@ describe('core', async () => {
 								message:
 									'Implemented ability to persist status updates for projects.',
 								author: alex.sub,
-								project: '$acme#teamstatus',
+								project: `${acme.id}#teamstatus`,
 							}),
 						),
 					)
@@ -613,7 +604,7 @@ describe('core', async () => {
 						await createStatus(dbContext, notify)(
 							{
 								id: id,
-								projectId: '$acme#teamstatus',
+								projectId: `${acme.id}#teamstatus`,
 								message:
 									'Implemented ability to persist status updates for projects.',
 							},
@@ -624,7 +615,7 @@ describe('core', async () => {
 						arrayContaining(
 							objectMatching({
 								type: CoreEventType.STATUS_CREATED,
-								project: '$acme#teamstatus',
+								project: `${acme.id}#teamstatus`,
 								message:
 									'Implemented ability to persist status updates for projects.',
 								author: alex.sub,
@@ -638,15 +629,14 @@ describe('core', async () => {
 					const { error } = (await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
-							projectId: '$acme#teamstatus',
-							message:
-								'I am not a member of the $acme organization, so I should not be allowed to create a status.',
+							projectId: `${acme.id}#teamstatus`,
+							message: `I am not a member of the ${acme.id} organization, so I should not be allowed to create a status.`,
 						},
 						blake,
 					)) as { error: ProblemDetail }
 					assert.equal(
 						error?.title,
-						`Only members of '$acme#teamstatus' are allowed to create status.`,
+						`Only members of '${acme.id}#teamstatus' are allowed to create status.`,
 					)
 				})
 			})
@@ -659,7 +649,7 @@ describe('core', async () => {
 						await createStatus(dbContext, notify)(
 							{
 								id: statusId,
-								projectId: '$acme#teamstatus',
+								projectId: `${acme.id}#teamstatus`,
 								message: 'Status with an typo',
 							},
 							alex,
@@ -677,7 +667,7 @@ describe('core', async () => {
 					)
 					// Fetch
 					const { status: statusList } = (await listStatus(dbContext)(
-						{ projectId: '$acme#teamstatus' },
+						{ projectId: `${acme.id}#teamstatus` },
 						alex,
 					)) as {
 						status: Status[]
@@ -706,7 +696,7 @@ describe('core', async () => {
 			await describe('list', async () => {
 				await it('can list status for a project', async () => {
 					const { status } = (await listStatus(dbContext)(
-						{ projectId: '$acme#teamstatus' },
+						{ projectId: `${acme.id}#teamstatus` },
 						alex,
 					)) as { status: Status[] }
 					check(status?.[0]).is(
@@ -715,7 +705,7 @@ describe('core', async () => {
 							message:
 								'Implemented ability to persist status updates for projects.',
 							author: alex.sub,
-							project: '$acme#teamstatus',
+							project: `${acme.id}#teamstatus`,
 						}),
 					)
 				})
@@ -724,7 +714,7 @@ describe('core', async () => {
 					await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
-							projectId: '$acme#teamstatus',
+							projectId: `${acme.id}#teamstatus`,
 							message: 'Status 1',
 						},
 						alex,
@@ -732,7 +722,7 @@ describe('core', async () => {
 					await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
-							projectId: '$acme#teamstatus',
+							projectId: `${acme.id}#teamstatus`,
 							message: 'Status 2',
 						},
 						alex,
@@ -740,14 +730,14 @@ describe('core', async () => {
 					await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
-							projectId: '$acme#teamstatus',
+							projectId: `${acme.id}#teamstatus`,
 							message: 'Status 3',
 						},
 						alex,
 					)
 
 					const { status } = (await listStatus(dbContext)(
-						{ projectId: '$acme#teamstatus' },
+						{ projectId: `${acme.id}#teamstatus` },
 						alex,
 					)) as {
 						status: Status[]
@@ -761,24 +751,24 @@ describe('core', async () => {
 
 				await it('allows only organization members to list status', async () => {
 					const { error } = (await listStatus(dbContext)(
-						{ projectId: '$acme#teamstatus' },
+						{ projectId: `${acme.id}#teamstatus` },
 						blake,
 					)) as { error: ProblemDetail }
 					assert.equal(
 						error?.title,
-						`Only members of '$acme#teamstatus' are allowed to list status.`,
+						`Only members of '${acme.id}#teamstatus' are allowed to list status.`,
 					)
 				})
 
 				await it('paginates', async () => {
 					const projectId = ulid()
-					const user: UserAuthContext = {
-						email: 'pagination@example.com',
-						sub: '@paginate',
-					}
+					const user = randomUser()
+
+					const org = randomOrganization()
+
 					isNotAnError(
 						await createOrganization(dbContext, notify)(
-							{ id: `$paginate`, name: 'Pagination test5' },
+							{ id: org.id, name: 'Pagination test5' },
 							user,
 						),
 					)
@@ -786,7 +776,7 @@ describe('core', async () => {
 					isNotAnError(
 						await createProject(dbContext, notify)(
 							{
-								id: `$paginate#test-${projectId}`,
+								id: `${org.id}#test-${projectId}`,
 								name: `Project ${projectId}`,
 							},
 							user,
@@ -796,7 +786,7 @@ describe('core', async () => {
 					await ensureUserIsMember(
 						dbContext,
 						user,
-						`$paginate#test-${projectId}`,
+						`${org.id}#test-${projectId}`,
 					)
 
 					for (let i = 0; i < 30; i++) {
@@ -804,7 +794,7 @@ describe('core', async () => {
 							await createStatus(dbContext, notify)(
 								{
 									id: ulid(),
-									projectId: `$paginate#test-${projectId}`,
+									projectId: `${org.id}#test-${projectId}`,
 									message: `Status for pagination ${i}`,
 								},
 								user,
@@ -814,7 +804,7 @@ describe('core', async () => {
 
 					const { status, nextStartKey } = (await listStatus(dbContext)(
 						{
-							projectId: `$paginate#test-${projectId}`,
+							projectId: `${org.id}#test-${projectId}`,
 						},
 						user,
 					)) as { status: Status[]; nextStartKey: string }
@@ -827,7 +817,7 @@ describe('core', async () => {
 					const { status: restStatus, nextStartKey: lastStartKey } =
 						(await listStatus(dbContext)(
 							{
-								projectId: `$paginate#test-${projectId}`,
+								projectId: `${org.id}#test-${projectId}`,
 								startKey: nextStartKey,
 							},
 							user,
@@ -847,7 +837,7 @@ describe('core', async () => {
 						await createStatus(dbContext, notify)(
 							{
 								id: statusId,
-								projectId: '$acme#teamstatus',
+								projectId: `${acme.id}#teamstatus`,
 								message: `A new status!`,
 							},
 							alex,
@@ -857,7 +847,7 @@ describe('core', async () => {
 						await getStatus(dbContext)(
 							{
 								statusId,
-								projectId: '$acme#teamstatus',
+								projectId: `${acme.id}#teamstatus`,
 							},
 							alex,
 						),
@@ -867,7 +857,7 @@ describe('core', async () => {
 							id: aString,
 							message: `A new status!`,
 							author: alex.sub,
-							project: '$acme#teamstatus',
+							project: `${acme.id}#teamstatus`,
 						}),
 					)
 				})
@@ -875,13 +865,13 @@ describe('core', async () => {
 					const { error } = (await getStatus(dbContext)(
 						{
 							statusId,
-							projectId: '$acme#teamstatus',
+							projectId: `${acme.id}#teamstatus`,
 						},
 						blake,
 					)) as { error: ProblemDetail }
 					assert.equal(
 						error?.title,
-						`Only members of '$acme#teamstatus' are allowed to list status.`,
+						`Only members of '${acme.id}#teamstatus' are allowed to list status.`,
 					)
 				})
 			})
@@ -914,7 +904,7 @@ describe('core', async () => {
 					on(CoreEventType.REACTION_CREATED, storeEvent(events))
 
 					await createProject(dbContext, notify)(
-						{ id: `$acme${projectId}`, name: `Project ${projectId}` },
+						{ id: `${acme.id}${projectId}`, name: `Project ${projectId}` },
 						alex,
 					)
 
@@ -922,7 +912,7 @@ describe('core', async () => {
 						await createStatus(dbContext, notify)(
 							{
 								id: statusId,
-								projectId: `$acme${projectId}`,
+								projectId: `${acme.id}${projectId}`,
 								message: `I've released a new version!`,
 							},
 							alex,
@@ -959,15 +949,15 @@ describe('core', async () => {
 						dbContext,
 						notify,
 					)({
-						id: '@blake',
-						authContext: { email: 'blake@example.com' },
+						id: blake.sub,
+						authContext: blake,
 					})
 
 					isNotAnError(
 						await inviteToProject(dbContext, notify)(
 							{
-								invitedUserId: '@blake',
-								projectId: `$acme${projectId}`,
+								invitedUserId: blake.sub,
+								projectId: `${acme.id}${projectId}`,
 								role: Role.MEMBER,
 							},
 							alex,
@@ -975,7 +965,7 @@ describe('core', async () => {
 					)
 
 					await acceptProjectInvitation(dbContext, notify)(
-						`$acme${projectId}`,
+						`${acme.id}${projectId}`,
 						blake,
 					)
 
@@ -993,7 +983,7 @@ describe('core', async () => {
 
 				await it('returns reactions with the status', async () => {
 					const { status } = (await listStatus(dbContext)(
-						{ projectId: `$acme${projectId}` },
+						{ projectId: `${acme.id}${projectId}` },
 						alex,
 					)) as { status: Status[] }
 
@@ -1007,7 +997,7 @@ describe('core', async () => {
 
 					check(status[0]?.reactions[1]).is(
 						objectMatching({
-							author: '@blake',
+							author: blake.sub,
 							id: aUlid(),
 							...thumbsUp,
 						}),
@@ -1023,7 +1013,7 @@ describe('core', async () => {
 					assert.equal(error, undefined)
 
 					const { status } = (await listStatus(dbContext)(
-						{ projectId: `$acme${projectId}` },
+						{ projectId: `${acme.id}${projectId}` },
 						alex,
 					)) as { status: Status[] }
 
@@ -1043,7 +1033,7 @@ describe('core', async () => {
 				check(projects).is(
 					arrayContaining(
 						objectMatching({
-							id: '$acme#teamstatus',
+							id: `${acme.id}#teamstatus`,
 							name: 'Teamstatus',
 							version: 2,
 						}),
@@ -1053,7 +1043,7 @@ describe('core', async () => {
 
 			await it('allows project members to list status', async () => {
 				const { status } = (await listStatus(dbContext)(
-					{ projectId: '$acme#teamstatus' },
+					{ projectId: `${acme.id}#teamstatus` },
 					cameron,
 				)) as { status: Status[] }
 				assert.equal(status.length, 6)
@@ -1061,22 +1051,3 @@ describe('core', async () => {
 		})
 	})
 })
-
-export const storeEvent =
-	(events: CoreEvent[]): listenerFn =>
-	async (e: CoreEvent) => {
-		events.push(e)
-	}
-
-export const ensureUserIsMember = async (
-	dbContext: DbContext,
-	user: UserAuthContext,
-	projectId: string,
-) =>
-	eventually(async () => {
-		const { projects } = (await listProjects(dbContext)(user)) as {
-			projects: Project[]
-		}
-
-		check(projects).is(arrayContaining(objectMatching({ id: l(projectId) })))
-	})

@@ -6,6 +6,7 @@ import { l } from './l.js'
 import { canUpdateProject } from './getProjectMember.js'
 import type { ProjectMember } from './createProjectMember.js'
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
+import { projectMembersIndex } from './db.js'
 
 export const listProjectMembers =
 	(dbContext: DbContext) =>
@@ -26,7 +27,7 @@ export const listProjectMembers =
 		const { Items } = await db.send(
 			new QueryCommand({
 				TableName,
-				IndexName: 'projectMembers',
+				IndexName: projectMembersIndex,
 				KeyConditionExpression: '#project = :project',
 				ExpressionAttributeNames: {
 					'#project': 'projectMember__project',

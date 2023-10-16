@@ -7,6 +7,7 @@ import type { DbContext } from './DbContext.js'
 import { itemToSync, serialize, type SerializedSync } from './getSync.js'
 import { l } from './l.js'
 import { listProjects } from './listProjects.js'
+import { projectSyncProjectIndex, syncOwnerIndex } from './db.js'
 
 export const listSyncs =
 	(dbContext: DbContext) =>
@@ -59,7 +60,7 @@ const getSyncsByOwnerRole = async (
 	const { Items } = await db.send(
 		new QueryCommand({
 			TableName,
-			IndexName: 'syncOwner',
+			IndexName: syncOwnerIndex,
 			KeyConditionExpression: '#owner = :user',
 			ExpressionAttributeNames: {
 				'#id': 'id',
@@ -90,7 +91,7 @@ const getSyncsByProjectMembers = async (
 			db.send(
 				new QueryCommand({
 					TableName,
-					IndexName: 'projectSyncProject',
+					IndexName: projectSyncProjectIndex,
 					KeyConditionExpression: '#project = :project',
 					ExpressionAttributeNames: {
 						'#id': 'id',

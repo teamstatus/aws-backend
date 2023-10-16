@@ -5,17 +5,16 @@ import type { DbContext } from './persistence/DbContext'
 import { notifier } from './notifier'
 import { createTestDb } from './test/createTestDb'
 import { CoreEventType } from './CoreEventType'
-import { ensureUserIsMember, storeEvent } from './core.spec'
+import { storeEvent } from './test/storeEvent'
+import { ensureUserIsMember } from './test/ensureUserIsMember'
 import { ulid } from 'ulid'
 import { isNotAnError } from './test/isNotAnError'
 import { createStatus } from './persistence/createStatus'
-import type { UserAuthContext } from './auth'
-import Chance from 'chance'
 import { createOrganization } from './persistence/createOrganization'
 import { aString, arrayContaining, check, objectMatching } from 'tsmatchers'
 import { createProject } from './persistence/createProject'
 import { getStatus } from './persistence/getStatus'
-const chance = new Chance()
+import { randomUser, randomOrganization, randomProject } from './randomEntities'
 
 describe('status', async () => {
 	const { TableName, db } = testDb()
@@ -82,26 +81,3 @@ describe('status', async () => {
 		)
 	})
 })
-
-const randomUser = (): UserAuthContext => {
-	const email = chance.email()
-	return {
-		email,
-		sub: `@${email.split('@')[0]}`,
-	}
-}
-
-const randomOrganization = (): { id: string; name: string } => ({
-	id: `$${chance.word({ syllables: 5 })}`,
-	name: chance.company(),
-})
-
-const randomProject = (organization: {
-	id: string
-}): { id: string; name: string } => {
-	const projectId = chance.word({ syllables: 5 })
-	return {
-		id: `${organization.id}#${projectId}`,
-		name: `${projectId} project`,
-	}
-}

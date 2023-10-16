@@ -3,6 +3,7 @@ import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { InternalError, type ProblemDetail } from '../ProblemDetail.js'
 import { create, type UserAuthContext } from '../auth.js'
 import type { DbContext } from './DbContext.js'
+import { emailUserIndex } from './db.js'
 
 export const createToken =
 	({ db, TableName }: DbContext) =>
@@ -17,7 +18,7 @@ export const createToken =
 				new QueryCommand({
 					TableName,
 					Limit: 1,
-					IndexName: 'emailUser',
+					IndexName: emailUserIndex,
 					KeyConditionExpression: '#email = :email',
 					ExpressionAttributeNames: {
 						'#email': 'user__email',

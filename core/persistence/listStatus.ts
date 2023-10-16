@@ -12,6 +12,7 @@ import type { Status } from './createStatus.js'
 import { canReadProjectStatus } from './getProjectMember.js'
 import { getStatusReactions } from './getStatusReactions.js'
 import { l } from './l.js'
+import { projectStatusIndex } from './db.js'
 
 export const listStatus =
 	(dbContext: DbContext) =>
@@ -54,7 +55,7 @@ export const listStatus =
 		}
 		const args: QueryCommandInput = {
 			TableName,
-			IndexName: 'projectStatus',
+			IndexName: projectStatusIndex,
 			KeyConditionExpression: KeyConditionExpression.join(' AND '),
 			ExpressionAttributeNames: {
 				'#project': 'projectStatus__project',

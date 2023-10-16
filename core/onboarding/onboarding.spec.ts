@@ -4,14 +4,16 @@ import { testDb } from '../test/testDb'
 import type { DbContext } from '../persistence/DbContext'
 import { notifier } from '../notifier'
 import { createTestDb } from '../test/createTestDb'
-import type { UserAuthContext } from '../auth'
 import { arrayContaining, check, objectMatching } from 'tsmatchers'
 import { createProject } from '../persistence/createProject'
 import type { CoreEvent } from '../CoreEvent'
 import { CoreEventType } from '../CoreEventType'
 import { createOrganization } from '../persistence/createOrganization'
 import { onboarding } from './onboarding'
-import { ensureUserIsMember } from '../core.spec'
+import { ensureUserIsMember } from '../test/ensureUserIsMember'
+import { randomProfile, randomUser } from '../randomEntities'
+import { eventually } from '../test/eventually'
+import { isNotAnError } from '../test/isNotAnError'
 
 describe('Onboarding', async () => {
 	const { TableName, db } = testDb()
@@ -39,7 +41,6 @@ describe('Onboarding', async () => {
 				sub: '@coderbyheart',
 			},
 		)
-
 		await createProject(dbContext, notify)(
 			{
 				id: '$teamstatus#feedback',
@@ -52,29 +53,32 @@ describe('Onboarding', async () => {
 		)
 
 		onboarding(dbContext, notify, on)
-		const gray: UserAuthContext = {
-			email: 'gray@example.com',
-			sub: '@gray',
-		}
-		await createUser(
-			dbContext,
-			notify,
-		)({
-			id: '@gray',
-			name: 'Gray',
-			authContext: { email: 'gray@example.com' },
-		})
+		const grayUser = randomUser()
+		const gray = randomProfile(grayUser)
 
-		check(events).is(
-			arrayContaining(
-				objectMatching({
-					type: CoreEventType.PROJECT_MEMBER_CREATED,
-					project: '$teamstatus#feedback',
-					user: gray.sub,
-				}),
-			),
+		isNotAnError(
+			await createUser(
+				dbContext,
+				notify,
+			)({
+				id: gray.id,
+				name: gray.name,
+				authContext: gray,
+			}),
 		)
 
-		await ensureUserIsMember(dbContext, gray, `$teamstatus#feedback`)
+		eventually(async () => {
+			check(events).is(
+				arrayContaining(
+					objectMatching({
+						type: CoreEventType.PROJECT_MEMBER_CREATED,
+						project: '$teamstatus#feedback',
+						user: gray.id,
+					}),
+				),
+			)
+		})
+
+		await ensureUserIsMember(dbContext, grayUser, `$teamstatus#feedback`)
 	})
 })

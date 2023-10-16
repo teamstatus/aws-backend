@@ -7,6 +7,7 @@ import type { Project } from './createProject.js'
 import { isOrganizationMember } from './getOrganizationMember.js'
 import { itemToProject } from './getProject.js'
 import { l } from './l.js'
+import { projectMemberIndex } from './db.js'
 
 export const listOrganizationProjects =
 	(dbContext: DbContext) =>
@@ -27,7 +28,7 @@ export const listOrganizationProjects =
 		const { Items } = await db.send(
 			new QueryCommand({
 				TableName,
-				IndexName: 'projectMember',
+				IndexName: projectMemberIndex,
 				KeyConditionExpression: '#user = :user',
 				ExpressionAttributeNames: {
 					'#user': 'projectMember__user',
