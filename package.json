@@ -59,7 +59,7 @@
     "prettier": "3.1.0",
     "tsmatchers": "5.0.2",
     "tsx": "4.1.4",
-    "typescript": "5.2.2",
+    "typescript": "5.3.2",
     "ulid": "2.3.0",
     "yazl": "2.5.1"
   },
