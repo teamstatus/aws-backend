@@ -97,6 +97,6 @@
     "@nordicsemiconductor/from-env": "3.0.0",
     "ajv": "8.12.0",
     "jsonwebtoken": "9.0.2",
-    "mailparser": "3.6.6"
+    "mailparser": "3.6.7"
   }
 }
