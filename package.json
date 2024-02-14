@@ -54,7 +54,7 @@
     "commitlint": "18.6.1",
     "constructs": "10.3.0",
     "glob": "10.3.10",
-    "husky": "9.0.10",
+    "husky": "9.0.11",
     "lint-staged": "15.2.2",
     "prettier": "3.2.5",
     "tsmatchers": "5.0.2",
