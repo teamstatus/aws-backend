@@ -24,7 +24,7 @@
   "author": "Markus Tacker <m@coderbyheart.com> | coderbyheart.com",
   "license": "MIT",
   "devDependencies": {
-    "@aws-sdk/client-cloudformation": "3.525.0",
+    "@aws-sdk/client-cloudformation": "3.526.0",
     "@aws-sdk/client-dynamodb": "3.525.0",
     "@aws-sdk/client-iam": "3.525.0",
     "@aws-sdk/client-s3": "3.525.0",
