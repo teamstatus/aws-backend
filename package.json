@@ -51,7 +51,7 @@
     "chalk": "5.3.0",
     "chance": "1.1.11",
     "check-node-version": "4.2.1",
-    "commitlint": "19.2.2",
+    "commitlint": "19.3.0",
     "constructs": "10.3.0",
     "glob": "10.3.12",
     "husky": "9.0.11",
