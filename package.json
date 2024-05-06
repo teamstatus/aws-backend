@@ -33,7 +33,7 @@
     "@aws-sdk/client-ssm": "3.569.0",
     "@aws-sdk/s3-request-presigner": "3.569.0",
     "@aws-sdk/util-dynamodb": "3.569.0",
-    "@biomejs/biome": "1.7.2",
+    "@biomejs/biome": "1.7.3",
     "@commitlint/config-conventional": "19.2.2",
     "@nordicsemiconductor/cloudformation-helpers": "9.0.3",
     "@sinclair/typebox": "0.32.29",
