@@ -58,7 +58,7 @@
     "lint-staged": "15.2.2",
     "prettier": "3.2.5",
     "tsmatchers": "5.0.2",
-    "tsx": "4.9.4",
+    "tsx": "4.9.5",
     "typescript": "5.4.5",
     "ulid": "2.3.0",
     "yazl": "2.5.1"
