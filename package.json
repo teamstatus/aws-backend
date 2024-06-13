@@ -38,7 +38,7 @@
     "@nordicsemiconductor/cloudformation-helpers": "9.1.0",
     "@sinclair/typebox": "0.32.32",
     "@swc/cli": "0.3.12",
-    "@swc/core": "1.5.28",
+    "@swc/core": "1.5.29",
     "@types/aws-lambda": "8.10.138",
     "@types/chance": "1.1.6",
     "@types/glob": "8.1.0",
