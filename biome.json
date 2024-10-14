@@ -17,7 +17,7 @@
         "noExplicitAny": "warn",
         "noConsoleLog": "off"
       },
-      "nursery": {
+      "performance": {
         "noAccumulatingSpread": "off"
       }
     }

@@ -12,14 +12,16 @@ const ssm = new SSMClient({})
 
 const publicKeyPromise = getPublicKey({ ssm, stackName })
 
-export const handler = async (event: {
-	methodArn: string
-	cookies: string[]
-}): Promise<{
+type AuthorizerResult = {
 	principalId: string
 	policyDocument: PolicyDocument
 	context?: UserAuthContext
-}> => {
+}
+
+export const handler = async (event: {
+	methodArn: string
+	cookies: string[]
+}): Promise<AuthorizerResult> => {
 	console.log(JSON.stringify({ event }))
 
 	const [, token] =
@@ -29,7 +31,7 @@ export const handler = async (event: {
 
 	console.log(JSON.stringify({ token }))
 
-	const deny = {
+	const deny: AuthorizerResult = {
 		principalId: 'me',
 		policyDocument: {
 			Version: '2012-10-17',
@@ -57,7 +59,7 @@ export const handler = async (event: {
 		return deny
 	}
 
-	return {
+	return <AuthorizerResult>{
 		principalId: 'me',
 		policyDocument: {
 			Version: '2012-10-17',
