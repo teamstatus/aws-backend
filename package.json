@@ -39,7 +39,7 @@
     "@sinclair/typebox": "0.33.16",
     "@swc/cli": "0.4.0",
     "@swc/core": "1.7.35",
-    "@types/aws-lambda": "8.10.138",
+    "@types/aws-lambda": "8.10.145",
     "@types/chance": "1.1.6",
     "@types/glob": "8.1.0",
     "@types/jsonwebtoken": "^9.0.7",
