@@ -61,7 +61,7 @@
     "tsx": "4.19.1",
     "typescript": "5.6.3",
     "ulid": "2.3.0",
-    "yazl": "2.5.1"
+    "yazl": "3.1.0"
   },
   "lint-staged": {
     "*.{md,json,yaml,yml}": [
