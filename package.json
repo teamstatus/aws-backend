@@ -47,7 +47,7 @@
     "@types/yazl": "2.4.6",
     "aws-cdk": "2.1000.3",
     "aws-cdk-lib": "2.180.0",
-    "cdk": "2.1000.2",
+    "cdk": "2.1000.3",
     "chalk": "5.4.1",
     "chance": "1.1.12",
     "check-node-version": "4.2.1",
