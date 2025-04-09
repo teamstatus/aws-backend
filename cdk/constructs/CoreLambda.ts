@@ -3,15 +3,15 @@ import {
 	aws_iam as IAM,
 	aws_lambda as Lambda,
 	aws_logs as Logs,
-	Stack,
+	type Stack,
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import type { PackedLambda } from '../lambdas/packLambdaFromPath.js'
-import { readKeyPolicy } from '../teamstatus-backend.js'
-import { LambdaSource } from './LambdaSource.js'
-import { Persistence } from './Persistence.js'
-import type { WebsocketAPI } from './WebsocketAPI.js'
-import type { Events } from './Events.js'
+import type { PackedLambda } from '../lambdas/packLambdaFromPath.ts'
+import { readKeyPolicy } from '../teamstatus-backend.ts'
+import { LambdaSource } from './LambdaSource.ts'
+import type { Persistence } from './Persistence.ts'
+import type { WebsocketAPI } from './WebsocketAPI.ts'
+import type { Events } from './Events.ts'
 
 export class CoreLambda extends Construct {
 	public readonly lambda: Lambda.Function

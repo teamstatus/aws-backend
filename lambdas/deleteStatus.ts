@@ -1,10 +1,10 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { fromEnv } from '@nordicsemiconductor/from-env'
-import { StatusCode } from '../core/StatusCode.js'
-import { notifier } from '../core/notifier.js'
-import { deleteStatus } from '../core/persistence/deleteStatus.js'
-import { userAuthRequestPipe } from './requestPipe.js'
-import { verifyOlderULID } from './verifyULID.js'
+import { StatusCode } from '../core/StatusCode.ts'
+import { notifier } from '../core/notifier.ts'
+import { deleteStatus } from '../core/persistence/deleteStatus.ts'
+import { userAuthRequestPipe } from './requestPipe.ts'
+import { verifyOlderULID } from './verifyULID.ts'
 
 const { TableName } = fromEnv({
 	TableName: 'TABLE_NAME',
@@ -24,7 +24,7 @@ const del = deleteStatus(
 export const handler = userAuthRequestPipe(
 	(event) => ({
 		id: verifyOlderULID(event.pathParameters?.statusId as string),
-		version: parseInt(event.headers['if-match'] ?? '0', 10),
+		version: Number.parseInt(event.headers['if-match'] ?? '0', 10),
 	}),
 	async ({ id, version }, authContext) => del(id, version, authContext),
 	() => StatusCode.ACCEPTED,

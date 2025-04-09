@@ -1,11 +1,11 @@
-import { spawn } from 'child_process'
-import { createWriteStream } from 'fs'
-import { copyFile, mkdir, readFile, rm, writeFile } from 'fs/promises'
+import { spawn } from 'node:child_process'
+import { createWriteStream } from 'node:fs'
+import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { glob } from 'glob'
-import path from 'path'
+import path from 'node:path'
 import { ZipFile } from 'yazl'
-import { checkSumOfFiles } from './checksumOfFiles.js'
-import { checksum } from './checksum.js'
+import { checkSumOfFiles } from './checksumOfFiles.ts'
+import { checksum } from './checksum.ts'
 
 export type PackedLayer = { layerZipFile: string; hash: string }
 
@@ -33,21 +33,25 @@ export const packLayer = async ({
 
 	await mkdir(nodejsDir, { recursive: true })
 
-	const depsToBeInstalled = dependencies.reduce((resolved, dep) => {
-		const resolvedDependency = deps[dep] ?? devDeps[dep]
-		if (resolvedDependency === undefined)
-			throw new Error(
-				`Could not resolve dependency "${dep}" in ${packageJsonFile}!`,
-			)
-		return {
-			...resolved,
-			[dep]: resolvedDependency,
-		}
-	}, {} as Record<string, string>)
+	const depsToBeInstalled = dependencies.reduce(
+		(resolved, dep) => {
+			const resolvedDependency = deps[dep] ?? devDeps[dep]
+			if (resolvedDependency === undefined) {
+				throw new Error(
+					`Could not resolve dependency "${dep}" in ${packageJsonFile}!`,
+				)
+			}
+			return {
+				...resolved,
+				[dep]: resolvedDependency,
+			}
+		},
+		{} as Record<string, string>,
+	)
 
-	const packageJSON = path.join(nodejsDir, 'package.json')
+	const packageJson = path.join(nodejsDir, 'package.json')
 	await writeFile(
-		packageJSON,
+		packageJson,
 		JSON.stringify({
 			dependencies: depsToBeInstalled,
 		}),
@@ -82,9 +86,9 @@ export const packLayer = async ({
 		nodir: true,
 	})
 	const zipfile = new ZipFile()
-	filesToAdd.forEach((f) => {
+	for (const f of filesToAdd) {
 		zipfile.addFile(path.join(layerDir, f), f)
-	})
+	}
 
 	const zipFileName = await new Promise<string>((resolve) => {
 		const zipFileName = path.join(process.cwd(), 'dist', 'layers', `${id}.zip`)
@@ -101,7 +105,7 @@ export const packLayer = async ({
 		hash: checksum(
 			[
 				...dependencies,
-				await checkSumOfFiles([packageJSON, packageLockJsonFile]),
+				await checkSumOfFiles([packageJson, packageLockJsonFile]),
 			].join('|'),
 		),
 	}

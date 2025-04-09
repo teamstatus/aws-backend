@@ -1,9 +1,9 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { fromEnv } from '@nordicsemiconductor/from-env'
-import { StatusCode } from '../core/StatusCode.js'
-import { notifier } from '../core/notifier.js'
-import { deleteProject } from '../core/persistence/deleteProject.js'
-import { userAuthRequestPipe } from './requestPipe.js'
+import { StatusCode } from '../core/StatusCode.ts'
+import { notifier } from '../core/notifier.ts'
+import { deleteProject } from '../core/persistence/deleteProject.ts'
+import { userAuthRequestPipe } from './requestPipe.ts'
 
 const { TableName } = fromEnv({
 	TableName: 'TABLE_NAME',
@@ -23,7 +23,7 @@ const del = deleteProject(
 export const handler = userAuthRequestPipe(
 	(event) => ({
 		id: event.pathParameters?.id as string,
-		version: parseInt(event.headers['if-match'] ?? '0', 10),
+		version: Number.parseInt(event.headers['if-match'] ?? '0', 10),
 	}),
 	async ({ id, version }, authContext) => del(id, version, authContext),
 	() => StatusCode.ACCEPTED,

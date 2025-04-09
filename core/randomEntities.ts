@@ -1,6 +1,6 @@
-import type { UserAuthContext } from './auth'
+import type { UserAuthContext } from './auth.ts'
 import Chance from 'chance'
-import type { User } from './persistence/createUser'
+import type { User } from './persistence/createUser.ts'
 import { randomUUID } from 'node:crypto'
 export const chance = new Chance()
 

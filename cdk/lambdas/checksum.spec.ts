@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, test as it } from 'node:test'
-import { checksum } from './checksum.js'
+import { checksum } from './checksum.ts'
 
 describe('checksum()', () => {
 	it('should calculate a checksum', () =>

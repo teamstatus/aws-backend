@@ -2,19 +2,19 @@ import {
 	ConditionalCheckFailedException,
 	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb'
-import type { CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import { CoreEventType } from '../CoreEventType.ts'
 import {
 	BadRequestError,
 	ConflictError,
 	InternalError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
-import { isOrganizationOwner } from './getOrganizationMember.js'
-import type { Organization } from './createOrganization.js'
+} from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
+import { isOrganizationOwner } from './getOrganizationMember.ts'
+import type { Organization } from './createOrganization.ts'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 
 export type OrganizationUpdatedEvent = CoreEvent & {
@@ -73,8 +73,9 @@ export const updateOrganization =
 					ReturnValues: 'ALL_NEW',
 				}),
 			)
-			if (Attributes === undefined)
+			if (Attributes === undefined) {
 				return { error: ConflictError('Update failed.') }
+			}
 			const updated = unmarshall(Attributes)
 			const event: OrganizationUpdatedEvent = {
 				type: CoreEventType.ORGANIZATION_UPDATED,
@@ -86,11 +87,11 @@ export const updateOrganization =
 			await notify(event)
 			return {}
 		} catch (error) {
-			if ((error as Error).name === ConditionalCheckFailedException.name)
+			if ((error as Error).name === ConditionalCheckFailedException.name) {
 				return {
 					error: ConflictError(`Failed to update organization.`),
 				}
-			console.error(error)
+			}
 			return { error: InternalError() }
 		}
 	}

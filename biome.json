@@ -8,17 +8,23 @@
     "rules": {
       "all": true,
       "style": {
-        "noUnusedTemplateLiteral": "off"
+        "noUnusedTemplateLiteral": "off",
+        "useNamingConvention": "off"
       },
       "correctness": {
-        "noUnreachableSuper": "off"
+        "noUnreachableSuper": "off",
+        "noNodejsModules": "off"
       },
       "suspicious": {
         "noExplicitAny": "warn",
-        "noConsoleLog": "off"
+        "noConsoleLog": "off",
+        "useAwait": "warn"
       },
       "performance": {
         "noAccumulatingSpread": "off"
+      },
+      "complexity": {
+        "noVoid": "off"
       }
     }
   },

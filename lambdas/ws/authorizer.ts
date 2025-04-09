@@ -1,8 +1,8 @@
 import { SSMClient } from '@aws-sdk/client-ssm'
 import { fromEnv } from '@nordicsemiconductor/from-env'
 import type { PolicyDocument } from 'aws-lambda'
-import { verifyToken, type UserAuthContext } from '../../core/auth.js'
-import { getPublicKey } from '../signingKeyPromise.js'
+import { verifyToken, type UserAuthContext } from '../../core/auth.ts'
+import { getPublicKey } from '../signingKeyPromise.ts'
 
 const { stackName } = fromEnv({
 	stackName: 'STACK_NAME',
@@ -22,14 +22,10 @@ export const handler = async (event: {
 	methodArn: string
 	cookies: string[]
 }): Promise<AuthorizerResult> => {
-	console.log(JSON.stringify({ event }))
-
 	const [, token] =
 		event.cookies
 			?.map((s) => s.split('='))
 			.find(([name]) => name === 'token') ?? []
-
-	console.log(JSON.stringify({ token }))
 
 	const deny: AuthorizerResult = {
 		principalId: 'me',
@@ -46,7 +42,6 @@ export const handler = async (event: {
 	}
 
 	if (token === undefined) {
-		console.log(`No token found.`)
 		return deny
 	}
 
@@ -55,7 +50,6 @@ export const handler = async (event: {
 	})(token)
 
 	if (!('sub' in verified)) {
-		console.log(`Sub required.`)
 		return deny
 	}
 

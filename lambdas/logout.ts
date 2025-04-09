@@ -3,9 +3,9 @@ import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
-import { StatusCode } from '../core/StatusCode.js'
-import { result } from './response.js'
-import { expiredTokenCooked } from './tokenCookie.js'
+import { StatusCode } from '../core/StatusCode.ts'
+import { result } from './response.ts'
+import { expiredTokenCooked } from './tokenCookie.ts'
 
 const { wsURL } = fromEnv({
 	wsURL: 'WS_URL',

@@ -1,18 +1,18 @@
 import {
-	AttributeValue,
+	type AttributeValue,
 	QueryCommand,
 	type QueryCommandInput,
 } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { ulid } from 'ulid'
-import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { DbContext } from './DbContext.js'
-import type { Status } from './createStatus.js'
-import { canReadProjectStatus } from './getProjectMember.js'
-import { getStatusReactions } from './getStatusReactions.js'
-import { l } from './l.js'
-import { projectStatusIndex } from './db.js'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { DbContext } from './DbContext.ts'
+import type { Status } from './createStatus.ts'
+import { canReadProjectStatus } from './getProjectMember.ts'
+import { getStatusReactions } from './getStatusReactions.ts'
+import { l } from './l.ts'
+import { projectStatusIndex } from './db.ts'
 
 export const listStatus =
 	(dbContext: DbContext) =>
@@ -72,14 +72,14 @@ export const listStatus =
 							':inclusiveStartDate': {
 								S: ulid(inclusiveStartDate.getTime()),
 							},
-					  }
+						}
 					: {}),
 				...(inclusiveEndDate !== undefined
 					? {
 							':inclusiveEndDate': {
 								S: ulid(inclusiveEndDate.getTime()),
 							},
-					  }
+						}
 					: {}),
 			},
 			ScanIndexForward: false,
@@ -98,7 +98,7 @@ export const listStatus =
 					? undefined
 					: Buffer.from(JSON.stringify(res.LastEvaluatedKey), 'utf-8').toString(
 							'base64url',
-					  ),
+						),
 		}
 	}
 

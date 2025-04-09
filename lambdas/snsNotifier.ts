@@ -1,16 +1,18 @@
-import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
-import type { onFn } from '../core/notifier'
-import { CoreEventType } from '../core/CoreEventType.js'
-import type { CoreEvent } from '../core/CoreEvent'
-import type { UserCreatedEvent } from '../core/persistence/createUser'
-import type { OrganizationCreatedEvent } from '../core/persistence/createOrganization'
-import type { ProjectCreatedEvent } from '../core/persistence/createProject'
+import { type SNSClient, PublishCommand } from '@aws-sdk/client-sns'
+import type { onFn } from '../core/notifier.ts'
+import { CoreEventType } from '../core/CoreEventType.ts'
+import type { CoreEvent } from '../core/CoreEvent.tsx'
+import type { UserCreatedEvent } from '../core/persistence/createUser.ts'
+import type { OrganizationCreatedEvent } from '../core/persistence/createOrganization.ts'
+import type { ProjectCreatedEvent } from '../core/persistence/createProject.ts'
 
 export const snsNotifier =
 	({ sns, topicArn }: { sns: SNSClient; topicArn: string }) =>
 	({ on }: { on: onFn }): void => {
 		on('*', async (event, replay) => {
-			if (replay) return
+			if (replay) {
+				return
+			}
 			if (
 				isUserCreatedEvent(event) ||
 				isOrganizationCreatedEvent(event) ||
@@ -33,7 +35,6 @@ export const snsNotifier =
 						Message: JSON.stringify(event),
 					}),
 				)
-				console.log({ snsNotifier: JSON.stringify(event) })
 			}
 		})
 	}

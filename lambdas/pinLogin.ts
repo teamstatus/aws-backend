@@ -5,13 +5,13 @@ import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
-import { BadRequestError } from '../core/ProblemDetail.js'
-import { StatusCode } from '../core/StatusCode.js'
-import { notifier } from '../core/notifier.js'
-import { emailPINLogin } from '../core/persistence/emailPINLogin.js'
-import { problem, result } from './response.js'
-import { getPrivateKey } from './signingKeyPromise.js'
-import { tokenCookie } from './tokenCookie.js'
+import { BadRequestError } from '../core/ProblemDetail.ts'
+import { StatusCode } from '../core/StatusCode.ts'
+import { notifier } from '../core/notifier.ts'
+import { emailPINLogin } from '../core/persistence/emailPINLogin.ts'
+import { problem, result } from './response.ts'
+import { getPrivateKey } from './signingKeyPromise.ts'
+import { tokenCookie } from './tokenCookie.ts'
 
 const { TableName, stackName, wsURL } = fromEnv({
 	TableName: 'TABLE_NAME',
@@ -56,7 +56,7 @@ export const handler = async (
 				cookieProps: [`Domain=${new URL(wsURL).hostname}`],
 			}),
 		])
-	} catch (error) {
+	} catch (_error) {
 		return problem(event)(BadRequestError('Failed to parse JSON.'))
 	}
 }

@@ -1,7 +1,7 @@
-import { AttributeValue, ScanCommand } from '@aws-sdk/client-dynamodb'
-import type { User } from './createUser'
-import { itemToUser } from './getUser'
-import type { DbContext } from './DbContext'
+import { type AttributeValue, ScanCommand } from '@aws-sdk/client-dynamodb'
+import type { User } from './createUser.ts'
+import { itemToUser } from './getUser.ts'
+import type { DbContext } from './DbContext.tsx'
 
 export const getAllUsers =
 	({ db, TableName }: DbContext) =>
@@ -28,6 +28,8 @@ export const getAllUsers =
 			...items,
 			...(Items ?? []).map((item) => itemToUser(item)),
 		]
-		if (LastEvaluatedKey === undefined) return newItems
+		if (LastEvaluatedKey === undefined) {
+			return newItems
+		}
 		return getAllUsers({ db, TableName })(newItems, LastEvaluatedKey)
 	}

@@ -1,17 +1,17 @@
 import { GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import type { CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import { CoreEventType } from '../CoreEventType.ts'
 import {
 	BadRequestError,
 	NotFoundError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
-import { canWriteReaction } from './getProjectMember.js'
-import { l } from './l.js'
+} from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
+import { canWriteReaction } from './getProjectMember.ts'
+import { l } from './l.ts'
 
 export type Reaction =
 	| {
@@ -57,10 +57,11 @@ export const createReaction =
 			}),
 		)
 
-		if (Item === undefined)
+		if (Item === undefined) {
 			return {
 				error: NotFoundError(`Status '${statusId}' not found!`),
 			}
+		}
 
 		const status = unmarshall(Item)
 

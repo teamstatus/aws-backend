@@ -2,16 +2,16 @@ import {
 	ConditionalCheckFailedException,
 	DeleteItemCommand,
 } from '@aws-sdk/client-dynamodb'
-import type { CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import { CoreEventType } from '../CoreEventType.ts'
 import {
 	ConflictError,
 	InternalError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
+} from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
 
 type ReactionDeletedEvent = CoreEvent & {
 	type: CoreEventType.REACTION_DELETED
@@ -57,11 +57,11 @@ export const deleteReaction =
 			await notify(event)
 			return { deleted: true }
 		} catch (error) {
-			if ((error as Error).name === ConditionalCheckFailedException.name)
+			if ((error as Error).name === ConditionalCheckFailedException.name) {
 				return {
 					error: ConflictError(`Failed to delete reaction.`),
 				}
-			console.error(error)
+			}
 			return { error: InternalError() }
 		}
 	}

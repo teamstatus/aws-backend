@@ -1,8 +1,8 @@
 import { SSMClient } from '@aws-sdk/client-ssm'
 import { fromEnv } from '@nordicsemiconductor/from-env'
 import type { APIGatewayProxyEventV2 } from 'aws-lambda'
-import { verifyToken } from '../core/auth.js'
-import { getPublicKey } from './signingKeyPromise.js'
+import { verifyToken } from '../core/auth.ts'
+import { getPublicKey } from './signingKeyPromise.ts'
 
 const { stackName } = fromEnv({
 	stackName: 'STACK_NAME',
@@ -20,17 +20,12 @@ export const handler = async (
 	isAuthorized: boolean
 	context: Record<string, any>
 }> => {
-	console.log(JSON.stringify({ event }))
-
 	const [, token] =
 		event.cookies
 			?.map((s) => s.split('='))
 			.find(([name]) => name === 'token') ?? []
 
-	console.log(JSON.stringify({ token }))
-
 	if (token === undefined) {
-		console.log(`No token found.`)
 		return { isAuthorized: false, context: {} }
 	}
 
@@ -39,7 +34,6 @@ export const handler = async (
 	})(token)
 
 	if (requireSub && !('sub' in verified)) {
-		console.log(`Sub required.`)
 		return { isAuthorized: false, context: {} }
 	}
 

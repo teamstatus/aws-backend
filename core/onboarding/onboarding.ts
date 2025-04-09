@@ -1,9 +1,9 @@
-import { type UserCreatedEvent } from '../persistence/createUser.js'
-import type { DbContext } from '../persistence/DbContext.js'
-import { type Notify, type onFn } from '../notifier.js'
-import { CoreEventType } from '../CoreEventType.js'
-import { createProjectMember } from '../persistence/createProjectMember.js'
-import { Role } from '../Role.js'
+import type { UserCreatedEvent } from '../persistence/createUser.ts'
+import type { DbContext } from '../persistence/DbContext.ts'
+import type { Notify, onFn } from '../notifier.ts'
+import { CoreEventType } from '../CoreEventType.ts'
+import { createProjectMember } from '../persistence/createProjectMember.ts'
+import { Role } from '../Role.ts'
 
 export const onboarding = (dbContext: DbContext, notify: Notify, on: onFn) => {
 	const create = createProjectMember(dbContext, notify)

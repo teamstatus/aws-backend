@@ -1,4 +1,10 @@
-import { App, CfnOutput, Duration, aws_iam as IAM, Stack } from 'aws-cdk-lib'
+import {
+	type App,
+	CfnOutput,
+	Duration,
+	aws_iam as IAM,
+	Stack,
+} from 'aws-cdk-lib'
 
 export class CIStack extends Stack {
 	public constructor(
@@ -17,7 +23,7 @@ export class CIStack extends Stack {
 	) {
 		super(parent, name)
 
-		const gitHubOIDC = IAM.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
+		const gitHubOidc = IAM.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
 			this,
 			'gitHubOICDProvider',
 			gitHubOICDProviderArn,
@@ -26,7 +32,7 @@ export class CIStack extends Stack {
 		const ghRole = new IAM.Role(this, 'ghRole', {
 			roleName: `teamstatus-backend-github-actions`,
 			assumedBy: new IAM.WebIdentityPrincipal(
-				gitHubOIDC.openIdConnectProviderArn,
+				gitHubOidc.openIdConnectProviderArn,
 				{
 					StringEquals: {
 						'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',

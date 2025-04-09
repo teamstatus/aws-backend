@@ -1,15 +1,15 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import type { ProblemDetail } from '../ProblemDetail.js'
-import { Role } from '../Role.js'
-import type { DbContext } from './DbContext.js'
-import { l } from './l.js'
-import { parseProjectId } from '../ids.js'
+import type { ProblemDetail } from '../ProblemDetail.ts'
+import { Role } from '../Role.ts'
+import type { DbContext } from './DbContext.ts'
+import { l } from './l.ts'
+import { parseProjectId } from '../ids.ts'
 import {
 	isOrganizationMember,
 	isOrganizationOwner,
-} from './getOrganizationMember.js'
-import { projectMemberIndex } from './db.js'
+} from './getOrganizationMember.ts'
+import { projectMemberIndex } from './db.ts'
 
 type MemberInfo = {
 	role: Role
@@ -45,7 +45,9 @@ export const getProjectMember =
 		)
 
 		const memberInfo = res.Items?.[0]
-		if (memberInfo === undefined) return { member: null }
+		if (memberInfo === undefined) {
+			return { member: null }
+		}
 		const info = unmarshall(memberInfo)
 		return {
 			member: {
@@ -60,7 +62,9 @@ const getMemberRole =
 	(dbContext: DbContext) =>
 	async (projectId: string, userId: string): Promise<Role | null> => {
 		const maybeMember = await getProjectMember(dbContext)(projectId, userId)
-		if ('error' in maybeMember) return null
+		if ('error' in maybeMember) {
+			return null
+		}
 		const { member } = maybeMember
 		return member?.role ?? null
 	}
@@ -69,7 +73,9 @@ export const canWriteStatus =
 	(dbContext: DbContext) =>
 	async (projectId: string, userId: string): Promise<boolean> => {
 		const role = await getMemberRole(dbContext)(projectId, userId)
-		if (role === null) return false
+		if (role === null) {
+			return false
+		}
 		return [Role.OWNER, Role.MEMBER].includes(role)
 	}
 
@@ -77,7 +83,9 @@ export const canWriteReaction =
 	(dbContext: DbContext) =>
 	async (projectId: string, userId: string): Promise<boolean> => {
 		const role = await getMemberRole(dbContext)(projectId, userId)
-		if (role === null) return false
+		if (role === null) {
+			return false
+		}
 		return [Role.OWNER, Role.MEMBER, Role.WATCHER].includes(role)
 	}
 
@@ -90,10 +98,14 @@ export const canReadProjectStatus =
 			return false
 		}
 		// Organization members can read project status
-		if (await isOrganizationMember(dbContext)(organization, userId)) return true
+		if (await isOrganizationMember(dbContext)(organization, userId)) {
+			return true
+		}
 
 		const role = await getMemberRole(dbContext)(projectId, userId)
-		if (role === null) return false
+		if (role === null) {
+			return false
+		}
 		return [Role.OWNER, Role.MEMBER, Role.WATCHER].includes(role)
 	}
 
@@ -106,9 +118,13 @@ export const canUpdateProject =
 			return false
 		}
 		// Organization owners can update projects
-		if (await isOrganizationOwner(dbContext)(organization, userId)) return true
+		if (await isOrganizationOwner(dbContext)(organization, userId)) {
+			return true
+		}
 
 		const role = await getMemberRole(dbContext)(projectId, userId)
-		if (role === null) return false
+		if (role === null) {
+			return false
+		}
 		return [Role.OWNER].includes(role)
 	}

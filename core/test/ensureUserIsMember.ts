@@ -1,10 +1,10 @@
 import { arrayContaining, check, objectMatching } from 'tsmatchers'
-import { type UserAuthContext } from '../auth.js'
-import type { DbContext } from '../persistence/DbContext.js'
-import { type Project } from '../persistence/createProject.js'
-import { listProjects } from '../persistence/listProjects.js'
-import { eventually } from './eventually.js'
-import { l } from '../persistence/l.js'
+import type { UserAuthContext } from '../auth.ts'
+import type { DbContext } from '../persistence/DbContext.ts'
+import type { Project } from '../persistence/createProject.ts'
+import { listProjects } from '../persistence/listProjects.ts'
+import { eventually } from './eventually.ts'
+import { l } from '../persistence/l.ts'
 
 export const ensureUserIsMember = async (
 	dbContext: DbContext,

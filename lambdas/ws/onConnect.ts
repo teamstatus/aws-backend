@@ -13,8 +13,6 @@ export const handler = async (event: {
 	stage: string
 	params: URLSearchParams
 }): Promise<{ statusCode: number }> => {
-	console.log(JSON.stringify({ event }))
-
 	await db.send(
 		new PutItemCommand({
 			TableName,

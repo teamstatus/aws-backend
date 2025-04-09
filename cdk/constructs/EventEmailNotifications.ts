@@ -5,9 +5,9 @@ import {
 	aws_logs as Logs,
 	aws_iam as IAM,
 } from 'aws-cdk-lib'
-import type { BackendLambdas } from '../lambdas/packBackendLambdas'
-import { LambdaSource } from './LambdaSource.js'
-import type { Events } from './Events'
+import type { BackendLambdas } from '../lambdas/packBackendLambdas.ts'
+import { LambdaSource } from './LambdaSource.ts'
+import type { Events } from './Events.tsx'
 
 export class EventEmailNotifications extends Construct {
 	constructor(

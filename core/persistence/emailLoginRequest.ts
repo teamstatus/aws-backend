@@ -2,16 +2,16 @@ import {
 	ConditionalCheckFailedException,
 	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb'
-import type { CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import { CoreEventType } from '../CoreEventType.ts'
 import {
 	ConflictError,
 	InternalError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
-import { generatePIN as randomPIN } from '../generatePIN.js'
+} from '../ProblemDetail.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
+import { generatePIN as randomPin } from '../generatePIN.ts'
 
 export type EmailLoginRequestedEvent = CoreEvent & {
 	type: CoreEventType.EMAIL_LOGIN_REQUESTED
@@ -24,7 +24,7 @@ export type EmailLoginRequest = {
 }
 
 export const emailLoginRequest =
-	(dbContext: DbContext, notify: Notify, generatePIN?: () => string) =>
+	(dbContext: DbContext, notify: Notify, generatePin?: () => string) =>
 	async ({
 		email,
 	}: {
@@ -34,7 +34,7 @@ export const emailLoginRequest =
 	> => {
 		try {
 			const { db, TableName } = dbContext
-			const pin = (generatePIN ?? randomPIN)()
+			const pin = (generatePin ?? randomPin)()
 			// Expires in 5 Minutes
 			const expires = new Date(Date.now() + 5 * 60 * 1000)
 			// Rerequest after 1 Minute
@@ -88,11 +88,11 @@ export const emailLoginRequest =
 			await notify(event)
 			return { loginRequest, pin }
 		} catch (error) {
-			if ((error as Error).name === ConditionalCheckFailedException.name)
+			if ((error as Error).name === ConditionalCheckFailedException.name) {
 				return {
 					error: ConflictError(`Login requests for '${email}' already exists.`),
 				}
-			console.error(error)
+			}
 			return { error: InternalError() }
 		}
 	}

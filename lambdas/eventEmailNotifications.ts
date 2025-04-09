@@ -6,8 +6,6 @@ const fromEmail = process.env.FROM_EMAIL ?? 'notification@teamstatus.space'
 const adminEmail = process.env.ADMIN_EMAIL ?? 'm@coderbyheart.com'
 
 export const handler = async ({ Records }: SNSEvent): Promise<void> => {
-	console.log(JSON.stringify({ Records }))
-
 	for (const { Sns } of Records) {
 		const event = JSON.parse(Sns.Message)
 		await ses.send(
@@ -25,7 +23,7 @@ export const handler = async ({ Records }: SNSEvent): Promise<void> => {
 					},
 					Subject: {
 						Data: `[teamstatus.space] › ${
-							Sns.MessageAttributes['type']?.Value ?? 'Unknown event'
+							Sns.MessageAttributes.type?.Value ?? 'Unknown event'
 						}`,
 					},
 				},

@@ -1,11 +1,11 @@
 import { BatchGetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import type { ProblemDetail } from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { DbContext } from './DbContext.js'
-import type { Organization } from './createOrganization'
-import { l } from './l.js'
-import { organizationMemberIndex } from './db.js'
+import type { ProblemDetail } from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { DbContext } from './DbContext.ts'
+import type { Organization } from './createOrganization.ts'
+import { l } from './l.ts'
+import { organizationMemberIndex } from './db.ts'
 
 export const listOrganizations =
 	(dbContext: DbContext) =>
@@ -30,7 +30,9 @@ export const listOrganizations =
 			}),
 		)
 
-		if (Items === undefined || Items.length === 0) return { organizations: [] }
+		if (Items === undefined || Items.length === 0) {
+			return { organizations: [] }
+		}
 
 		const { Responses } = await db.send(
 			new BatchGetItemCommand({

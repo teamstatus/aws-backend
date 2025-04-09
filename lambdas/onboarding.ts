@@ -2,9 +2,9 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { SNSClient } from '@aws-sdk/client-sns'
 import { fromEnv } from '@nordicsemiconductor/from-env'
 import type { SNSEvent } from 'aws-lambda'
-import { notifier } from '../core/notifier.js'
-import { onboarding } from '../core/onboarding/onboarding.js'
-import { snsNotifier } from './snsNotifier.js'
+import { notifier } from '../core/notifier.ts'
+import { onboarding } from '../core/onboarding/onboarding.ts'
+import { snsNotifier } from './snsNotifier.ts'
 
 const { TableName, topicArn } = fromEnv({
 	TableName: 'TABLE_NAME',
@@ -23,8 +23,6 @@ snsNotifier({
 onboarding({ db, TableName }, notify, on)
 
 export const handler = async ({ Records }: SNSEvent): Promise<void> => {
-	console.log(JSON.stringify({ Records }))
-
 	for (const { Sns } of Records) {
 		const event = JSON.parse(Sns.Message)
 		await notify(

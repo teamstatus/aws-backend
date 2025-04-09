@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, test as it } from 'node:test'
-import { corsHeaders } from './corsHeaders.js'
+import { corsHeaders } from './corsHeaders.ts'
 
 describe('corsHeaders()', () => {
 	it('should send the correct headers', () =>

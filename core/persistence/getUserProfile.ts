@@ -1,7 +1,7 @@
-import { AttributeValue, GetItemCommand } from '@aws-sdk/client-dynamodb'
-import { NotFoundError, type ProblemDetail } from '../ProblemDetail.js'
-import type { DbContext } from './DbContext.js'
-import type { User } from './createUser.js'
+import { type AttributeValue, GetItemCommand } from '@aws-sdk/client-dynamodb'
+import { NotFoundError, type ProblemDetail } from '../ProblemDetail.ts'
+import type { DbContext } from './DbContext.ts'
+import type { User } from './createUser.ts'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 
 type UserProfile = Pick<User, 'id' | 'name' | 'pronouns'>
@@ -30,10 +30,11 @@ export const getUserProfile =
 			}),
 		)
 
-		if (Item === undefined)
+		if (Item === undefined) {
 			return {
 				error: NotFoundError(`User ${id} not found!`),
 			}
+		}
 
 		return {
 			user: await itemToUserProfile()(Item),
@@ -41,7 +42,8 @@ export const getUserProfile =
 	}
 
 export const itemToUserProfile =
-	() => async (item: Record<string, AttributeValue>): Promise<UserProfile> => {
+	() =>
+	(item: Record<string, AttributeValue>): UserProfile => {
 		const d = unmarshall(item)
 		return {
 			id: d.id,

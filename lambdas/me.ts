@@ -1,7 +1,7 @@
 import { fromEnv } from '@nordicsemiconductor/from-env'
-import type { UserAuthContext } from '../core/auth.js'
-import { emailAuthRequestPipe } from './requestPipe.js'
-import { getUser } from '../core/persistence/getUser.js'
+import type { UserAuthContext } from '../core/auth.ts'
+import { emailAuthRequestPipe } from './requestPipe.ts'
+import { getUser } from '../core/persistence/getUser.ts'
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 
 const { TableName } = fromEnv({
@@ -18,12 +18,13 @@ const get = getUser({
 export const handler = emailAuthRequestPipe(
 	() => ({}),
 	async (_, authContext) => {
-		if ((authContext as UserAuthContext).sub === undefined)
+		if ((authContext as UserAuthContext).sub === undefined) {
 			return {
 				user: {
 					email: authContext.email,
 				},
 			}
+		}
 
 		return await get(authContext as UserAuthContext)
 	},

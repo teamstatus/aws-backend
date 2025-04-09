@@ -1,6 +1,6 @@
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
-import { packLambda } from './packLambda.js'
+import { packLambda } from './packLambda.ts'
 export type PackedLambda = {
 	id: string
 	zipFile: string

@@ -5,21 +5,21 @@ import {
 	aws_lambda as Lambda,
 	Stack,
 } from 'aws-cdk-lib'
-import { Construct } from 'constructs'
-import { LambdaSource } from './constructs/LambdaSource.js'
-import { Persistence } from './constructs/Persistence.js'
-import { RESTAPI } from './constructs/RESTAPI.js'
-import { WebsocketAPI } from './constructs/WebsocketAPI.js'
+import type { Construct } from 'constructs'
+import { LambdaSource } from './constructs/LambdaSource.ts'
+import { Persistence } from './constructs/Persistence.ts'
+import { RESTAPI } from './constructs/RESTAPI.ts'
+import { WebsocketAPI } from './constructs/WebsocketAPI.ts'
 import {
 	packBackendLambdas,
 	type BackendLambdas,
-} from './lambdas/packBackendLambdas.js'
-import type { PackedLayer } from './lambdas/packLayer.js'
-import { packLayer } from './lambdas/packLayer.js'
-import { EmailReceiving } from './constructs/EmailReceiving.js'
-import { Events } from './constructs/Events.js'
-import { EventEmailNotifications } from './constructs/EventEmailNotifications.js'
-import { Onboarding } from './constructs/Onboarding.js'
+} from './lambdas/packBackendLambdas.ts'
+import type { PackedLayer } from './lambdas/packLayer.ts'
+import { packLayer } from './lambdas/packLayer.ts'
+import { EmailReceiving } from './constructs/EmailReceiving.ts'
+import { Events } from './constructs/Events.ts'
+import { EventEmailNotifications } from './constructs/EventEmailNotifications.ts'
+import { Onboarding } from './constructs/Onboarding.ts'
 
 export const readKeyPolicy = (
 	stack: Stack,

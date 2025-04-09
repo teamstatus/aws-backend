@@ -4,13 +4,13 @@ import {
 	BadRequestError,
 	NotFoundError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
-import { createProjectMember } from './createProjectMember.js'
-import { l } from './l.js'
-import { createInvitationId } from './inviteToProject.js'
+} from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
+import { createProjectMember } from './createProjectMember.ts'
+import { l } from './l.ts'
+import { createInvitationId } from './inviteToProject.ts'
 
 export const acceptProjectInvitation =
 	(dbContext: DbContext, notify: Notify) =>
@@ -35,10 +35,11 @@ export const acceptProjectInvitation =
 			}),
 		)
 
-		if (Item === undefined)
+		if (Item === undefined) {
 			return {
 				error: NotFoundError(`Invitation '${id}' not found!`),
 			}
+		}
 
 		const invitation = unmarshall(Item)
 

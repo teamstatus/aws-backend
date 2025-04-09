@@ -4,18 +4,18 @@ import {
 	QueryCommand,
 } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import type { CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import { CoreEventType } from '../CoreEventType.ts'
 import {
 	ConflictError,
 	InternalError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import { type EmailAuthContext, type UserAuthContext } from '../auth.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
-import { l } from './l.js'
-import { emailUserIndex } from './db.js'
+} from '../ProblemDetail.ts'
+import type { EmailAuthContext, UserAuthContext } from '../auth.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
+import { l } from './l.ts'
+import { emailUserIndex } from './db.ts'
 
 export type LoggedInWithEmailAndPin = CoreEvent & {
 	type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS
@@ -99,11 +99,11 @@ export const emailPINLogin =
 				authContext,
 			}
 		} catch (error) {
-			if ((error as Error).name === ConditionalCheckFailedException.name)
+			if ((error as Error).name === ConditionalCheckFailedException.name) {
 				return {
 					error: ConflictError(`Login failed.`),
 				}
-			console.error(error)
+			}
 			return { error: InternalError() }
 		}
 	}

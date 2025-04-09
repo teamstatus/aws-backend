@@ -2,17 +2,17 @@ import {
 	ConditionalCheckFailedException,
 	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb'
-import type { CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import { CoreEventType } from '../CoreEventType.ts'
 import {
 	ConflictError,
 	InternalError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
-import type { User } from './createUser.js'
+} from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
+import type { User } from './createUser.ts'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 
 export type UserUpdatedEvent = CoreEvent & {
@@ -53,13 +53,13 @@ export const updateUser =
 							update.name !== undefined
 								? {
 										S: update.name,
-								  }
+									}
 								: { NULL: true },
 						':pronouns':
 							update.pronouns !== undefined
 								? {
 										S: update.pronouns,
-								  }
+									}
 								: { NULL: true },
 						':version': {
 							N: `${version}`,
@@ -71,8 +71,9 @@ export const updateUser =
 					ReturnValues: 'ALL_NEW',
 				}),
 			)
-			if (Attributes === undefined)
+			if (Attributes === undefined) {
 				return { error: ConflictError('Update failed.') }
+			}
 			const updated = unmarshall(Attributes)
 			const event: UserUpdatedEvent = {
 				type: CoreEventType.USER_UPDATED,
@@ -85,11 +86,11 @@ export const updateUser =
 			await notify(event)
 			return {}
 		} catch (error) {
-			if ((error as Error).name === ConditionalCheckFailedException.name)
+			if ((error as Error).name === ConditionalCheckFailedException.name) {
 				return {
 					error: ConflictError(`Failed to update user.`),
 				}
-			console.error(error)
+			}
 			return { error: InternalError() }
 		}
 	}

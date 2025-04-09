@@ -1,8 +1,8 @@
-import { AttributeValue, GetItemCommand } from '@aws-sdk/client-dynamodb'
-import { NotFoundError, type ProblemDetail } from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { DbContext } from './DbContext.js'
-import type { User } from './createUser.js'
+import { type AttributeValue, GetItemCommand } from '@aws-sdk/client-dynamodb'
+import { NotFoundError, type ProblemDetail } from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { DbContext } from './DbContext.ts'
+import type { User } from './createUser.ts'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 
 export const getUser =
@@ -26,10 +26,11 @@ export const getUser =
 			}),
 		)
 
-		if (Item === undefined)
+		if (Item === undefined) {
 			return {
 				error: NotFoundError(`User ${authContext.sub} not found!`),
 			}
+		}
 
 		return {
 			user: itemToUser(Item),

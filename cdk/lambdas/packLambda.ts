@@ -1,23 +1,25 @@
 import swc from '@swc/core'
 import { createWriteStream } from 'node:fs'
-import { parse } from 'path'
+import { parse } from 'node:path'
 import yazl from 'yazl'
-import { checkSumOfFiles } from './checksumOfFiles.js'
-import { commonParent } from './commonParent.js'
-import { findDependencies } from './findDependencies.js'
+import { checkSumOfFiles } from './checksumOfFiles.ts'
+import { commonParent } from './commonParent.ts'
+import { findDependencies } from './findDependencies.ts'
 
-const removeCommonAncestor = (parentDir: string) => (file: string): string => {
-	const p = parse(file)
-	const jsFileName = [
-		p.dir.replace(parentDir.slice(0, parentDir.length - 1), ''),
-		`${p.name}.js`,
-	]
-		.join('/')
-		// Replace leading slash
-		.replace(/^\//, '')
+const removeCommonAncestor =
+	(parentDir: string) =>
+	(file: string): string => {
+		const p = parse(file)
+		const jsFileName = [
+			p.dir.replace(parentDir.slice(0, parentDir.length - 1), ''),
+			`${p.name}.js`,
+		]
+			.join('/')
+			// Replace leading slash
+			.replace(/^\//, '')
 
-	return jsFileName
-}
+		return jsFileName
+	}
 
 /**
  * In the bundle we only include code that's not in the layer.

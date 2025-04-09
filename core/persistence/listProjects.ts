@@ -1,13 +1,13 @@
 import { BatchGetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import type { ProblemDetail } from '../ProblemDetail.js'
-import type { Role } from '../Role.js'
-import type { UserAuthContext } from '../auth.js'
-import type { DbContext } from './DbContext.js'
-import type { Project } from './createProject.js'
-import { itemToProject } from './getProject.js'
-import { l } from './l.js'
-import { projectMemberIndex } from './db.js'
+import type { ProblemDetail } from '../ProblemDetail.ts'
+import type { Role } from '../Role.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { DbContext } from './DbContext.ts'
+import type { Project } from './createProject.ts'
+import { itemToProject } from './getProject.ts'
+import { l } from './l.ts'
+import { projectMemberIndex } from './db.ts'
 
 type UserProject = Project & { role: Role }
 
@@ -39,7 +39,9 @@ export const listProjects =
 			}),
 		)
 
-		if (Items === undefined || Items.length === 0) return { projects: [] }
+		if (Items === undefined || Items.length === 0) {
+			return { projects: [] }
+		}
 
 		const projectRole: Record<string, Role> = Items.map((Item) =>
 			unmarshall(Item),

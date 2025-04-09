@@ -1,12 +1,12 @@
 import { PutItemCommand } from '@aws-sdk/client-dynamodb'
-import type { CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
-import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
-import { l } from './l.js'
-import { canWriteStatus } from './getProjectMember.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import { CoreEventType } from '../CoreEventType.ts'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
+import { l } from './l.ts'
+import { canWriteStatus } from './getProjectMember.ts'
 
 type SyncCreatedEvent = CoreEvent & {
 	type: CoreEventType.SYNC_CREATED
@@ -77,7 +77,7 @@ export const createSync =
 							? { NULL: true }
 							: {
 									S: title,
-							  },
+								},
 					inclusiveStartDate:
 						inclusiveStartDate === undefined
 							? { NULL: true }
