@@ -1,5 +1,5 @@
 import { Type } from '@sinclair/typebox'
-import { validate } from './validate.js'
+import { validate } from './validate.ts'
 import { describe, test as it } from 'node:test'
 import assert from 'node:assert/strict'
 

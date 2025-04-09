@@ -25,7 +25,9 @@ export const verifyToken =
 	({ verificationKey }: { verificationKey: string }): VerifyTokenFn =>
 	(token: string): EmailAuthContext | UserAuthContext => {
 		const { email } = jwt.decode(token) as { email: string }
-		if (email === undefined) throw new Error(`Token is missing email payload!`)
+		if (email === undefined) {
+			throw new Error(`Token is missing email payload!`)
+		}
 		const { sub } = jwt.verify(token, verificationKey) as JwtPayload
 		return { sub, email }
 	}

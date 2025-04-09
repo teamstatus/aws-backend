@@ -2,7 +2,7 @@ import {
 	create,
 	type EmailAuthContext,
 	type UserAuthContext,
-} from '../core/auth.js'
+} from '../core/auth.ts'
 
 export const tokenCookie = async ({
 	authContext,

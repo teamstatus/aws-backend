@@ -1,4 +1,4 @@
-import { packLambdaFromPath, type PackedLambda } from './packLambdaFromPath.js'
+import { packLambdaFromPath, type PackedLambda } from './packLambdaFromPath.ts'
 
 export type BackendLambdas = {
 	loginRequest: PackedLambda

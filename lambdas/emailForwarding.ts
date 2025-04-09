@@ -11,7 +11,6 @@ const fromEmail = process.env.FROM_EMAIL ?? 'notification@teamstatus.space'
 const adminEmail = process.env.ADMIN_EMAIL ?? 'm@coderbyheart.com'
 
 export const handler = async (event: SESEvent): Promise<void> => {
-	console.log(JSON.stringify({ event }, null, 2))
 	for (const mail of event.Records) {
 		const {
 			destination, // e.g.  ['premium@teamstatus.space'], 't194b6t5nbuesjn902s2ev1jm18u8110e5ecpsg1',
@@ -32,8 +31,20 @@ export const handler = async (event: SESEvent): Promise<void> => {
 		} = mail.ses.receipt
 
 		const bodyIsSafe = virusVerdict === 'PASS' && spamVerdict === 'PASS'
-		let body: string | undefined = undefined
-		if (!bodyIsSafe) {
+		let body: string | undefined
+		if (bodyIsSafe) {
+			try {
+				const { Body } = await s3.send(
+					new GetObjectCommand({
+						Bucket,
+						Key: messageId,
+					}),
+				)
+				if (Body !== undefined) {
+					body = (await simpleParser(await Body.transformToString())).text ?? ''
+				}
+			} catch (_error) {}
+		} else {
 			body = await getSignedUrl(
 				s3,
 				new GetObjectCommand({
@@ -42,19 +53,6 @@ export const handler = async (event: SESEvent): Promise<void> => {
 				}),
 				{ expiresIn: 60 * 60 * 24 * 7 },
 			)
-		} else {
-			try {
-				const { Body } = await s3.send(
-					new GetObjectCommand({
-						Bucket,
-						Key: messageId,
-					}),
-				)
-				if (Body !== undefined)
-					body = (await simpleParser(await Body.transformToString())).text ?? ''
-			} catch (error) {
-				console.error(error)
-			}
 		}
 
 		await ses.send(

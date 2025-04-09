@@ -1,13 +1,13 @@
 import {
 	BillingMode,
 	CreateTableCommand,
-	DynamoDBClient,
+	type DynamoDBClient,
 	KeyType,
 	ProjectionType,
 	ScalarAttributeType,
 	UpdateTimeToLiveCommand,
 } from '@aws-sdk/client-dynamodb'
-import { indexes } from '../db.js'
+import { indexes } from '../db.ts'
 
 export const createTable = async (
 	db: DynamoDBClient,
@@ -54,11 +54,11 @@ export const createTable = async (
 						include === undefined
 							? {
 									ProjectionType: ProjectionType.KEYS_ONLY,
-							  }
+								}
 							: {
 									ProjectionType: ProjectionType.INCLUDE,
 									NonKeyAttributes: include,
-							  },
+								},
 				}),
 			),
 		}),

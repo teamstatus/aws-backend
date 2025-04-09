@@ -1,13 +1,13 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { fromEnv } from '@nordicsemiconductor/from-env'
-import { StatusCode } from '../core/StatusCode.js'
-import { notifier } from '../core/notifier.js'
-import { createStatus } from '../core/persistence/createStatus.js'
-import { userAuthRequestPipe } from './requestPipe.js'
-import { ULID, verifyRecentULID } from './verifyULID.js'
-import { validate } from './validate.js'
+import { StatusCode } from '../core/StatusCode.ts'
+import { notifier } from '../core/notifier.ts'
+import { createStatus } from '../core/persistence/createStatus.ts'
+import { userAuthRequestPipe } from './requestPipe.ts'
+import { ULID, verifyRecentULID } from './verifyULID.ts'
+import { validate } from './validate.ts'
 import { Type } from '@sinclair/typebox'
-import { ProjectId } from '../core/ids.js'
+import { ProjectId } from '../core/ids.ts'
 
 const { TableName } = fromEnv({
 	TableName: 'TABLE_NAME',

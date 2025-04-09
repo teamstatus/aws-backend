@@ -1,13 +1,13 @@
 import { BatchGetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { decodeTime } from 'ulid'
-import type { ProblemDetail } from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { DbContext } from './DbContext.js'
-import { itemToSync, serialize, type SerializedSync } from './getSync.js'
-import { l } from './l.js'
-import { listProjects } from './listProjects.js'
-import { projectSyncProjectIndex, syncOwnerIndex } from './db.js'
+import type { ProblemDetail } from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { DbContext } from './DbContext.ts'
+import { itemToSync, serialize, type SerializedSync } from './getSync.ts'
+import { l } from './l.ts'
+import { listProjects } from './listProjects.ts'
+import { projectSyncProjectIndex, syncOwnerIndex } from './db.ts'
 
 export const listSyncs =
 	(dbContext: DbContext) =>
@@ -25,7 +25,9 @@ export const listSyncs =
 			.sort((a, b) => b.localeCompare(a))
 			.slice(0, 25)
 
-		if (ids.length === 0) return { syncs: [] }
+		if (ids.length === 0) {
+			return { syncs: [] }
+		}
 
 		const { db, TableName } = dbContext
 		const { Responses } = await db.send(
@@ -83,7 +85,9 @@ const getSyncsByProjectMembers = async (
 	authContext: UserAuthContext,
 ): Promise<string[]> => {
 	const projects = await listProjects(dbContext)(authContext)
-	if ('error' in projects) return []
+	if ('error' in projects) {
+		return []
+	}
 
 	const { db, TableName } = dbContext
 	const res = await Promise.all(

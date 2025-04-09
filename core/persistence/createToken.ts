@@ -1,9 +1,9 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { InternalError, type ProblemDetail } from '../ProblemDetail.js'
-import { create, type UserAuthContext } from '../auth.js'
-import type { DbContext } from './DbContext.js'
-import { emailUserIndex } from './db.js'
+import { InternalError, type ProblemDetail } from '../ProblemDetail.ts'
+import { create, type UserAuthContext } from '../auth.ts'
+import type { DbContext } from './DbContext.ts'
+import { emailUserIndex } from './db.ts'
 
 export const createToken =
 	({ db, TableName }: DbContext) =>
@@ -39,8 +39,7 @@ export const createToken =
 					sub: userId,
 				}),
 			}
-		} catch (error) {
-			console.error(error)
+		} catch (_error) {
 			return { error: InternalError() }
 		}
 	}

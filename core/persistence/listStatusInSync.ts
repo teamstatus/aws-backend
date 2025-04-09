@@ -1,11 +1,11 @@
 import { GetItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { NotFoundError, type ProblemDetail } from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { DbContext } from './DbContext.js'
-import type { Status } from './createStatus.js'
-import { listStatus } from './listStatus.js'
-import { itemToSync, projectsInSyncForUser } from './getSync.js'
+import { NotFoundError, type ProblemDetail } from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { DbContext } from './DbContext.ts'
+import type { Status } from './createStatus.ts'
+import { listStatus } from './listStatus.ts'
+import { itemToSync, projectsInSyncForUser } from './getSync.ts'
 
 export const listStatusInSync =
 	(dbContext: DbContext) =>
@@ -35,8 +35,9 @@ export const listStatusInSync =
 			}),
 		)
 
-		if (Item === undefined)
+		if (Item === undefined) {
 			return { error: NotFoundError(`Sync ${syncId} not found!`) }
+		}
 
 		const sync = itemToSync(unmarshall(Item))
 
@@ -44,7 +45,9 @@ export const listStatusInSync =
 			sync,
 			authContext,
 		)
-		if ('error' in maybeProjectIds) return maybeProjectIds
+		if ('error' in maybeProjectIds) {
+			return maybeProjectIds
+		}
 
 		const { projectIds, inclusiveStartDate, inclusiveEndDate } = sync
 

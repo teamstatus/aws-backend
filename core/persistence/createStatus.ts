@@ -1,13 +1,13 @@
 import { PutItemCommand } from '@aws-sdk/client-dynamodb'
-import type { CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
-import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
-import type { Reaction } from './createReaction.js'
-import { canWriteStatus } from './getProjectMember.js'
-import { l } from './l.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import { CoreEventType } from '../CoreEventType.ts'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
+import type { Reaction } from './createReaction.ts'
+import { canWriteStatus } from './getProjectMember.ts'
+import { l } from './l.ts'
 
 type StatusCreatedEvent = CoreEvent & {
 	type: CoreEventType.STATUS_CREATED

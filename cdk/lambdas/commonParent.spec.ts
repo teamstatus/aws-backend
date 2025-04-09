@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, test as it } from 'node:test'
-import { commonParent } from './commonParent.js'
+import { commonParent } from './commonParent.ts'
 
 describe('commonParent()', () => {
 	it('should return the common parent directory', () =>

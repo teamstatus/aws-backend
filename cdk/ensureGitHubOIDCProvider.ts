@@ -1,10 +1,9 @@
 import {
 	CreateOpenIDConnectProviderCommand,
 	GetOpenIDConnectProviderCommand,
-	IAMClient,
+	type IAMClient,
 	ListOpenIDConnectProvidersCommand,
 } from '@aws-sdk/client-iam'
-import chalk from 'chalk'
 
 /**
  * Returns the ARN of the OpenID Connect provider for GitHub of the account.
@@ -35,17 +34,8 @@ export const ensureGitHubOIDCProvider = async ({
 	)
 
 	if (maybeGithubProvider?.Arn !== undefined) {
-		console.debug(
-			chalk.green(
-				`OIDC provider for GitHub exists: ${maybeGithubProvider.Arn}`,
-			),
-		)
 		return maybeGithubProvider.Arn
 	}
-
-	console.log(
-		chalk.yellow(`OIDC provider for GitHub does not exist. Creating ...`),
-	)
 
 	const provider = await iam.send(
 		new CreateOpenIDConnectProviderCommand({
@@ -55,8 +45,9 @@ export const ensureGitHubOIDCProvider = async ({
 		}),
 	)
 
-	if (provider.OpenIDConnectProviderArn === undefined)
+	if (provider.OpenIDConnectProviderArn === undefined) {
 		throw new Error(`Failed to create OpenID Connect Provider for GitHub!`)
+	}
 
 	return provider.OpenIDConnectProviderArn
 }

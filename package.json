@@ -4,7 +4,7 @@
   "description": "AWS backend for teamstatus developed using CDK in TypeScript",
   "type": "module",
   "scripts": {
-    "test": "find ./ -type f -name '*.spec.ts' -not -path './node_modules/*' -print | xargs npx tsx --no-warnings --test --test-reporter spec",
+    "test": "node --no-warnings --experimental-transform-types --test \"!(node_modules)/**/*.spec.ts\"",
     "prepare": "husky && check-node-version --package"
   },
   "repository": {
@@ -58,7 +58,6 @@
     "lint-staged": "15.5.0",
     "prettier": "3.5.3",
     "tsmatchers": "5.0.2",
-    "tsx": "4.19.3",
     "typescript": "5.8.3",
     "ulid": "3.0.0",
     "yazl": "3.3.1"
@@ -73,7 +72,7 @@
     ]
   },
   "engines": {
-    "node": ">=20",
+    "node": ">=22.7.0",
     "npm": ">=9"
   },
   "release": {

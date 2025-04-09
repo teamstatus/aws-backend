@@ -1,6 +1,6 @@
 import {
 	Duration,
-	aws_dynamodb as DynamoDB,
+	aws_dynamodb as dynamoDb,
 	aws_apigatewayv2 as HttpApi,
 	aws_iam as IAM,
 	aws_lambda as Lambda,
@@ -8,11 +8,11 @@ import {
 	type Stack,
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import type { BackendLambdas } from '../lambdas/packBackendLambdas'
-import type { PackedLambda } from '../lambdas/packLambdaFromPath'
-import { WSUserAuthorizer } from './APIAuthorizer.js'
-import { integrationUri } from './ApiRoute.js'
-import { LambdaSource } from './LambdaSource.js'
+import type { BackendLambdas } from '../lambdas/packBackendLambdas.ts'
+import type { PackedLambda } from '../lambdas/packLambdaFromPath.ts'
+import { WSUserAuthorizer } from './APIAuthorizer.ts'
+import { integrationUri } from './ApiRoute.ts'
+import { LambdaSource } from './LambdaSource.ts'
 
 export class WebsocketAPI extends Construct {
 	public readonly URL: string
@@ -45,11 +45,11 @@ export class WebsocketAPI extends Construct {
 		})
 		deployment.node.addDependency(stage)
 
-		const clientsTable = new DynamoDB.Table(this, 'clientsTable', {
-			billingMode: DynamoDB.BillingMode.PAY_PER_REQUEST,
+		const clientsTable = new dynamoDb.Table(this, 'clientsTable', {
+			billingMode: dynamoDb.BillingMode.PAY_PER_REQUEST,
 			partitionKey: {
 				name: 'connectionId',
-				type: DynamoDB.AttributeType.STRING,
+				type: dynamoDb.AttributeType.STRING,
 			},
 			timeToLiveAttribute: 'ttl',
 			removalPolicy: RemovalPolicy.DESTROY,
@@ -69,7 +69,7 @@ export class WebsocketAPI extends Construct {
 			routeKey: '$connect' | '$disconnect' | 'message',
 			source: PackedLambda,
 		) =>
-			new WSAPIRoute(
+			new WsapiRoute(
 				api,
 				stage,
 				routeKey,
@@ -83,13 +83,15 @@ export class WebsocketAPI extends Construct {
 			addRoute('$disconnect', lambdaSources.wsOnDisconnect),
 			addRoute('message', lambdaSources.wsOnMessage),
 		]
-		for (const route of routes) deployment.node.addDependency(route)
+		for (const route of routes) {
+			deployment.node.addDependency(route)
+		}
 
 		this.URL = `wss://${api.ref}.execute-api.${parent.region}.amazonaws.com/${stage.ref}`
 	}
 }
 
-class WSAPIRoute extends Construct {
+class WsapiRoute extends Construct {
 	public readonly fn: Lambda.IFunction
 	public readonly route: HttpApi.CfnRoute
 	constructor(
@@ -98,7 +100,7 @@ class WSAPIRoute extends Construct {
 		routeKey: '$connect' | '$disconnect' | 'message',
 		stack: Stack,
 		source: PackedLambda,
-		clientsTable: DynamoDB.ITable,
+		clientsTable: dynamoDb.ITable,
 		authorizer: HttpApi.CfnAuthorizer,
 	) {
 		super(api, routeKey)
@@ -138,7 +140,7 @@ class WSAPIRoute extends Construct {
 				? { authorizationType: 'CUSTOM', authorizerId: authorizer.ref }
 				: {
 						authorizationType: 'NONE',
-				  }),
+					}),
 		})
 	}
 }

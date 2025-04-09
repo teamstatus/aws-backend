@@ -3,12 +3,12 @@ import {
 	BadRequestError,
 	NotFoundError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { DbContext } from './DbContext.js'
-import type { Status } from './createStatus.js'
-import { canReadProjectStatus } from './getProjectMember.js'
-import { itemToStatus } from './listStatus.js'
+} from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { DbContext } from './DbContext.ts'
+import type { Status } from './createStatus.ts'
+import { canReadProjectStatus } from './getProjectMember.ts'
+import { itemToStatus } from './listStatus.ts'
 
 export const getStatus =
 	(dbContext: DbContext) =>
@@ -47,10 +47,11 @@ export const getStatus =
 			}),
 		)
 
-		if (Item === undefined)
+		if (Item === undefined) {
 			return {
 				error: NotFoundError(`Status ${statusId} not found!`),
 			}
+		}
 
 		return {
 			status: await itemToStatus(dbContext)(Item),

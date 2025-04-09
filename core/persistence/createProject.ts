@@ -2,22 +2,22 @@ import {
 	ConditionalCheckFailedException,
 	PutItemCommand,
 } from '@aws-sdk/client-dynamodb'
-import type { CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import { CoreEventType } from '../CoreEventType.ts'
 import {
 	BadRequestError,
 	ConflictError,
 	InternalError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import { Role } from '../Role.js'
-import type { UserAuthContext } from '../auth.js'
-import { parseProjectId } from '../ids.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
-import { createProjectMember } from './createProjectMember.js'
-import { isOrganizationMember } from './getOrganizationMember.js'
-import { l } from './l.js'
+} from '../ProblemDetail.ts'
+import { Role } from '../Role.ts'
+import type { UserAuthContext } from '../auth.ts'
+import { parseProjectId } from '../ids.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
+import { createProjectMember } from './createProjectMember.ts'
+import { isOrganizationMember } from './getOrganizationMember.ts'
+import { l } from './l.ts'
 export type ProjectCreatedEvent = CoreEvent & {
 	type: CoreEventType.PROJECT_CREATED
 } & Project
@@ -66,7 +66,7 @@ export const createProject =
 								? { NULL: true }
 								: {
 										S: name,
-								  },
+									},
 						version: {
 							N: `1`,
 						},
@@ -91,11 +91,11 @@ export const createProject =
 
 			return {}
 		} catch (error) {
-			if ((error as Error).name === ConditionalCheckFailedException.name)
+			if ((error as Error).name === ConditionalCheckFailedException.name) {
 				return {
 					error: ConflictError(`Project '${projectId}' already exists.`),
 				}
-			console.error(error)
+			}
 			return { error: InternalError() }
 		}
 	}

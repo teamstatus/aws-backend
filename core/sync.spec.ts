@@ -8,27 +8,27 @@ import {
 	objectMatching,
 } from 'tsmatchers'
 import { ulid } from 'ulid'
-import type { CoreEvent } from './CoreEvent.js'
-import { CoreEventType } from './CoreEventType.js'
-import type { UserAuthContext } from './auth.js'
-import { notifier, type Notify } from './notifier.js'
-import type { DbContext } from './persistence/DbContext.js'
-import { createOrganization } from './persistence/createOrganization.js'
-import { createProject } from './persistence/createProject.js'
-import { createStatus, type Status } from './persistence/createStatus.js'
-import { createSync } from './persistence/createSync.js'
-import { getSync, type SerializedSync } from './persistence/getSync.js'
-import { listStatusInSync } from './persistence/listStatusInSync.js'
-import { listSyncs } from './persistence/listSyncs.js'
-import { createTestDb } from './test/createTestDb.js'
-import { eventually } from './test/eventually.js'
-import { isNotAnError } from './test/isNotAnError.js'
-import { testDb } from './test/testDb.js'
-import type { ProblemDetail } from './ProblemDetail.js'
-import { createProjectMember } from './persistence/createProjectMember.js'
-import { Role } from './Role.js'
-import { l } from './persistence/l.js'
-import { deleteSync } from './persistence/deleteSync.js'
+import type { CoreEvent } from './CoreEvent.ts'
+import { CoreEventType } from './CoreEventType.ts'
+import type { UserAuthContext } from './auth.ts'
+import { notifier, type Notify } from './notifier.ts'
+import type { DbContext } from './persistence/DbContext.ts'
+import { createOrganization } from './persistence/createOrganization.ts'
+import { createProject } from './persistence/createProject.ts'
+import { createStatus, type Status } from './persistence/createStatus.ts'
+import { createSync } from './persistence/createSync.ts'
+import { getSync, type SerializedSync } from './persistence/getSync.ts'
+import { listStatusInSync } from './persistence/listStatusInSync.ts'
+import { listSyncs } from './persistence/listSyncs.ts'
+import { createTestDb } from './test/createTestDb.ts'
+import { eventually } from './test/eventually.ts'
+import { isNotAnError } from './test/isNotAnError.ts'
+import { testDb } from './test/testDb.ts'
+import type { ProblemDetail } from './ProblemDetail.ts'
+import { createProjectMember } from './persistence/createProjectMember.ts'
+import { Role } from './Role.ts'
+import { l } from './persistence/l.ts'
+import { deleteSync } from './persistence/deleteSync.ts'
 
 describe('sync', async () => {
 	const { TableName, db } = testDb()
@@ -38,8 +38,6 @@ describe('sync', async () => {
 
 		TableName,
 	}
-
-	before(createTestDb(dbContext))
 
 	const { on, notify } = notifier()
 	const organizationId = `$test-${ulid()}`
@@ -56,6 +54,7 @@ describe('sync', async () => {
 
 	// Given there is a project with status
 	before(async () => {
+		await createTestDb(dbContext)()
 		await newOrg(dbContext, notify, organizationId, user)
 		return Promise.all(
 			projectIds.map(async (projectId) => {
@@ -376,7 +375,7 @@ describe('sync', async () => {
 	})
 })
 
-export const newProject = async (
+const newProject = async (
 	dbContext: DbContext,
 	notify: Notify,
 	projectId: string,
@@ -390,7 +389,7 @@ export const newProject = async (
 	)
 }
 
-export const newOrg = async (
+const newOrg = async (
 	dbContext: DbContext,
 	notify: Notify,
 	organizationId: string,

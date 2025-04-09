@@ -1,4 +1,4 @@
-import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm'
+import { GetParameterCommand, type SSMClient } from '@aws-sdk/client-ssm'
 
 export const getPrivateKey = async ({
 	ssm,
@@ -14,8 +14,9 @@ export const getPrivateKey = async ({
 		}),
 	)
 	const privateKey = Parameter?.Value
-	if (privateKey === undefined)
+	if (privateKey === undefined) {
 		throw new Error(`${stackName} is not configured!`)
+	}
 
 	return privateKey
 }
@@ -34,8 +35,9 @@ export const getPublicKey = async ({
 		}),
 	)
 	const publicKey = Parameter?.Value
-	if (publicKey === undefined)
+	if (publicKey === undefined) {
 		throw new Error(`${stackName} is not configured!`)
+	}
 
 	return publicKey
 }

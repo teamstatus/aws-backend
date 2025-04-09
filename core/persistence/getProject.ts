@@ -1,7 +1,7 @@
 import { GetItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import type { DbContext } from './DbContext.js'
-import type { Project } from './createProject.js'
+import type { DbContext } from './DbContext.ts'
+import type { Project } from './createProject.ts'
 
 export const getProject =
 	({ db, TableName }: DbContext) =>
@@ -20,7 +20,9 @@ export const getProject =
 			}),
 		)
 
-		if (Item === undefined) return null
+		if (Item === undefined) {
+			return null
+		}
 		const project = unmarshall(Item)
 
 		return itemToProject(project)

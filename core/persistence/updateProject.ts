@@ -2,19 +2,19 @@ import {
 	ConditionalCheckFailedException,
 	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb'
-import type { CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import { CoreEventType } from '../CoreEventType.ts'
 import {
 	BadRequestError,
 	ConflictError,
 	InternalError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
-import { canUpdateProject } from './getProjectMember.js'
-import type { Project } from './createProject.js'
+} from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
+import { canUpdateProject } from './getProjectMember.ts'
+import type { Project } from './createProject.ts'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 
 export type ProjectUpdatedEvent = CoreEvent & {
@@ -62,7 +62,7 @@ export const updateProject =
 							update.name !== undefined
 								? {
 										S: update.name,
-								  }
+									}
 								: { NULL: true },
 						':version': {
 							N: `${version}`,
@@ -74,8 +74,9 @@ export const updateProject =
 					ReturnValues: 'ALL_NEW',
 				}),
 			)
-			if (Attributes === undefined)
+			if (Attributes === undefined) {
 				return { error: ConflictError('Update failed.') }
+			}
 			const updated = unmarshall(Attributes)
 			const event: ProjectUpdatedEvent = {
 				type: CoreEventType.PROJECT_UPDATED,
@@ -87,11 +88,11 @@ export const updateProject =
 			await notify(event)
 			return {}
 		} catch (error) {
-			if ((error as Error).name === ConditionalCheckFailedException.name)
+			if ((error as Error).name === ConditionalCheckFailedException.name) {
 				return {
 					error: ConflictError(`Failed to update project.`),
 				}
-			console.error(error)
+			}
 			return { error: InternalError() }
 		}
 	}

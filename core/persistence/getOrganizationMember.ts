@@ -1,11 +1,11 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
-import { Role } from '../Role.js'
-import { isOrganizationId, isUserId } from '../ids.js'
-import type { DbContext } from './DbContext.js'
-import { l } from './l.js'
-import { organizationMemberIndex } from './db.js'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
+import { Role } from '../Role.ts'
+import { isOrganizationId, isUserId } from '../ids.ts'
+import type { DbContext } from './DbContext.ts'
+import { l } from './l.ts'
+import { organizationMemberIndex } from './db.ts'
 
 export const getOrganizationMember =
 	({ db, TableName }: DbContext) =>
@@ -59,7 +59,9 @@ export const getOrganizationMember =
 		)
 
 		const memberInfo = res.Items?.[0]
-		if (memberInfo === undefined) return null
+		if (memberInfo === undefined) {
+			return null
+		}
 		const info = unmarshall(memberInfo)
 		return {
 			role: info.role,

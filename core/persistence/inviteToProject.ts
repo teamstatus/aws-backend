@@ -3,22 +3,22 @@ import {
 	GetItemCommand,
 	PutItemCommand,
 } from '@aws-sdk/client-dynamodb'
-import type { CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import { CoreEventType } from '../CoreEventType.ts'
 import {
 	BadRequestError,
 	ConflictError,
 	InternalError,
 	NotFoundError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import { Role } from '../Role.js'
-import type { UserAuthContext } from '../auth.js'
-import { parseProjectId } from '../ids.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
-import { isOrganizationOwner } from './getOrganizationMember.js'
-import { l } from './l.js'
+} from '../ProblemDetail.ts'
+import { Role } from '../Role.ts'
+import type { UserAuthContext } from '../auth.ts'
+import { parseProjectId } from '../ids.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
+import { isOrganizationOwner } from './getOrganizationMember.ts'
+import { l } from './l.ts'
 
 export type MemberInvitedEvent = CoreEvent & {
 	type: CoreEventType.PROJECT_MEMBER_INVITED
@@ -86,10 +86,11 @@ export const inviteToProject =
 				}),
 			)
 
-			if (Item === undefined)
+			if (Item === undefined) {
 				return {
 					error: NotFoundError(`User ${invitedUserId} does not exist.`),
 				}
+			}
 
 			const id = createInvitationId({ projectId, invitedUserId })
 			await db.send(
@@ -131,11 +132,11 @@ export const inviteToProject =
 
 			return { id }
 		} catch (error) {
-			if ((error as Error).name === ConditionalCheckFailedException.name)
+			if ((error as Error).name === ConditionalCheckFailedException.name) {
 				return {
 					error: ConflictError(`User '${invitedUserId}' already invited.`),
 				}
-			console.error(error)
+			}
 			return { error: InternalError() }
 		}
 	}

@@ -10,7 +10,9 @@ export const findDependencies = (
 	imports: string[] = [],
 	visited: string[] = [],
 ): string[] => {
-	if (visited.includes(sourceFile)) return imports
+	if (visited.includes(sourceFile)) {
+		return imports
+	}
 
 	const fileNode = ts.createSourceFile(
 		sourceFile,
@@ -20,7 +22,9 @@ export const findDependencies = (
 	)
 
 	const parseChild = (node: ts.Node) => {
-		if (node.kind !== ts.SyntaxKind.ImportDeclaration) return
+		if (node.kind !== ts.SyntaxKind.ImportDeclaration) {
+			return
+		}
 		const moduleSpecifier = (
 			(node as ImportDeclaration).moduleSpecifier as StringLiteral
 		).text
@@ -30,13 +34,15 @@ export const findDependencies = (
 					// In ECMA Script modules, all imports from local files must have an extension.
 					// See https://nodejs.org/api/esm.html#mandatory-file-extensions
 					// So we need to replace the `.js` in the import specification to find the TypeScript source for the file.
-					// Example: import { Network, notifyClients } from './notifyClients.js'
+					// Example: import { Network, notifyClients } from './notifyClients.ts'
 					// The source file for that is actually in './notifyClients.ts'
 					.replace(/\.js$/, '.ts')
 			: moduleSpecifier
 		try {
 			const s = statSync(file)
-			if (!s.isDirectory()) imports.push(file)
+			if (!s.isDirectory()) {
+				imports.push(file)
+			}
 		} catch {
 			// Module or file not found
 			visited.push(file)

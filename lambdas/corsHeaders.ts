@@ -5,7 +5,9 @@ const defaultOrigin = 'https://teamstatus.space'
 const origin = (event: { headers: APIGatewayProxyEventHeaders }): string => {
 	const origin = event.headers.origin ?? defaultOrigin.toString()
 
-	if (allowedDomains.find((rx) => rx.test(origin)) !== undefined) return origin
+	if (allowedDomains.find((rx) => rx.test(origin)) !== undefined) {
+		return origin
+	}
 
 	return defaultOrigin
 }

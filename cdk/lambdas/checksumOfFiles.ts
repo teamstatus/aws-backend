@@ -1,5 +1,5 @@
-import * as crypto from 'node:crypto'
-import * as fs from 'node:fs'
+import crypto from 'node:crypto'
+import fs from 'node:fs'
 
 /**
  * Computes the combined checksum of the given files

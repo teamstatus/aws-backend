@@ -1,12 +1,12 @@
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { BadRequestError, type ProblemDetail } from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { DbContext } from './DbContext.js'
-import { l } from './l.js'
-import { canUpdateProject } from './getProjectMember.js'
-import type { ProjectMember } from './createProjectMember.js'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { DbContext } from './DbContext.ts'
+import { l } from './l.ts'
+import { canUpdateProject } from './getProjectMember.ts'
+import type { ProjectMember } from './createProjectMember.ts'
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
-import { projectMembersIndex } from './db.js'
+import { projectMembersIndex } from './db.ts'
 
 export const listProjectMembers =
 	(dbContext: DbContext) =>
@@ -40,7 +40,9 @@ export const listProjectMembers =
 			}),
 		)
 
-		if (Items === undefined || Items.length === 0) return { members: [] }
+		if (Items === undefined || Items.length === 0) {
+			return { members: [] }
+		}
 
 		return {
 			members: Items.map((Item) => {

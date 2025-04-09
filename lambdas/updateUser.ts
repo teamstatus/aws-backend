@@ -1,9 +1,9 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { fromEnv } from '@nordicsemiconductor/from-env'
-import { StatusCode } from '../core/StatusCode.js'
-import { notifier } from '../core/notifier.js'
-import { updateUser } from '../core/persistence/updateUser.js'
-import { userAuthRequestPipe } from './requestPipe.js'
+import { StatusCode } from '../core/StatusCode.ts'
+import { notifier } from '../core/notifier.ts'
+import { updateUser } from '../core/persistence/updateUser.ts'
+import { userAuthRequestPipe } from './requestPipe.ts'
 
 const { TableName } = fromEnv({
 	TableName: 'TABLE_NAME',
@@ -23,7 +23,7 @@ const update = updateUser(
 export const handler = userAuthRequestPipe(
 	(event) => ({
 		patch: JSON.parse(event.body ?? ''),
-		version: parseInt(event.headers['if-match'] ?? '0', 10),
+		version: Number.parseInt(event.headers['if-match'] ?? '0', 10),
 	}),
 	async ({ patch, version }, authContext) =>
 		update(patch, version, authContext),

@@ -2,9 +2,9 @@ import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
-import type { ProblemDetail } from '../core/ProblemDetail.js'
-import { StatusCode } from '../core/StatusCode.js'
-import { corsHeaders } from './corsHeaders.js'
+import type { ProblemDetail } from '../core/ProblemDetail.ts'
+import type { StatusCode } from '../core/StatusCode.ts'
+import { corsHeaders } from './corsHeaders.ts'
 
 export const result =
 	(event: APIGatewayProxyEventV2) =>
@@ -13,7 +13,6 @@ export const result =
 		result?: unknown,
 		cookies?: string[],
 	): APIGatewayProxyResultV2 => {
-		console.log(JSON.stringify({ statusCode, result }))
 		const cors = corsHeaders(event)
 		return {
 			statusCode,
@@ -23,7 +22,7 @@ export const result =
 							'Content-type': 'application/json; charset=utf-8',
 							'Content-Language': 'en',
 							...cors,
-					  }
+						}
 					: cors,
 			body:
 				result !== undefined && !emptyObject(result)
@@ -36,7 +35,6 @@ export const result =
 export const problem =
 	(event: APIGatewayProxyEventV2) =>
 	(problem: ProblemDetail): APIGatewayProxyResultV2 => {
-		console.error(JSON.stringify(problem))
 		const cors = corsHeaders(event)
 		return {
 			statusCode: problem.status,

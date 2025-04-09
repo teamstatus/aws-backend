@@ -3,17 +3,17 @@ import {
 	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import type { CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import { CoreEventType } from '../CoreEventType.ts'
 import {
 	ConflictError,
 	InternalError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
-import { l } from './l.js'
+} from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
+import { l } from './l.ts'
 
 type StatusUpdatedEvent = CoreEvent & {
 	type: CoreEventType.STATUS_UPDATED
@@ -68,8 +68,9 @@ export const updateStatus =
 					ReturnValues: 'ALL_NEW',
 				}),
 			)
-			if (Attributes === undefined)
+			if (Attributes === undefined) {
 				return { error: ConflictError('Update failed.') }
+			}
 			const updated = unmarshall(Attributes)
 			const event: StatusUpdatedEvent = {
 				type: CoreEventType.STATUS_UPDATED,
@@ -81,11 +82,11 @@ export const updateStatus =
 			await notify(event)
 			return {}
 		} catch (error) {
-			if ((error as Error).name === ConditionalCheckFailedException.name)
+			if ((error as Error).name === ConditionalCheckFailedException.name) {
 				return {
 					error: ConflictError(`Failed to update status.`),
 				}
-			console.error(error)
+			}
 			return { error: InternalError() }
 		}
 	}

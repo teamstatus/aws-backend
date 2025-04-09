@@ -1,10 +1,10 @@
 import { IAMClient } from '@aws-sdk/client-iam'
 import { App } from 'aws-cdk-lib'
-import pJSON from '../../package.json'
-import { ensureGitHubOIDCProvider } from '../ensureGitHubOIDCProvider.js'
-import { CIStack } from './CIStack.js'
+import pJson from '../../package.json'
+import { ensureGitHubOIDCProvider } from '../ensureGitHubOIDCProvider.ts'
+import { CIStack } from './CIStack.ts'
 
-const repoUrl = new URL(pJSON.repository.url)
+const repoUrl = new URL(pJson.repository.url)
 const repository = {
 	owner: repoUrl.pathname.split('/')[1] ?? 'bifravst',
 	repo:
@@ -13,7 +13,7 @@ const repository = {
 }
 
 const stackNamePrefix = process.env.STACK_NAME_PREFIX ?? 'teamstatus'
-class CIApp extends App {
+class CiApp extends App {
 	public constructor(props: ConstructorParameters<typeof CIStack>[2]) {
 		super()
 
@@ -21,7 +21,7 @@ class CIApp extends App {
 	}
 }
 
-new CIApp({
+new CiApp({
 	repository,
 	gitHubOICDProviderArn: await ensureGitHubOIDCProvider({
 		iam: new IAMClient({}),

@@ -4,15 +4,15 @@ import {
 	aws_iam as IAM,
 	aws_lambda as Lambda,
 	aws_logs as Logs,
-	Stack,
+	type Stack,
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import type { PackedLambda } from '../lambdas/packLambdaFromPath.js'
-import { readKeyPolicy } from '../teamstatus-backend.js'
-import { integrationUri } from './ApiRoute.js'
-import { LambdaSource } from './LambdaSource.js'
+import type { PackedLambda } from '../lambdas/packLambdaFromPath.ts'
+import { readKeyPolicy } from '../teamstatus-backend.ts'
+import { integrationUri } from './ApiRoute.ts'
+import { LambdaSource } from './LambdaSource.ts'
 
-abstract class APIAuthorizer extends Construct {
+abstract class ApiAuthorizer extends Construct {
 	public readonly fn: Lambda.IFunction
 	public readonly authorizer: HttpApi.CfnAuthorizer
 	constructor(
@@ -71,8 +71,8 @@ abstract class APIAuthorizer extends Construct {
 	}
 }
 
-export class ApiEmailAuthorizer extends APIAuthorizer {}
-export class ApiUserAuthorizer extends APIAuthorizer {
+export class ApiEmailAuthorizer extends ApiAuthorizer {}
+export class ApiUserAuthorizer extends ApiAuthorizer {
 	constructor(
 		parent: Construct,
 		id: string,
@@ -97,7 +97,7 @@ export class ApiUserAuthorizer extends APIAuthorizer {
 	}
 }
 
-export class WSUserAuthorizer extends APIAuthorizer {
+export class WSUserAuthorizer extends ApiAuthorizer {
 	constructor(
 		parent: Construct,
 		id: string,

@@ -1,5 +1,5 @@
 import { check, objectMatching, undefinedValue } from 'tsmatchers'
-import type { ProblemDetail } from '../ProblemDetail.js'
+import type { ProblemDetail } from '../ProblemDetail.ts'
 
 export const isNotAnError = <Result>(
 	res: { error: ProblemDetail } | Result,

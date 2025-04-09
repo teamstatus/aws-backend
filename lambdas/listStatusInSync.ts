@@ -1,8 +1,8 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { fromEnv } from '@nordicsemiconductor/from-env'
-import { listStatusInSync } from '../core/persistence/listStatusInSync.js'
-import { userAuthRequestPipe } from './requestPipe.js'
-import { verifyOlderULID } from './verifyULID.js'
+import { listStatusInSync } from '../core/persistence/listStatusInSync.ts'
+import { userAuthRequestPipe } from './requestPipe.ts'
+import { verifyOlderULID } from './verifyULID.ts'
 
 const { TableName } = fromEnv({
 	TableName: 'TABLE_NAME',

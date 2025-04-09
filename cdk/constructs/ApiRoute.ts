@@ -1,8 +1,8 @@
 import {
 	aws_apigatewayv2 as HttpApi,
 	aws_iam as IAM,
-	aws_lambda as Lambda,
-	Stack,
+	type aws_lambda as Lambda,
+	type Stack,
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 

@@ -2,19 +2,19 @@ import {
 	ConditionalCheckFailedException,
 	PutItemCommand,
 } from '@aws-sdk/client-dynamodb'
-import type { CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import { CoreEventType } from '../CoreEventType.ts'
 import {
 	BadRequestError,
 	InternalError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import { Role } from '../Role.js'
-import type { UserAuthContext } from '../auth.js'
-import { isOrganizationId } from '../ids.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
-import { l } from './l.js'
+} from '../ProblemDetail.ts'
+import { Role } from '../Role.ts'
+import type { UserAuthContext } from '../auth.ts'
+import { isOrganizationId } from '../ids.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
+import { l } from './l.ts'
 
 export type Organization = { id: string; name: string }
 
@@ -32,10 +32,11 @@ export const createOrganization =
 		authContext: UserAuthContext,
 	): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { sub: userId } = authContext
-		if (!isOrganizationId(organizationId))
+		if (!isOrganizationId(organizationId)) {
 			return {
 				error: BadRequestError(`Not an organization ID: ${organizationId}`),
 			}
+		}
 		try {
 			const { db, TableName } = dbContext
 			await db.send(
@@ -90,13 +91,13 @@ export const createOrganization =
 			await notify(event)
 			return {}
 		} catch (error) {
-			if ((error as Error).name === ConditionalCheckFailedException.name)
+			if ((error as Error).name === ConditionalCheckFailedException.name) {
 				return {
 					error: BadRequestError(
 						`Organization '${organizationId}' already exists.`,
 					),
 				}
-			console.error(error)
+			}
 			return { error: InternalError() }
 		}
 	}

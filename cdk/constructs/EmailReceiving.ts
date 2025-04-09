@@ -1,15 +1,15 @@
 import { Construct } from 'constructs'
 import {
 	aws_ses as SES,
-	aws_ses_actions as SESActions,
+	aws_ses_actions as sesActions,
 	aws_lambda as Lambda,
 	aws_logs as Logs,
 	aws_s3 as S3,
 	aws_iam as IAM,
 	RemovalPolicy,
 } from 'aws-cdk-lib'
-import type { BackendLambdas } from '../lambdas/packBackendLambdas'
-import { LambdaSource } from './LambdaSource.js'
+import type { BackendLambdas } from '../lambdas/packBackendLambdas.ts'
+import { LambdaSource } from './LambdaSource.ts'
 
 export class EmailReceiving extends Construct {
 	constructor(
@@ -57,12 +57,12 @@ export class EmailReceiving extends Construct {
 			tlsPolicy: SES.TlsPolicy.REQUIRE,
 		})
 		rule.addAction(
-			new SESActions.S3({
+			new sesActions.S3({
 				bucket,
 			}),
 		)
 		rule.addAction(
-			new SESActions.Lambda({
+			new sesActions.Lambda({
 				function: lambda,
 			}),
 		)

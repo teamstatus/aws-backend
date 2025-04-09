@@ -2,19 +2,19 @@ import {
 	ConditionalCheckFailedException,
 	PutItemCommand,
 } from '@aws-sdk/client-dynamodb'
-import type { CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import { CoreEventType } from '../CoreEventType.ts'
 import {
 	BadRequestError,
 	ConflictError,
 	InternalError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import type { EmailAuthContext } from '../auth.js'
-import { isUserId } from '../ids.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
-import { l } from './l.js'
+} from '../ProblemDetail.ts'
+import type { EmailAuthContext } from '../auth.ts'
+import { isUserId } from '../ids.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
+import { l } from './l.ts'
 
 export type User = {
 	id: string
@@ -42,10 +42,11 @@ export const createUser =
 		authContext: EmailAuthContext
 	}): Promise<{ error: ProblemDetail } | Record<string, never>> => {
 		const { email } = authContext
-		if (!isUserId(userId))
+		if (!isUserId(userId)) {
 			return {
 				error: BadRequestError(`Not an user ID: ${userId}`),
 			}
+		}
 		try {
 			const { db, TableName } = dbContext
 			await db.send(
@@ -63,13 +64,13 @@ export const createUser =
 							name !== undefined
 								? {
 										S: name,
-								  }
+									}
 								: { NULL: true },
 						pronouns:
 							pronouns !== undefined
 								? {
 										S: pronouns,
-								  }
+									}
 								: { NULL: true },
 						version: {
 							N: `1`,
@@ -91,11 +92,11 @@ export const createUser =
 			await notify(event)
 			return {}
 		} catch (error) {
-			if ((error as Error).name === ConditionalCheckFailedException.name)
+			if ((error as Error).name === ConditionalCheckFailedException.name) {
 				return {
 					error: ConflictError(`User '${userId}' already exists.`),
 				}
-			console.error(error)
+			}
 			return { error: InternalError() }
 		}
 	}

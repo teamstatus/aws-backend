@@ -1,11 +1,11 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { fromEnv } from '@nordicsemiconductor/from-env'
-import { StatusCode } from '../core/StatusCode.js'
-import { notifier } from '../core/notifier.js'
-import { updateOrganization } from '../core/persistence/updateOrganization.js'
-import { userAuthRequestPipe } from './requestPipe.js'
+import { StatusCode } from '../core/StatusCode.ts'
+import { notifier } from '../core/notifier.ts'
+import { updateOrganization } from '../core/persistence/updateOrganization.ts'
+import { userAuthRequestPipe } from './requestPipe.ts'
 import { SNSClient } from '@aws-sdk/client-sns'
-import { snsNotifier } from './snsNotifier.js'
+import { snsNotifier } from './snsNotifier.ts'
 
 const { TableName, topicArn } = fromEnv({
 	TableName: 'TABLE_NAME',
@@ -29,7 +29,7 @@ export const handler = userAuthRequestPipe(
 	(event) => ({
 		id: event.pathParameters?.id as string,
 		patch: JSON.parse(event.body ?? ''),
-		version: parseInt(event.headers['if-match'] ?? '0', 10),
+		version: Number.parseInt(event.headers['if-match'] ?? '0', 10),
 	}),
 	async ({ id, patch, version }, authContext) =>
 		update(id, patch, version, authContext),

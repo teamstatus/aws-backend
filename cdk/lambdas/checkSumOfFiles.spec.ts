@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import path from 'node:path'
 import { describe, test as it } from 'node:test'
-import { checkSumOfFiles } from './checksumOfFiles.js'
+import { checkSumOfFiles } from './checksumOfFiles.ts'
 
 describe('checkSumOfFiles()', async () => {
 	await it('should calculate a checksum of files', async () =>

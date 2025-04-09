@@ -1,11 +1,11 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import type { ProblemDetail } from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { DbContext } from './DbContext.js'
-import { l } from './l.js'
-import type { Invitation } from './inviteToProject.js'
-import { invitationsForUserIndex } from './db.js'
+import type { ProblemDetail } from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { DbContext } from './DbContext.ts'
+import { l } from './l.ts'
+import type { Invitation } from './inviteToProject.ts'
+import { invitationsForUserIndex } from './db.ts'
 
 export const listInvitations =
 	(dbContext: DbContext) =>

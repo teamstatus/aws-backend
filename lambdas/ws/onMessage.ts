@@ -1,9 +1,6 @@
-export const handler = async (event: {
+export const handler = (_event: {
 	connectionId: string
 	domain: string
 	stage: string
 	params: URLSearchParams
-}): Promise<{ statusCode: number }> => {
-	console.log(JSON.stringify({ event }))
-	return { statusCode: 200 }
-}
+}): { statusCode: number } => ({ statusCode: 200 })

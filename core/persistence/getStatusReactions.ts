@@ -1,7 +1,7 @@
-import { DynamoDBClient, QueryCommand } from '@aws-sdk/client-dynamodb'
+import { type DynamoDBClient, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import type { Reaction, StatusReaction } from './createReaction.js'
-import { statusReactionIndex } from './db.js'
+import type { Reaction, StatusReaction } from './createReaction.ts'
+import { statusReactionIndex } from './db.ts'
 
 export const getStatusReactions =
 	({ db, TableName }: { db: DynamoDBClient; TableName: string }) =>
@@ -32,9 +32,12 @@ export const getStatusReactions =
 							author: item.author,
 							status: item.statusReaction__status,
 						}
-						if (item.description !== null)
+						if (item.description !== null) {
 							reaction.description = item.description
-						if (item.role !== null) reaction.role = item.role
+						}
+						if (item.role !== null) {
+							reaction.role = item.role
+						}
 						return reaction
 					}) ?? [],
 			)

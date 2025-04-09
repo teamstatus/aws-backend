@@ -1,7 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { fromEnv } from '@nordicsemiconductor/from-env'
-import { listProjects } from '../core/persistence/listProjects.js'
-import { userAuthRequestPipe } from './requestPipe.js'
+import { listProjects } from '../core/persistence/listProjects.ts'
+import { userAuthRequestPipe } from './requestPipe.ts'
 
 const { TableName } = fromEnv({
 	TableName: 'TABLE_NAME',

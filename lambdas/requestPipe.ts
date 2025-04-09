@@ -2,11 +2,11 @@ import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
-import { BadRequestError, type ProblemDetail } from '../core/ProblemDetail.js'
-import { StatusCode } from '../core/StatusCode.js'
-import type { EmailAuthContext, UserAuthContext } from '../core/auth.js'
-import type { AuthorizedEvent } from './AuthorizedEvent.js'
-import { problem, result } from './response.js'
+import { BadRequestError, type ProblemDetail } from '../core/ProblemDetail.ts'
+import { StatusCode } from '../core/StatusCode.ts'
+import type { EmailAuthContext, UserAuthContext } from '../core/auth.ts'
+import type { AuthorizedEvent } from './AuthorizedEvent.ts'
+import { problem, result } from './response.ts'
 
 export const anonRequestPipe =
 	<ValidInput, Result extends Record<string, any>>(
@@ -16,16 +16,16 @@ export const anonRequestPipe =
 	) =>
 	async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
 		{
-			console.log(JSON.stringify({ event }))
 			let input: ValidInput
 			try {
 				input = validateInput(event)
-			} catch (error) {
-				console.error(error)
+			} catch (_error) {
 				return problem(event)(BadRequestError('Input validation failed.'))
 			}
 			const maybeResult = await handle(input)
-			if ('error' in maybeResult) return problem(event)(maybeResult.error)
+			if ('error' in maybeResult) {
+				return problem(event)(maybeResult.error)
+			}
 			return result(event)(
 				toStatusCode?.(maybeResult) ?? StatusCode.OK,
 				maybeResult,
@@ -51,19 +51,19 @@ export const userAuthRequestPipe =
 		event: AuthorizedEvent<UserAuthContext>,
 	): Promise<APIGatewayProxyResultV2> => {
 		{
-			console.log(JSON.stringify({ event }))
 			let input: ValidInput
 			try {
 				input = validateInput(event)
-			} catch (error) {
-				console.error(error)
+			} catch (_error) {
 				return problem(event)(BadRequestError('Input validation failed.'))
 			}
 			const maybeResult = await handle(
 				input,
 				event.requestContext.authorizer.lambda,
 			)
-			if ('error' in maybeResult) return problem(event)(maybeResult.error)
+			if ('error' in maybeResult) {
+				return problem(event)(maybeResult.error)
+			}
 			return result(event)(
 				toStatusCode?.(maybeResult) ?? StatusCode.OK,
 				maybeResult,
@@ -94,19 +94,19 @@ export const emailAuthRequestPipe =
 		event: AuthorizedEvent<EmailAuthContext>,
 	): Promise<APIGatewayProxyResultV2> => {
 		{
-			console.log(JSON.stringify({ event }))
 			let input: ValidInput
 			try {
 				input = validateInput(event)
-			} catch (error) {
-				console.error(error)
+			} catch (_error) {
 				return problem(event)(BadRequestError('Input validation failed.'))
 			}
 			const maybeResult = await handle(
 				input,
 				event.requestContext.authorizer.lambda,
 			)
-			if ('error' in maybeResult) return problem(event)(maybeResult.error)
+			if ('error' in maybeResult) {
+				return problem(event)(maybeResult.error)
+			}
 			return result(event)(
 				toStatusCode?.(maybeResult) ?? StatusCode.OK,
 				maybeResult,

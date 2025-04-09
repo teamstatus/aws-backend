@@ -2,17 +2,17 @@ import {
 	ConditionalCheckFailedException,
 	DeleteItemCommand,
 } from '@aws-sdk/client-dynamodb'
-import type { CoreEvent } from '../CoreEvent.js'
-import { CoreEventType } from '../CoreEventType.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import { CoreEventType } from '../CoreEventType.ts'
 import {
 	ConflictError,
 	InternalError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import type { UserAuthContext } from '../auth.js'
-import type { Notify } from '../notifier.js'
-import type { DbContext } from './DbContext.js'
-import { l } from './l.js'
+} from '../ProblemDetail.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { Notify } from '../notifier.ts'
+import type { DbContext } from './DbContext.ts'
+import { l } from './l.ts'
 
 type SyncDeletedEvent = CoreEvent & {
 	type: CoreEventType.SYNC_DELETED
@@ -66,11 +66,11 @@ export const deleteSync =
 
 			return { deleted: true }
 		} catch (error) {
-			if ((error as Error).name === ConditionalCheckFailedException.name)
+			if ((error as Error).name === ConditionalCheckFailedException.name) {
 				return {
 					error: ConflictError(`Failed to delete sync.`),
 				}
-			console.error(error)
+			}
 			return { error: InternalError() }
 		}
 	}

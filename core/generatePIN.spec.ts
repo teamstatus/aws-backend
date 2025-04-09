@@ -1,6 +1,6 @@
 import { describe, test as it } from 'node:test'
 import { check, not, stringMatching } from 'tsmatchers'
-import { generatePIN } from './generatePIN.js'
+import { generatePIN } from './generatePIN.ts'
 
 describe('generatePIN()', () => {
 	void it('should generate an 8 digit PIN', () => {

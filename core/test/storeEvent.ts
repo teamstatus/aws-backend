@@ -1,5 +1,5 @@
-import type { CoreEvent } from '../CoreEvent.js'
-import { type listenerFn } from '../notifier.js'
+import type { CoreEvent } from '../CoreEvent.ts'
+import type { listenerFn } from '../notifier.ts'
 
 export const storeEvent =
 	(events: CoreEvent[]): listenerFn =>

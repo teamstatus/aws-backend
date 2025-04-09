@@ -1,14 +1,14 @@
 import { GetItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import type { DbContext } from './DbContext.js'
-import type { Sync } from './createSync.js'
-import type { UserAuthContext } from '../auth.js'
+import type { DbContext } from './DbContext.ts'
+import type { Sync } from './createSync.ts'
+import type { UserAuthContext } from '../auth.ts'
 import {
 	AccessDeniedError,
 	NotFoundError,
 	type ProblemDetail,
-} from '../ProblemDetail.js'
-import { listProjects } from './listProjects.js'
+} from '../ProblemDetail.ts'
+import { listProjects } from './listProjects.ts'
 
 export type SerializedSync = Omit<Sync, 'projectIds'> & {
 	projectIds: string[]
@@ -21,13 +21,17 @@ export const getSync =
 		authContext: UserAuthContext,
 	): Promise<{ sync: SerializedSync } | { error: ProblemDetail }> => {
 		const maybeSync = await getSyncById(dbContext)(syncId)
-		if ('error' in maybeSync) return maybeSync
+		if ('error' in maybeSync) {
+			return maybeSync
+		}
 		const { sync } = maybeSync
 		const maybeProjectIds = await projectsInSyncForUser(dbContext)(
 			sync,
 			authContext,
 		)
-		if ('error' in maybeProjectIds) return maybeProjectIds
+		if ('error' in maybeProjectIds) {
+			return maybeProjectIds
+		}
 		return {
 			sync: serialize({
 				...sync,
@@ -75,8 +79,9 @@ export const getSyncById =
 			}),
 		)
 
-		if (Item === undefined)
+		if (Item === undefined) {
 			return { error: NotFoundError(`Sync ${id} not found!`) }
+		}
 		const sync = itemToSync(unmarshall(Item))
 		return { sync }
 	}
@@ -97,13 +102,14 @@ export const projectsInSyncForUser =
 		const userProjectIdsInSync = [...sync.projectIds].filter((id) =>
 			userProjectIds.includes(id),
 		)
-		if (userProjectIdsInSync.length === 0)
+		if (userProjectIdsInSync.length === 0) {
 			return {
 				error: AccessDeniedError(
 					`Access to sync ${sync.id} denied.`,
 					`Only members of the organizations referenced in this sync have access. Ask the owner of this sync (${sync.owner}) to invite you to the relevant projects.`,
 				),
 			}
+		}
 
 		return { projectIds: new Set(userProjectIdsInSync) }
 	}

@@ -40,7 +40,7 @@ export STACK_NAME_PREFIX="my-teamstatus"
 npx cdk deploy
 
 # Configure the JWT keys
-npx tsx ./cli/configureKeys.ts
+node --experimental-transform-types ./cli/configureKeys.ts
 ```
 
 ## CD with GitHub Actions
@@ -64,7 +64,7 @@ gh variable set STACK_NAME_PREFIX --env production --body "${STACK_NAME_PREFIX}"
 Configure the AWS credentials for an account used for CI, then run
 
 ```bash
-npx cdk --app 'npx tsx cdk/ci/main.ts' deploy
+npx cdk --app 'node --experimental-transform-types cdk/ci/main.ts' deploy
 ```
 
 This creates a role with Administrator privileges in that account, and allows

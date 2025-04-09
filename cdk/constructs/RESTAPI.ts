@@ -4,19 +4,19 @@ import {
 	aws_iam as IAM,
 	aws_lambda as Lambda,
 	aws_logs as Logs,
-	Stack,
+	type Stack,
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import { type BackendLambdas } from '../lambdas/packBackendLambdas.js'
-import type { PackedLambda } from '../lambdas/packLambdaFromPath.js'
-import { readKeyPolicy } from '../teamstatus-backend.js'
-import { ApiEmailAuthorizer, ApiUserAuthorizer } from './APIAuthorizer.js'
-import { ApiRoute } from './ApiRoute.js'
-import { CoreLambda } from './CoreLambda.js'
-import { LambdaSource } from './LambdaSource.js'
-import { Persistence } from './Persistence.js'
-import type { WebsocketAPI } from './WebsocketAPI.js'
-import type { Events } from './Events.js'
+import type { BackendLambdas } from '../lambdas/packBackendLambdas.ts'
+import type { PackedLambda } from '../lambdas/packLambdaFromPath.ts'
+import { readKeyPolicy } from '../teamstatus-backend.ts'
+import { ApiEmailAuthorizer, ApiUserAuthorizer } from './APIAuthorizer.ts'
+import { ApiRoute } from './ApiRoute.ts'
+import { CoreLambda } from './CoreLambda.ts'
+import { LambdaSource } from './LambdaSource.ts'
+import type { Persistence } from './Persistence.ts'
+import type { WebsocketAPI } from './WebsocketAPI.ts'
+import type { Events } from './Events.ts'
 
 export class RESTAPI extends Construct {
 	public readonly URL: string

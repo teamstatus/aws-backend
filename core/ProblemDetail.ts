@@ -1,4 +1,4 @@
-import { StatusCode } from './StatusCode.js'
+import { StatusCode } from './StatusCode.ts'
 
 /**
  * Problem Details Object
