@@ -43,7 +43,7 @@
     "@types/chance": "1.1.6",
     "@types/glob": "8.1.0",
     "@types/jsonwebtoken": "^9.0.9",
-    "@types/mailparser": "3.4.5",
+    "@types/mailparser": "3.4.6",
     "@types/yazl": "2.4.6",
     "aws-cdk": "2.1013.0",
     "aws-cdk-lib": "2.194.0",
