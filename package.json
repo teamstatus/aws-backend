@@ -44,7 +44,7 @@
     "@types/glob": "8.1.0",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/mailparser": "3.4.6",
-    "@types/yazl": "2.4.6",
+    "@types/yazl": "3.3.0",
     "aws-cdk": "2.1016.1",
     "aws-cdk-lib": "2.197.0",
     "cdk": "2.1016.0",
