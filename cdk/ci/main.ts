@@ -1,7 +1,7 @@
 import { IAMClient } from '@aws-sdk/client-iam'
 import { App } from 'aws-cdk-lib'
-import pJson from '../../package.json'
-import { ensureGitHubOIDCProvider } from '../ensureGitHubOIDCProvider.ts'
+import pJson from '../../package.json' with { type: 'json' }
+import { ensureGitHubOIDCProvider } from '@bifravst/ci'
 import { CIStack } from './CIStack.ts'
 
 const repoUrl = new URL(pJson.repository.url)

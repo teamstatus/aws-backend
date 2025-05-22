@@ -1,14 +1,13 @@
 import { Construct } from 'constructs'
 import {
 	aws_sns_subscriptions as Subscriptions,
-	aws_lambda as Lambda,
-	aws_logs as Logs,
+	type aws_lambda as Lambda,
 	aws_iam as IAM,
 } from 'aws-cdk-lib'
 import type { BackendLambdas } from '../lambdas/packBackendLambdas.ts'
-import { LambdaSource } from './LambdaSource.ts'
 import type { Events } from './Events.ts'
 import type { Persistence } from './Persistence.ts'
+import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 
 export class Onboarding extends Construct {
 	constructor(
@@ -28,15 +27,10 @@ export class Onboarding extends Construct {
 	) {
 		super(parent, 'onboarding')
 
-		const lambda = new Lambda.Function(this, 'fn', {
+		const lambda = new PackedLambdaFn(this, 'fn', lambdaSources.onboarding, {
 			description: 'Handle onboarding task',
-			handler: lambdaSources.onboarding.handler,
-			architecture: Lambda.Architecture.ARM_64,
-			runtime: Lambda.Runtime.NODEJS_LATEST,
 			memorySize: 256,
-			code: new LambdaSource(this, lambdaSources.onboarding).code,
 			layers: [layer],
-			logRetention: Logs.RetentionDays.ONE_DAY,
 			initialPolicy: [
 				new IAM.PolicyStatement({
 					actions: ['ses:SendEmail'],
@@ -47,7 +41,7 @@ export class Onboarding extends Construct {
 				TABLE_NAME: persistence.table.tableName,
 				TOPIC_ARN: events.topic.topicArn,
 			},
-		})
+		}).fn
 
 		events.topic.addSubscription(new Subscriptions.LambdaSubscription(lambda))
 		persistence.table.grantFullAccess(lambda)

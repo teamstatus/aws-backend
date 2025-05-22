@@ -1,13 +1,11 @@
 import { Construct } from 'constructs'
 import {
 	aws_sns_subscriptions as Subscriptions,
-	aws_lambda as Lambda,
-	aws_logs as Logs,
 	aws_iam as IAM,
 } from 'aws-cdk-lib'
 import type { BackendLambdas } from '../lambdas/packBackendLambdas.ts'
-import { LambdaSource } from './LambdaSource.ts'
 import type { Events } from './Events.tsx'
+import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 
 export class EventEmailNotifications extends Construct {
 	constructor(
@@ -22,22 +20,22 @@ export class EventEmailNotifications extends Construct {
 	) {
 		super(parent, 'eventEmailNotifications')
 
-		const lambda = new Lambda.Function(this, 'fn', {
-			description: 'Notify admins about important events',
-			handler: lambdaSources.eventEmailNotifications.handler,
-			architecture: Lambda.Architecture.ARM_64,
-			runtime: Lambda.Runtime.NODEJS_LATEST,
-			memorySize: 256,
-			code: new LambdaSource(this, lambdaSources.eventEmailNotifications).code,
-			logRetention: Logs.RetentionDays.ONE_DAY,
-			initialPolicy: [
-				new IAM.PolicyStatement({
-					actions: ['ses:SendEmail'],
-					resources: ['*'],
-				}),
-			],
-			environment: {},
-		})
+		const lambda = new PackedLambdaFn(
+			this,
+			'fn',
+			lambdaSources.eventEmailNotifications,
+			{
+				description: 'Notify admins about important events',
+				memorySize: 256,
+				initialPolicy: [
+					new IAM.PolicyStatement({
+						actions: ['ses:SendEmail'],
+						resources: ['*'],
+					}),
+				],
+				environment: {},
+			},
+		).fn
 
 		events.topic.addSubscription(new Subscriptions.LambdaSubscription(lambda))
 	}

@@ -6,7 +6,6 @@ import {
 	Stack,
 } from 'aws-cdk-lib'
 import type { Construct } from 'constructs'
-import { LambdaSource } from './constructs/LambdaSource.ts'
 import { Persistence } from './constructs/Persistence.ts'
 import { RESTAPI } from './constructs/RESTAPI.ts'
 import { WebsocketAPI } from './constructs/WebsocketAPI.ts'
@@ -14,12 +13,14 @@ import {
 	packBackendLambdas,
 	type BackendLambdas,
 } from './lambdas/packBackendLambdas.ts'
-import type { PackedLayer } from './lambdas/packLayer.ts'
-import { packLayer } from './lambdas/packLayer.ts'
+import type { PackedLayer } from '@bifravst/aws-cdk-lambda-helpers/layer'
+import { packLayer } from '@bifravst/aws-cdk-lambda-helpers/layer'
 import { EmailReceiving } from './constructs/EmailReceiving.ts'
 import { Events } from './constructs/Events.ts'
 import { EventEmailNotifications } from './constructs/EventEmailNotifications.ts'
 import { Onboarding } from './constructs/Onboarding.ts'
+import { LambdaSource } from '@bifravst/aws-cdk-lambda-helpers/cdk'
+import { isTest } from '@bifravst/aws-cdk-lambda-helpers/util'
 
 export const readKeyPolicy = (
 	stack: Stack,
@@ -66,18 +67,16 @@ class TeamStatusBackendStack extends Stack {
 	) {
 		super(parent, name)
 
-		const isTest = this.node.tryGetContext('isTest') === '1'
-
-		const persistence = new Persistence(this, { isTest })
+		const persistence = new Persistence(this)
 
 		const backendLayer = new Lambda.LayerVersion(this, 'backendLayer', {
 			code: new LambdaSource(this, {
 				hash: layer.hash,
-				zipFile: layer.layerZipFile,
+				zipFilePath: layer.layerZipFilePath,
 				id: 'backendLayer',
 			}).code,
 			compatibleArchitectures: [Lambda.Architecture.ARM_64],
-			compatibleRuntimes: [Lambda.Runtime.NODEJS_LATEST],
+			compatibleRuntimes: [Lambda.Runtime.NODEJS_22_X],
 		})
 
 		const ws = new WebsocketAPI(this, {
@@ -95,7 +94,7 @@ class TeamStatusBackendStack extends Stack {
 			events,
 		})
 
-		if (!isTest) {
+		if (!isTest(this)) {
 			new EmailReceiving(this, {
 				lambdaSources,
 				layer: backendLayer,

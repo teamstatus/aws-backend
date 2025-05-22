@@ -1,18 +1,17 @@
 import {
-	Duration,
 	aws_dynamodb as dynamoDb,
 	aws_apigatewayv2 as HttpApi,
 	aws_iam as IAM,
-	aws_lambda as Lambda,
+	type aws_lambda as Lambda,
 	RemovalPolicy,
 	type Stack,
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import type { BackendLambdas } from '../lambdas/packBackendLambdas.ts'
-import type { PackedLambda } from '../lambdas/packLambdaFromPath.ts'
+import type { PackedLambda } from '@bifravst/aws-cdk-lambda-helpers'
+import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import { WSUserAuthorizer } from './APIAuthorizer.ts'
 import { integrationUri } from './ApiRoute.ts'
-import { LambdaSource } from './LambdaSource.ts'
 
 export class WebsocketAPI extends Construct {
 	public readonly URL: string
@@ -105,18 +104,12 @@ class WsapiRoute extends Construct {
 	) {
 		super(api, routeKey)
 
-		this.fn = new Lambda.Function(this, 'lambda', {
-			handler: source.handler,
-			architecture: Lambda.Architecture.ARM_64,
-			runtime: Lambda.Runtime.NODEJS_LATEST,
-			timeout: Duration.seconds(5),
-			memorySize: 1792,
-			code: new LambdaSource(this, source).code,
+		this.fn = new PackedLambdaFn(this, 'lambda', source, {
 			description: `Websocket handler for ${routeKey}`,
 			environment: {
 				CONNECTIONS_TABLE_NAME: clientsTable.tableName,
 			},
-		})
+		}).fn
 		clientsTable.grantWriteData(this.fn)
 
 		this.fn.addPermission('invokeByAPI', {

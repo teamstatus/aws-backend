@@ -10,4 +10,5 @@ dist/
 .envrc
 dynamodb_local_latest/
 dynamodb_local_latest.zip
+dynamodb-local-metadata.json
 test_suite_analysis/

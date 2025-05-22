@@ -3,14 +3,13 @@ import {
 	aws_apigatewayv2 as HttpApi,
 	aws_iam as IAM,
 	aws_lambda as Lambda,
-	aws_logs as Logs,
 	type Stack,
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import type { PackedLambda } from '../lambdas/packLambdaFromPath.ts'
 import { readKeyPolicy } from '../teamstatus-backend.ts'
 import { integrationUri } from './ApiRoute.ts'
-import { LambdaSource } from './LambdaSource.ts'
+import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
+import type { PackedLambda } from '@bifravst/aws-cdk-lambda-helpers'
 
 abstract class ApiAuthorizer extends Construct {
 	public readonly fn: Lambda.IFunction
@@ -28,22 +27,15 @@ abstract class ApiAuthorizer extends Construct {
 	) {
 		super(parent, id)
 
-		this.fn = new Lambda.Function(this, 'fn', {
+		this.fn = new PackedLambdaFn(this, 'fn', source, {
 			description,
-			handler: source.handler,
 			architecture: Lambda.Architecture.ARM_64,
-			runtime: Lambda.Runtime.NODEJS_LATEST,
+			runtime: Lambda.Runtime.NODEJS_22_X,
 			timeout: Duration.seconds(1),
-			memorySize: 1792,
-			code: new LambdaSource(this, source).code,
 			layers: [layer],
-			logRetention: Logs.RetentionDays.ONE_WEEK,
 			initialPolicy: [readKeyPolicy(stack, 'publicKey')],
-			environment: {
-				STACK_NAME: stack.stackName,
-				...(environment ?? {}),
-			},
-		})
+			environment,
+		}).fn
 
 		let authorizerProps: HttpApi.CfnAuthorizerProps = {
 			apiId: api.ref,

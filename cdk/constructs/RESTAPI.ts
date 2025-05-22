@@ -2,21 +2,20 @@ import {
 	Duration,
 	aws_apigatewayv2 as HttpApi,
 	aws_iam as IAM,
-	aws_lambda as Lambda,
-	aws_logs as Logs,
+	type aws_lambda as Lambda,
 	type Stack,
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import type { BackendLambdas } from '../lambdas/packBackendLambdas.ts'
-import type { PackedLambda } from '../lambdas/packLambdaFromPath.ts'
 import { readKeyPolicy } from '../teamstatus-backend.ts'
 import { ApiEmailAuthorizer, ApiUserAuthorizer } from './APIAuthorizer.ts'
 import { ApiRoute } from './ApiRoute.ts'
 import { CoreLambda } from './CoreLambda.ts'
-import { LambdaSource } from './LambdaSource.ts'
 import type { Persistence } from './Persistence.ts'
 import type { WebsocketAPI } from './WebsocketAPI.ts'
 import type { Events } from './Events.ts'
+import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
+import type { PackedLambda } from '@bifravst/aws-cdk-lambda-helpers'
 
 export class RESTAPI extends Construct {
 	public readonly URL: string
@@ -38,52 +37,45 @@ export class RESTAPI extends Construct {
 	) {
 		super(parent, 'API')
 
-		const isTest = this.node.tryGetContext('isTest') === '1'
-
-		const loginRequest = new Lambda.Function(this, 'loginRequest', {
-			description: 'Handle login requests',
-			handler: lambdaSources.loginRequest.handler,
-			architecture: Lambda.Architecture.ARM_64,
-			runtime: Lambda.Runtime.NODEJS_LATEST,
-			timeout: Duration.seconds(1),
-			memorySize: 1792,
-			code: new LambdaSource(this, lambdaSources.loginRequest).code,
-			layers: [layer],
-			logRetention: Logs.RetentionDays.ONE_WEEK,
-			initialPolicy: [
-				new IAM.PolicyStatement({
-					actions: ['ses:SendEmail'],
-					resources: ['*'],
-				}),
-			],
-			environment: {
-				TABLE_NAME: persistence.table.tableName,
-				TOPIC_ARN: events.topic.topicArn,
-				IS_TEST: isTest ? '1' : '0',
+		const loginRequest = new PackedLambdaFn(
+			this,
+			'loginRequest',
+			lambdaSources.loginRequest,
+			{
+				description: 'Handle login requests',
+				timeout: Duration.seconds(1),
+				layers: [layer],
+				initialPolicy: [
+					new IAM.PolicyStatement({
+						actions: ['ses:SendEmail'],
+						resources: ['*'],
+					}),
+				],
+				environment: {
+					TABLE_NAME: persistence.table.tableName,
+					TOPIC_ARN: events.topic.topicArn,
+				},
 			},
-		})
+		).fn
 		persistence.table.grantFullAccess(loginRequest)
 		events.topic.grantPublish(loginRequest)
 
-		const pinLogin = new Lambda.Function(this, 'pinLogin', {
-			description: 'Handle logins with PINs',
-			handler: lambdaSources.pinLogin.handler,
-			architecture: Lambda.Architecture.ARM_64,
-			runtime: Lambda.Runtime.NODEJS_LATEST,
-			timeout: Duration.seconds(1),
-			memorySize: 1792,
-			code: new LambdaSource(this, lambdaSources.pinLogin).code,
-			layers: [layer],
-			logRetention: Logs.RetentionDays.ONE_WEEK,
-			initialPolicy: [readKeyPolicy(parent, 'privateKey')],
-			environment: {
-				STACK_NAME: parent.stackName,
-				TABLE_NAME: persistence.table.tableName,
-				WS_URL: ws.URL,
-				TOPIC_ARN: events.topic.topicArn,
-				IS_TEST: isTest ? '1' : '0',
+		const pinLogin = new PackedLambdaFn(
+			this,
+			'pinLogin',
+			lambdaSources.pinLogin,
+			{
+				description: 'Handle logins with PINs',
+				timeout: Duration.seconds(1),
+				layers: [layer],
+				initialPolicy: [readKeyPolicy(parent, 'privateKey')],
+				environment: {
+					TABLE_NAME: persistence.table.tableName,
+					WS_URL: ws.URL,
+					TOPIC_ARN: events.topic.topicArn,
+				},
 			},
-		})
+		).fn
 		persistence.table.grantFullAccess(pinLogin)
 		events.topic.grantPublish(pinLogin)
 
@@ -299,7 +291,6 @@ export class RESTAPI extends Construct {
 					source,
 					ws,
 					events,
-					isTest,
 				}).lambda,
 				routeKey,
 				authContext,
@@ -309,28 +300,13 @@ export class RESTAPI extends Construct {
 		const api = new HttpApi.CfnApi(this, 'api', {
 			name: 'teamstatus.space API',
 			protocolType: 'HTTP',
-			// This has no effect, maybe a bug?
-			/*
+			// See https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-cors.html
+			// Note: To return CORS headers, your *request* must contain an origin header. For the OPTIONS method, your *request* must contain an origin header and an Access-Control-Request-Method header.
 			corsConfiguration: {
-				allowCredentials: true,
-				allowMethods: [Lambda.HttpMethod.ALL],
-				maxAge: 60,
-				exposeHeaders: ['Content-Type', 'Content-Length', 'Content-Language'],
-				allowOrigins: ['http://localhost:8080', 'http://teamstatus.space'],
+				allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+				allowOrigins: ['*'],
+				allowHeaders: ['Authorization', 'Content-Type', 'Accept', 'If-Match'],
 			},
-			*/
-		})
-
-		// Use a lambda to send CORS headers
-		const cors = new Lambda.Function(this, 'cors', {
-			description: 'Send CORS headers',
-			handler: lambdaSources.cors.handler,
-			architecture: Lambda.Architecture.ARM_64,
-			runtime: Lambda.Runtime.NODEJS_LATEST,
-			timeout: Duration.seconds(1),
-			memorySize: 256,
-			code: new LambdaSource(this, lambdaSources.cors).code,
-			logRetention: Logs.RetentionDays.ONE_DAY,
 		})
 
 		const stage = new HttpApi.CfnStage(this, 'stage', {
@@ -379,16 +355,6 @@ export class RESTAPI extends Construct {
 				stage,
 				authorizer,
 			})
-		const addCors = (path: string) =>
-			new ApiRoute(this, `${path.slice(1).replaceAll('/', '_')}CORS`, {
-				api,
-				function: cors,
-				method: Lambda.HttpMethod.OPTIONS,
-				route: path,
-				stack: parent,
-				stage,
-			})
-
 		const authContextMap = {
 			email: emailAuthorizer.authorizer,
 			user: userAuthorizer.authorizer,
@@ -401,14 +367,6 @@ export class RESTAPI extends Construct {
 			...coreLambdas.map(({ routeId: id, fn, routeKey, authContext }) =>
 				addRoute(id, routeKey, fn, authContextMap[authContext]),
 			),
-			// CORS
-			addCors('/login/email'),
-			addCors('/login/email/pin'),
-			...[
-				...new Set(
-					coreLambdas.map(({ routeKey }) => routeKey.split(' ')[1] as string),
-				),
-			].map((path) => addCors(path)),
 		]
 
 		routes.map((r) => deployment.node.addDependency(r))
