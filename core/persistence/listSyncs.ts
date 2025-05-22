@@ -8,6 +8,7 @@ import { itemToSync, serialize, type SerializedSync } from './getSync.ts'
 import { l } from './l.ts'
 import { listProjects } from './listProjects.ts'
 import { projectSyncProjectIndex, syncOwnerIndex } from './db.ts'
+import { chunkArray } from '../../util/chunkArray.ts'
 
 export const listSyncs =
 	(dbContext: DbContext) =>
@@ -30,26 +31,32 @@ export const listSyncs =
 		}
 
 		const { db, TableName } = dbContext
-		const { Responses } = await db.send(
-			new BatchGetItemCommand({
-				RequestItems: {
-					[TableName]: {
-						Keys: ids.map((id) => ({
-							id: { S: id },
-							type: {
-								S: 'projectSync',
+
+		const responses = await Promise.all(
+			chunkArray(ids, 100).map((chunk) =>
+				db.send(
+					new BatchGetItemCommand({
+						RequestItems: {
+							[TableName]: {
+								Keys: chunk.map((id) => ({
+									id: { S: id },
+									type: { S: 'projectSync' },
+								})),
 							},
-						})),
-					},
-				},
-			}),
+						},
+					}),
+				),
+			),
 		)
 
+		const syncs: Array<SerializedSync> = responses
+			.flatMap(({ Responses }) => Responses?.[TableName] ?? [])
+			.map((Item) => itemToSync(unmarshall(Item)))
+			.sort((s1, s2) => decodeTime(s2.id) - decodeTime(s1.id))
+			.map(serialize)
+
 		return {
-			syncs: (Responses?.[TableName] ?? [])
-				.map((Item) => itemToSync(unmarshall(Item)))
-				.sort((s1, s2) => decodeTime(s2.id) - decodeTime(s1.id))
-				.map(serialize),
+			syncs,
 		}
 	}
 

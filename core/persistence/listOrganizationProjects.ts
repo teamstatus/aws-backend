@@ -8,6 +8,7 @@ import { isOrganizationMember } from './getOrganizationMember.ts'
 import { itemToProject } from './getProject.ts'
 import { l } from './l.ts'
 import { projectMemberIndex } from './db.ts'
+import { chunkArray } from '../../util/chunkArray.ts'
 
 export const listOrganizationProjects =
 	(dbContext: DbContext) =>
@@ -45,26 +46,31 @@ export const listOrganizationProjects =
 			return { projects: [] }
 		}
 
-		const { Responses } = await db.send(
-			new BatchGetItemCommand({
-				RequestItems: {
-					[TableName]: {
-						Keys: Items.map((Item) => unmarshall(Item)).map(
-							({ projectMember__project: id }) => ({
-								id: { S: id },
-								type: {
-									S: 'project',
+		const projects = (
+			await Promise.all(
+				chunkArray(Items, 100).map(async (chunk) => {
+					const { Responses } = await db.send(
+						new BatchGetItemCommand({
+							RequestItems: {
+								[TableName]: {
+									Keys: chunk
+										.map((Item) => unmarshall(Item))
+										.map(({ projectMember__project: id }) => ({
+											id: { S: id },
+											type: { S: 'project' },
+										})),
 								},
-							}),
-						),
-					},
-				},
-			}),
-		)
+							},
+						}),
+					)
+					return (Responses?.[TableName] ?? []).map((Item) =>
+						itemToProject(unmarshall(Item)),
+					)
+				}),
+			)
+		).flat()
 
 		return {
-			projects: (Responses?.[TableName] ?? []).map((Item) =>
-				itemToProject(unmarshall(Item)),
-			),
+			projects,
 		}
 	}

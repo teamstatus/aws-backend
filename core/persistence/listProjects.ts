@@ -8,6 +8,7 @@ import type { Project } from './createProject.ts'
 import { itemToProject } from './getProject.ts'
 import { l } from './l.ts'
 import { projectMemberIndex } from './db.ts'
+import { chunkArray } from '../../util/chunkArray.ts'
 
 type UserProject = Project & { role: Role }
 
@@ -53,30 +54,38 @@ export const listProjects =
 			{},
 		)
 
-		const { Responses } = await db.send(
-			new BatchGetItemCommand({
-				RequestItems: {
-					[TableName]: {
-						Keys: Items.map((Item) => unmarshall(Item)).map(
-							({ projectMember__project: id }) => ({
-								id: { S: id },
-								type: {
-									S: 'project',
+		const projects = (
+			await Promise.all(
+				chunkArray(Items, 100).map(async (chunk) => {
+					const { Responses } = await db.send(
+						new BatchGetItemCommand({
+							RequestItems: {
+								[TableName]: {
+									Keys: chunk
+										.map((Item) => unmarshall(Item))
+										.map(({ projectMember__project: id }) => ({
+											id: { S: id },
+											type: {
+												S: 'project',
+											},
+										})),
 								},
-							}),
-						),
-					},
-				},
-			}),
-		)
+							},
+						}),
+					)
+
+					return (Responses?.[TableName] ?? []).map((Item) => {
+						const project = itemToProject(unmarshall(Item))
+						return {
+							...project,
+							role: projectRole[project.id],
+						} as UserProject
+					})
+				}),
+			)
+		).flat()
 
 		return {
-			projects: (Responses?.[TableName] ?? []).map((Item) => {
-				const project = itemToProject(unmarshall(Item))
-				return {
-					...project,
-					role: projectRole[project.id],
-				} as UserProject
-			}),
+			projects,
 		}
 	}

@@ -6,6 +6,7 @@ import type { DbContext } from './DbContext.ts'
 import type { Organization } from './createOrganization.ts'
 import { l } from './l.ts'
 import { organizationMemberIndex } from './db.ts'
+import { chunkArray } from '../../util/chunkArray.ts'
 
 export const listOrganizations =
 	(dbContext: DbContext) =>
@@ -34,27 +35,34 @@ export const listOrganizations =
 			return { organizations: [] }
 		}
 
-		const { Responses } = await db.send(
-			new BatchGetItemCommand({
-				RequestItems: {
-					[TableName]: {
-						Keys: Items.map((Item) => unmarshall(Item)).map(
-							({ organizationMember__organization: id }) => ({
-								id: { S: id },
-								type: {
-									S: 'organization',
+		const organizations = (
+			await Promise.all(
+				chunkArray(Items, 100).map(async (chunk) => {
+					const { Responses } = await db.send(
+						new BatchGetItemCommand({
+							RequestItems: {
+								[TableName]: {
+									Keys: chunk
+										.map((Item) => unmarshall(Item))
+										.map(({ organizationMember__organization: id }) => ({
+											id: { S: id },
+											type: {
+												S: 'organization',
+											},
+										})),
 								},
-							}),
-						),
-					},
-				},
-			}),
-		)
+							},
+						}),
+					)
+					return (Responses?.[TableName] ?? []).map((Item) =>
+						itemToOrganization(unmarshall(Item)),
+					)
+				}),
+			)
+		).flat()
 
 		return {
-			organizations: (Responses?.[TableName] ?? []).map((Item) =>
-				itemToOrganization(unmarshall(Item)),
-			),
+			organizations,
 		}
 	}
 

@@ -16,6 +16,7 @@ import type { WebsocketAPI } from './WebsocketAPI.ts'
 import type { Events } from './Events.ts'
 import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import type { PackedLambda } from '@bifravst/aws-cdk-lambda-helpers'
+import { isTest } from '@bifravst/aws-cdk-lambda-helpers/util'
 
 export class RESTAPI extends Construct {
 	public readonly URL: string
@@ -54,6 +55,7 @@ export class RESTAPI extends Construct {
 				environment: {
 					TABLE_NAME: persistence.table.tableName,
 					TOPIC_ARN: events.topic.topicArn,
+					IS_TEST: isTest(this) ? '1' : '0',
 				},
 			},
 		).fn
@@ -304,8 +306,9 @@ export class RESTAPI extends Construct {
 			// Note: To return CORS headers, your *request* must contain an origin header. For the OPTIONS method, your *request* must contain an origin header and an Access-Control-Request-Method header.
 			corsConfiguration: {
 				allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-				allowOrigins: ['*'],
+				allowOrigins: ['https://teamstatus.space', 'http://localhost:8080'],
 				allowHeaders: ['Authorization', 'Content-Type', 'Accept', 'If-Match'],
+				allowCredentials: true,
 			},
 		})
 

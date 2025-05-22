@@ -39,7 +39,9 @@ class TeamStatusBackendApp extends App {
 		lambdaSources,
 		layer,
 	}: {
-		context: Record<string, string>
+		context: {
+			[key: string]: any
+		}
 		lambdaSources: BackendLambdas
 		layer: PackedLayer
 	}) {
@@ -135,10 +137,7 @@ class TeamStatusBackendStack extends Stack {
 
 new TeamStatusBackendApp({
 	context: {
-		isTest:
-			process.env.CI !== undefined || process.env.IS_TEST !== undefined
-				? '1'
-				: '0',
+		isTest: process.env.CI !== undefined || process.env.IS_TEST !== undefined,
 		stackNamePrefix: process.env.STACK_NAME_PREFIX ?? 'teamstatus',
 	},
 	lambdaSources: await packBackendLambdas(),
