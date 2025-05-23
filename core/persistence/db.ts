@@ -1,4 +1,4 @@
-export const projectStatusIndex = 'projectStatusIndex-2'
+export const projectStatusIndex = 'projectStatus'
 export const organizationMemberIndex = 'organizationMember'
 export const projectMemberIndex = 'projectMember'
 export const projectMembersIndex = 'projectMembers'
