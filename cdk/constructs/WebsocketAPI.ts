@@ -111,6 +111,7 @@ class WsapiRoute extends Construct {
 			},
 		}).fn
 		clientsTable.grantWriteData(this.fn)
+		this.fn.node.addDependency(clientsTable)
 
 		this.fn.addPermission('invokeByAPI', {
 			principal: new IAM.ServicePrincipal(
