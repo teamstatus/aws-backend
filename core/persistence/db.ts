@@ -24,12 +24,10 @@ export const indexes: Record<
 		keys: ['projectMember__project', 'id'],
 		include: ['role', 'projectMember__user', 'version'],
 	},
-	/*
 	[projectStatusIndex]: {
 		keys: ['projectStatus__project', 'id'],
 		include: ['author', 'message', 'attributeTo', 'version'],
 	},
-	*/
 	[statusReactionIndex]: {
 		keys: ['statusReaction__status', 'id'],
 		include: ['author', 'emoji', 'role', 'description'],
