@@ -32,10 +32,6 @@ export type BackendLambdas = {
 	acceptProjectInvitation: PackedLambda
 	listInvitations: PackedLambda
 	inviteToProject: PackedLambda
-	wsOnConnect: PackedLambda
-	wsOnDisconnect: PackedLambda
-	wsOnMessage: PackedLambda
-	wsAuthorizer: PackedLambda
 	createSync: PackedLambda
 	deleteSync: PackedLambda
 	listStatusInSync: PackedLambda
@@ -157,22 +153,6 @@ export const packBackendLambdas = async (): Promise<BackendLambdas> => ({
 	deleteReaction: await packLambdaFromPath({
 		id: 'deleteReaction',
 		sourceFilePath: 'lambdas/deleteReaction.ts',
-	}),
-	wsOnConnect: await packLambdaFromPath({
-		id: 'wsOnConnect',
-		sourceFilePath: 'lambdas/ws/onConnect.ts',
-	}),
-	wsOnDisconnect: await packLambdaFromPath({
-		id: 'wsOnDisconnect',
-		sourceFilePath: 'lambdas/ws/onDisconnect.ts',
-	}),
-	wsOnMessage: await packLambdaFromPath({
-		id: 'wsOnMessage',
-		sourceFilePath: 'lambdas/ws/onMessage.ts',
-	}),
-	wsAuthorizer: await packLambdaFromPath({
-		id: 'wsAuthorizer',
-		sourceFilePath: 'lambdas/ws/authorizer.ts',
 	}),
 	createSync: await packLambdaFromPath({
 		id: 'createSync',
