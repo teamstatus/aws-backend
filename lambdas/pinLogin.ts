@@ -13,10 +13,9 @@ import { problem, result } from './response.ts'
 import { getPrivateKey } from './signingKeyPromise.ts'
 import { tokenCookie } from './tokenCookie.ts'
 
-const { TableName, stackName, wsURL } = fromEnv({
+const { TableName, stackName } = fromEnv({
 	TableName: 'TABLE_NAME',
 	stackName: 'STACK_NAME',
-	wsURL: 'WS_URL',
 })(process.env)
 
 const ssm = new SSMClient({})
@@ -49,11 +48,6 @@ export const handler = async (
 			await tokenCookie({
 				signingKey: await privateKeyPromise,
 				authContext: r.authContext,
-			}),
-			await tokenCookie({
-				signingKey: await privateKeyPromise,
-				authContext: r.authContext,
-				cookieProps: [`Domain=${new URL(wsURL).hostname}`],
 			}),
 		])
 	} catch (_error) {

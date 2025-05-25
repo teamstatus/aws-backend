@@ -8,7 +8,6 @@ import {
 import type { Construct } from 'constructs'
 import { Persistence } from './constructs/Persistence.ts'
 import { RESTAPI } from './constructs/RESTAPI.ts'
-import { WebsocketAPI } from './constructs/WebsocketAPI.ts'
 import {
 	packBackendLambdas,
 	type BackendLambdas,
@@ -81,18 +80,12 @@ class TeamStatusBackendStack extends Stack {
 			compatibleRuntimes: [Lambda.Runtime.NODEJS_22_X],
 		})
 
-		const ws = new WebsocketAPI(this, {
-			lambdaSources,
-			layer: backendLayer,
-		})
-
 		const events = new Events(this)
 
 		const api = new RESTAPI(this, {
 			lambdaSources,
 			persistence,
 			layer: backendLayer,
-			ws,
 			events,
 		})
 
@@ -125,12 +118,6 @@ class TeamStatusBackendStack extends Stack {
 			exportName: `${this.stackName}:apiURL`,
 			description: 'The API endpoint',
 			value: api.URL,
-		})
-
-		new CfnOutput(this, 'wsURL', {
-			exportName: `${this.stackName}:wsURL`,
-			description: 'The Websocket endpoint',
-			value: ws.URL,
 		})
 	}
 }

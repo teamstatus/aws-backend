@@ -12,7 +12,6 @@ import { ApiEmailAuthorizer, ApiUserAuthorizer } from './APIAuthorizer.ts'
 import { ApiRoute } from './ApiRoute.ts'
 import { CoreLambda } from './CoreLambda.ts'
 import type { Persistence } from './Persistence.ts'
-import type { WebsocketAPI } from './WebsocketAPI.ts'
 import type { Events } from './Events.ts'
 import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import type { PackedLambda } from '@bifravst/aws-cdk-lambda-helpers'
@@ -26,13 +25,11 @@ export class RESTAPI extends Construct {
 			lambdaSources,
 			persistence,
 			layer,
-			ws,
 			events,
 		}: {
 			lambdaSources: BackendLambdas
 			layer: Lambda.ILayerVersion
 			persistence: Persistence
-			ws: WebsocketAPI
 			events: Events
 		},
 	) {
@@ -73,7 +70,6 @@ export class RESTAPI extends Construct {
 				initialPolicy: [readKeyPolicy(parent, 'privateKey')],
 				environment: {
 					TABLE_NAME: persistence.table.tableName,
-					WS_URL: ws.URL,
 					TOPIC_ARN: events.topic.topicArn,
 				},
 			},
@@ -291,7 +287,6 @@ export class RESTAPI extends Construct {
 					layer,
 					persistence,
 					source,
-					ws,
 					events,
 				}).lambda,
 				routeKey,

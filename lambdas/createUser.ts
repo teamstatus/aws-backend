@@ -10,10 +10,9 @@ import { getPrivateKey } from './signingKeyPromise.ts'
 import { tokenCookie } from './tokenCookie.ts'
 import { snsNotifier } from './snsNotifier.ts'
 
-const { TableName, stackName, wsURL, topicArn } = fromEnv({
+const { TableName, stackName, topicArn } = fromEnv({
 	TableName: 'TABLE_NAME',
 	stackName: 'STACK_NAME',
-	wsURL: 'WS_URL',
 	topicArn: 'TOPIC_ARN',
 })(process.env)
 
@@ -48,14 +47,6 @@ export const handler = emailAuthRequestPipe(
 				email: authContext.email,
 				sub: input.id,
 			},
-		}),
-		await tokenCookie({
-			signingKey: await privateKeyPromise,
-			authContext: {
-				email: authContext.email,
-				sub: input.id,
-			},
-			cookieProps: [`Domain=${new URL(wsURL).hostname}`],
 		}),
 	],
 )
