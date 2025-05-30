@@ -13,13 +13,13 @@ import {
 	type BackendLambdas,
 } from './lambdas/packBackendLambdas.ts'
 import type { PackedLayer } from '@bifravst/aws-cdk-lambda-helpers/layer'
-import { packLayer } from '@bifravst/aws-cdk-lambda-helpers/layer'
 import { EmailReceiving } from './constructs/EmailReceiving.ts'
 import { Events } from './constructs/Events.ts'
 import { EventEmailNotifications } from './constructs/EventEmailNotifications.ts'
 import { Onboarding } from './constructs/Onboarding.ts'
 import { LambdaSource } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import { isTest } from '@bifravst/aws-cdk-lambda-helpers/util'
+import { packBackendLayer } from './lambdas/packBackendLayer.ts'
 
 export const readKeyPolicy = (
 	stack: Stack,
@@ -128,15 +128,5 @@ new TeamStatusBackendApp({
 		stackNamePrefix: process.env.STACK_NAME_PREFIX ?? 'teamstatus',
 	},
 	lambdaSources: await packBackendLambdas(),
-	layer: await packLayer({
-		id: 'backendLayer',
-		dependencies: [
-			'@nordicsemiconductor/from-env',
-			'jsonwebtoken',
-			'ulid',
-			'mailparser',
-			'@sinclair/typebox',
-			'ajv',
-		],
-	}),
+	layer: await packBackendLayer(),
 })

@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "node --no-warnings --experimental-transform-types --test \"!(node_modules)/**/*.spec.ts\"",
-    "prepare": "husky && check-node-version --package"
+    "prepare": "husky && check-node-version --package",
+    "cdk:lambda:update": "node --no-warnings --experimental-transform-types ./cdk/cli/update-lambdas.ts"
   },
   "repository": {
     "type": "git",
