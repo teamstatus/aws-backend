@@ -45,7 +45,7 @@
     "@types/chance": "1.1.6",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/mailparser": "3.4.6",
-    "aws-cdk": "2.1016.1",
+    "aws-cdk": "2.1017.0",
     "aws-cdk-lib": "2.199.0",
     "cdk": "2.1016.1",
     "chalk": "5.4.1",
