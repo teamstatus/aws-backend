@@ -20,6 +20,7 @@ export const anonRequestPipe =
 			try {
 				input = validateInput(event)
 			} catch (_error) {
+				console.error('Input validation failed:', _error)
 				return problem(event)(BadRequestError('Input validation failed.'))
 			}
 			const maybeResult = await handle(input)
@@ -55,6 +56,7 @@ export const userAuthRequestPipe =
 			try {
 				input = validateInput(event)
 			} catch (_error) {
+				console.error('Input validation failed:', _error)
 				return problem(event)(BadRequestError('Input validation failed.'))
 			}
 			const maybeResult = await handle(
@@ -98,6 +100,7 @@ export const emailAuthRequestPipe =
 			try {
 				input = validateInput(event)
 			} catch (_error) {
+				console.error('Input validation failed:', _error)
 				return problem(event)(BadRequestError('Input validation failed.'))
 			}
 			const maybeResult = await handle(

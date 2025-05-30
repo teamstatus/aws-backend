@@ -25,15 +25,15 @@
   "author": "Markus Tacker <m@coderbyheart.com> | coderbyheart.com",
   "license": "MIT",
   "devDependencies": {
-    "@aws-sdk/client-cloudformation": "3.817.0",
-    "@aws-sdk/client-dynamodb": "3.817.0",
-    "@aws-sdk/client-iam": "3.817.0",
-    "@aws-sdk/client-s3": "3.820.0",
-    "@aws-sdk/client-ses": "3.817.0",
-    "@aws-sdk/client-sns": "3.817.0",
-    "@aws-sdk/client-ssm": "3.817.0",
-    "@aws-sdk/s3-request-presigner": "3.820.0",
-    "@aws-sdk/util-dynamodb": "3.817.0",
+    "@aws-sdk/client-cloudformation": "3.821.0",
+    "@aws-sdk/client-dynamodb": "3.821.0",
+    "@aws-sdk/client-iam": "3.821.0",
+    "@aws-sdk/client-s3": "3.821.0",
+    "@aws-sdk/client-ses": "3.821.0",
+    "@aws-sdk/client-sns": "3.821.0",
+    "@aws-sdk/client-ssm": "3.821.0",
+    "@aws-sdk/s3-request-presigner": "3.821.0",
+    "@aws-sdk/util-dynamodb": "3.821.0",
     "@bifravst/aws-cdk-lambda-helpers": "3.3.36",
     "@bifravst/ci": "2.1.1",
     "@biomejs/biome": "1.9.4",
@@ -92,8 +92,9 @@
     ]
   },
   "dependencies": {
+    "@middy/core": "6.3.1",
+    "@middy/input-output-logger": "6.3.1",
     "@nordicsemiconductor/from-env": "3.0.1",
-    "ajv": "8.17.1",
     "jsonwebtoken": "9.0.2",
     "mailparser": "3.7.3"
   }

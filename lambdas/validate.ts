@@ -1,22 +1,22 @@
 import type { Static, TSchema } from '@sinclair/typebox'
-import { Ajv, type ErrorObject } from 'ajv'
+import { validateWithTypeBox } from '../util/validateWithTypeBox.ts'
+import type { ValueError } from '@sinclair/typebox/errors'
 
 export const validate = <T extends TSchema>(
 	schema: T,
 ): ((value: unknown) => Static<typeof schema>) => {
-	const ajv = new Ajv()
-	const v = ajv.compile(schema)
+	const v = validateWithTypeBox(schema)
 	return (value: unknown) => {
-		const valid = v(value)
-		if (valid !== true) {
-			throw new InputValidationError(v.errors as ErrorObject[])
+		const maybeValid = v(value)
+		if ('errors' in maybeValid) {
+			throw new InputValidationError(maybeValid.errors)
 		}
 		return value as Static<typeof schema>
 	}
 }
 
 export class InputValidationError extends Error {
-	constructor(errors: ErrorObject[]) {
+	constructor(errors: ValueError[]) {
 		super(`Input validation failed: ${JSON.stringify(errors)}`)
 		this.name = 'InputValidationError'
 	}
