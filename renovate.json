@@ -31,6 +31,14 @@
         "optionalDependencies",
         "peerDependencies"
       ]
+    },
+    {
+      "matchPackagePatterns": [
+        "@bifravst/aws-cdk-lambda-helpers",
+        "cdk",
+        "aws-cdk-lib"
+      ],
+      "groupName": "cdk"
     }
   ]
 }
