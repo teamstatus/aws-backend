@@ -300,7 +300,7 @@ export class RESTAPI extends Construct {
 			// See https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-cors.html
 			// Note: To return CORS headers, your *request* must contain an origin header. For the OPTIONS method, your *request* must contain an origin header and an Access-Control-Request-Method header.
 			corsConfiguration: {
-				allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+				allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
 				allowOrigins: ['https://teamstatus.space', 'http://localhost:8080'],
 				allowHeaders: ['Authorization', 'Content-Type', 'Accept', 'If-Match'],
 				allowCredentials: true,
