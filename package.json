@@ -56,7 +56,7 @@
     "constructs": "10.4.2",
     "husky": "9.1.7",
     "lint-staged": "16.1.2",
-    "prettier": "3.5.3",
+    "prettier": "3.6.2",
     "tsmatchers": "5.0.2",
     "typescript": "5.8.3",
     "ulid": "3.0.1"
