@@ -1,14 +1,5 @@
-import assert from 'node:assert/strict'
-import { before, describe, test as it } from 'node:test'
-import {
-	arrayContaining,
-	aString,
-	check,
-	definedValue,
-	objectMatching,
-	stringMatching,
-	undefinedValue,
-} from 'tsmatchers'
+import { strict as assert } from 'node:assert'
+import { before, suite as describe, it } from 'node:test'
 import { ulid } from 'ulid'
 import type { EmailAuthContext, UserAuthContext } from './auth.ts'
 import type { CoreEvent } from './CoreEvent.ts'
@@ -35,11 +26,11 @@ import {
 } from './persistence/emailLoginRequest.ts'
 import { emailPINLogin } from './persistence/emailPINLogin.ts'
 import { getStatus } from './persistence/getStatus.ts'
-import type {
-	Invitation,
-	MemberInvitedEvent,
+import {
+	type Invitation,
+	inviteToProject,
+	type MemberInvitedEvent,
 } from './persistence/inviteToProject.ts'
-import { inviteToProject } from './persistence/inviteToProject.ts'
 import { listInvitations } from './persistence/listInvitations.ts'
 import { listOrganizationProjects } from './persistence/listOrganizationProjects.ts'
 import { listOrganizations } from './persistence/listOrganizations.ts'
@@ -51,6 +42,7 @@ import { updateProject } from './persistence/updateProject.ts'
 import { updateStatus } from './persistence/updateStatus.ts'
 import { Role } from './Role.ts'
 import { randomOrganization, randomUser } from './randomEntities.ts'
+import { assertArrayContaining } from './test/assertArrayContaining.ts'
 import { aUlid } from './test/aUlid.ts'
 import { createTestDb } from './test/createTestDb.ts'
 import { ensureUserIsMember } from './test/ensureUserIsMember.ts'
@@ -87,20 +79,20 @@ describe('core', async () => {
 					dbContext,
 					notify,
 				)(alex)) as { loginRequest: EmailLoginRequest; pin: string }
-				check(loginRequest).is(
-					objectMatching({
-						email: alex.email,
-					}),
-				)
-				check(events).is(
-					arrayContaining(
-						objectMatching({
-							type: CoreEventType.EMAIL_LOGIN_REQUESTED,
-							email: alex.email,
-						}),
-					),
-				)
-				check(p).is(stringMatching(/^[0-9]{8}$/))
+				assert.partialDeepStrictEqual(loginRequest, {
+					email: alex.email,
+				})
+
+				assertArrayContaining(events, {
+					type: CoreEventType.EMAIL_LOGIN_REQUESTED,
+					email: alex.email,
+				})
+
+				assertArrayContaining(events, {
+					type: CoreEventType.EMAIL_LOGIN_REQUESTED,
+					email: alex.email,
+				})
+				assert.match(p, /^[0-9]{8}$/)
 				pin = p
 			})
 
@@ -112,7 +104,7 @@ describe('core', async () => {
 					email: alex.email,
 				})) as { error: ProblemDetail }
 
-				check(error).is(definedValue)
+				assert(error !== undefined)
 			})
 
 			await it('logs a user in using a PIN', async () => {
@@ -126,21 +118,14 @@ describe('core', async () => {
 					pin,
 				})) as { authContext: EmailAuthContext }
 
-				check(events).is(
-					arrayContaining(
-						objectMatching({
-							type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS,
-							email: alex.email,
-						}),
-					),
-				)
-
-				check(authContext).is(
-					objectMatching({
-						email: alex.email,
-						sub: undefinedValue,
-					}),
-				)
+				assertArrayContaining(events, {
+					type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS,
+					email: alex.email,
+				})
+				assert.partialDeepStrictEqual(authContext, {
+					email: alex.email,
+				})
+				assert('sub' in authContext && authContext.sub === undefined)
 			})
 
 			await it('prevents re-using PINs', async () => {
@@ -152,7 +137,7 @@ describe('core', async () => {
 					pin,
 				})) as { error: ProblemDetail }
 
-				check(error).is(definedValue)
+				assert(error !== undefined)
 			})
 
 			await it('allows users to claim a user ID', async () => {
@@ -167,15 +152,11 @@ describe('core', async () => {
 						authContext: { email: alex.email },
 					}),
 				)
-				check(events).is(
-					arrayContaining(
-						objectMatching({
-							type: CoreEventType.USER_CREATED,
-							id: alex.sub,
-							email: alex.email,
-						}),
-					),
-				)
+				assertArrayContaining(events, {
+					type: CoreEventType.USER_CREATED,
+					id: alex.sub,
+					email: alex.email,
+				})
 			})
 
 			await it(`adds the user's ID to the token after they have claimed a user ID`, async () => {
@@ -192,7 +173,7 @@ describe('core', async () => {
 					email: alex.email,
 					pin,
 				})) as { authContext: UserAuthContext }
-				check(authContext).is(objectMatching(alex))
+				assert.partialDeepStrictEqual(authContext, alex)
 			})
 		})
 	})
@@ -207,16 +188,12 @@ describe('core', async () => {
 					alex,
 				),
 			)
-			check(events).is(
-				arrayContaining(
-					objectMatching({
-						type: CoreEventType.ORGANIZATION_CREATED,
-						id: acme.id,
-						name: 'ACME Inc.',
-						owner: alex.sub,
-					}),
-				),
-			)
+			assertArrayContaining(events, {
+				type: CoreEventType.ORGANIZATION_CREATED,
+				id: acme.id,
+				name: 'ACME Inc.',
+				owner: alex.sub,
+			})
 		})
 
 		await it('ensures that organizations are unique', async () => {
@@ -232,11 +209,9 @@ describe('core', async () => {
 			const { organizations } = (await listOrganizations(dbContext)(alex)) as {
 				organizations: Organization[]
 			}
-			check(organizations?.[0]).is(
-				objectMatching({
-					id: acme.id,
-				}),
-			)
+			assert.partialDeepStrictEqual(organizations?.[0], {
+				id: acme.id,
+			})
 		})
 
 		await describe('update', async () => {
@@ -252,16 +227,12 @@ describe('core', async () => {
 					),
 				)
 
-				check(events).is(
-					arrayContaining(
-						objectMatching({
-							type: CoreEventType.ORGANIZATION_UPDATED,
-							id: acme.id,
-							name: 'ACME Inc!',
-							version: 2,
-						}),
-					),
-				)
+				assertArrayContaining(events, {
+					type: CoreEventType.ORGANIZATION_UPDATED,
+					id: acme.id,
+					name: 'ACME Inc!',
+					version: 2,
+				})
 			})
 		})
 	})
@@ -277,25 +248,17 @@ describe('core', async () => {
 					alex,
 				),
 			)
-			check(events).is(
-				arrayContaining(
-					objectMatching({
-						type: CoreEventType.PROJECT_CREATED,
-						id: acmeTeamStatusProjectId,
-						name: 'Teamstatus.',
-						version: 1,
-					}),
-				),
-			)
-			check(events).is(
-				arrayContaining(
-					objectMatching({
-						type: CoreEventType.PROJECT_MEMBER_CREATED,
-						project: acmeTeamStatusProjectId,
-						user: alex.sub,
-					}),
-				),
-			)
+			assertArrayContaining(events, {
+				type: CoreEventType.PROJECT_CREATED,
+				id: acmeTeamStatusProjectId,
+				name: 'Teamstatus.',
+				version: 1,
+			})
+			assertArrayContaining(events, {
+				type: CoreEventType.PROJECT_MEMBER_CREATED,
+				project: acmeTeamStatusProjectId,
+				user: alex.sub,
+			})
 		})
 
 		await describe('update', async () => {
@@ -311,16 +274,12 @@ describe('core', async () => {
 					),
 				)
 
-				check(events).is(
-					arrayContaining(
-						objectMatching({
-							type: CoreEventType.PROJECT_UPDATED,
-							id: acmeTeamStatusProjectId,
-							name: 'Teamstatus',
-							version: 2,
-						}),
-					),
-				)
+				assertArrayContaining(events, {
+					type: CoreEventType.PROJECT_UPDATED,
+					id: acmeTeamStatusProjectId,
+					name: 'Teamstatus',
+					version: 2,
+				})
 			})
 		})
 
@@ -356,14 +315,10 @@ describe('core', async () => {
 				),
 			)
 
-			check(events).is(
-				arrayContaining(
-					objectMatching({
-						type: CoreEventType.PROJECT_DELETED,
-						id: `${acme.id}#teamstatus-to-be-deleted-by-owner`,
-					}),
-				),
-			)
+			assertArrayContaining(events, {
+				type: CoreEventType.PROJECT_DELETED,
+				id: `${acme.id}#teamstatus-to-be-deleted-by-owner`,
+			})
 		})
 
 		await it('can list projects for an organization', async () => {
@@ -371,12 +326,10 @@ describe('core', async () => {
 				acme.id,
 				alex,
 			)) as { projects: Project[] }
-			check(projects?.[0]).is(
-				objectMatching({
-					id: acmeTeamStatusProjectId,
-					name: 'Teamstatus',
-				}),
-			)
+			assert.partialDeepStrictEqual(projects?.[0], {
+				id: acmeTeamStatusProjectId,
+				name: 'Teamstatus',
+			})
 		})
 
 		await describe('member', async () => {
@@ -405,17 +358,13 @@ describe('core', async () => {
 						alex,
 					),
 				)
-				check(events).is(
-					arrayContaining(
-						objectMatching({
-							type: CoreEventType.PROJECT_MEMBER_INVITED,
-							project: acmeTeamStatusProjectId,
-							invitee: cameron.sub,
-							inviter: alex.sub,
-							role: Role.MEMBER,
-						}),
-					),
-				)
+				assertArrayContaining(events, {
+					type: CoreEventType.PROJECT_MEMBER_INVITED,
+					project: acmeTeamStatusProjectId,
+					invitee: cameron.sub,
+					inviter: alex.sub,
+					role: Role.MEMBER,
+				})
 			})
 
 			await it('should not allow to invite non-existing users', async () => {
@@ -485,15 +434,11 @@ describe('core', async () => {
 					acmeTeamStatusProjectId,
 					alex,
 				)) as { members: ProjectMember[] }
-				check(members).is(
-					arrayContaining(
-						objectMatching({
-							project: acmeTeamStatusProjectId,
-							user: cameron.sub,
-							role: Role.MEMBER,
-						}),
-					),
-				)
+				assertArrayContaining(members, {
+					project: acmeTeamStatusProjectId,
+					user: cameron.sub,
+					role: Role.MEMBER,
+				})
 			})
 		})
 
@@ -523,17 +468,13 @@ describe('core', async () => {
 						alex,
 					),
 				)
-				check(events).is(
-					arrayContaining(
-						objectMatching({
-							type: CoreEventType.PROJECT_MEMBER_INVITED,
-							project: acmeTeamStatusProjectId,
-							invitee: emerson.sub,
-							inviter: alex.sub,
-							role: Role.WATCHER,
-						}),
-					),
-				)
+				assertArrayContaining(events, {
+					type: CoreEventType.PROJECT_MEMBER_INVITED,
+					project: acmeTeamStatusProjectId,
+					invitee: emerson.sub,
+					inviter: alex.sub,
+					role: Role.WATCHER,
+				})
 			})
 
 			await it('should list open invites for a user', async () => {
@@ -591,18 +532,14 @@ describe('core', async () => {
 							alex,
 						),
 					)
-					check(events).is(
-						arrayContaining(
-							objectMatching({
-								type: CoreEventType.STATUS_CREATED,
-								project: acmeTeamStatusProjectId,
-								message:
-									'Implemented ability to persist status updates for projects.',
-								author: alex.sub,
-								id,
-							}),
-						),
-					)
+					assertArrayContaining(events, {
+						type: CoreEventType.STATUS_CREATED,
+						project: acmeTeamStatusProjectId,
+						message:
+							'Implemented ability to persist status updates for projects.',
+						author: alex.sub,
+						id,
+					})
 				})
 
 				await it('allows posting status only for organization members', async () => {
@@ -652,14 +589,10 @@ describe('core', async () => {
 					)) as {
 						status: Status[]
 					}
-					check(statusList).is(
-						arrayContaining(
-							objectMatching({
-								message: 'Status with a typo',
-								version: 2,
-							}),
-						),
-					)
+					assertArrayContaining(statusList, {
+						message: 'Status with a typo',
+						version: 2,
+					})
 				})
 
 				await it('allows status to be deleted by the author', async () => {
@@ -679,15 +612,13 @@ describe('core', async () => {
 						{ projectId: acmeTeamStatusProjectId },
 						alex,
 					)) as { status: Status[] }
-					check(status?.[0]).is(
-						objectMatching({
-							id: aString,
-							message:
-								'Implemented ability to persist status updates for projects.',
-							author: alex.sub,
-							project: acmeTeamStatusProjectId,
-						}),
-					)
+					assert.partialDeepStrictEqual(status?.[0], {
+						message:
+							'Implemented ability to persist status updates for projects.',
+						author: alex.sub,
+						project: acmeTeamStatusProjectId,
+					})
+					assert(typeof status?.[0]?.id === 'string')
 				})
 
 				await it('sorts status by creation time', async () => {
@@ -789,11 +720,10 @@ describe('core', async () => {
 						user,
 					)) as { status: Status[]; nextStartKey: string }
 
-					check(status.length).is(25)
-					check(nextStartKey).is(aString)
+					assert.equal(status.length, 25)
+					assert(typeof nextStartKey === 'string')
 
 					// Fetch next page
-
 					const { status: restStatus, nextStartKey: lastStartKey } =
 						(await listStatus(dbContext)(
 							{
@@ -803,8 +733,8 @@ describe('core', async () => {
 							user,
 						)) as { status: Status[]; nextStartKey: string }
 
-					check(restStatus.length).is(5)
-					check(lastStartKey).is(undefinedValue)
+					assert.equal(restStatus.length, 5)
+					assert(lastStartKey === undefined)
 				})
 			})
 
@@ -812,7 +742,6 @@ describe('core', async () => {
 				const statusId = ulid()
 				await it('allows getting individual status', async () => {
 					// useful if it is an older status, or in case we need the latest version
-
 					isNotAnError(
 						await createStatus(dbContext, notify)(
 							{
@@ -832,14 +761,12 @@ describe('core', async () => {
 							alex,
 						),
 					)
-					check(status).is(
-						objectMatching({
-							id: aString,
-							message: `A new status!`,
-							author: alex.sub,
-							project: acmeTeamStatusProjectId,
-						}),
-					)
+					assert.partialDeepStrictEqual(status, {
+						message: `A new status!`,
+						author: alex.sub,
+						project: acmeTeamStatusProjectId,
+					})
+					assert(typeof status.id === 'string')
 				})
 				await it('allows only organization members to get status', async () => {
 					const { error } = (await getStatus(dbContext)(
@@ -910,17 +837,13 @@ describe('core', async () => {
 						),
 					)
 
-					check(events).is(
-						arrayContaining(
-							objectMatching({
-								type: CoreEventType.REACTION_CREATED,
-								status: statusId,
-								author: alex.sub,
-								id: reactionId,
-								...newVersionRelease,
-							}),
-						),
-					)
+					assertArrayContaining(events, {
+						type: CoreEventType.REACTION_CREATED,
+						status: statusId,
+						author: alex.sub,
+						id: reactionId,
+						...newVersionRelease,
+					})
 				})
 
 				await it('allows project members to attach a reaction', async () => {
@@ -967,21 +890,17 @@ describe('core', async () => {
 						alex,
 					)) as { status: Status[] }
 
-					check(status[0]?.reactions[0]).is(
-						objectMatching({
-							author: alex.sub,
-							id: aUlid(),
-							...newVersionRelease,
-						}),
-					)
+					assert.partialDeepStrictEqual(status[0]?.reactions[0], {
+						author: alex.sub,
+						...newVersionRelease,
+					})
+					aUlid(status[0]?.reactions[0]?.id)
 
-					check(status[0]?.reactions[1]).is(
-						objectMatching({
-							author: blake.sub,
-							id: aUlid(),
-							...thumbsUp,
-						}),
-					)
+					assert.partialDeepStrictEqual(status[0]?.reactions[1], {
+						author: blake.sub,
+						...thumbsUp,
+					})
+					aUlid(status[0]?.reactions[1]?.id)
 				})
 
 				await it('allows reactions to be deleted by the author', async () => {
@@ -1010,15 +929,11 @@ describe('core', async () => {
 				const { projects } = (await listProjects(dbContext)(alex)) as {
 					projects: Project[]
 				}
-				check(projects).is(
-					arrayContaining(
-						objectMatching({
-							id: acmeTeamStatusProjectId,
-							name: 'Teamstatus',
-							version: 2,
-						}),
-					),
-				)
+				assertArrayContaining(projects, {
+					id: acmeTeamStatusProjectId,
+					name: 'Teamstatus',
+					version: 2,
+				})
 			})
 
 			await it('allows project members to list status', async () => {

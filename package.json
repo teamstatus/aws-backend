@@ -97,7 +97,6 @@
     "@middy/core": "6.4.5",
     "@middy/input-output-logger": "6.4.5",
     "jsonwebtoken": "9.0.2",
-    "mailparser": "3.7.4",
-    "tsmatchers": "5.0.2"
+    "mailparser": "3.7.4"
   }
 }

@@ -1,11 +1,11 @@
 import { type DynamoDBClient, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import type { Reaction, StatusReaction } from './createReaction.ts'
+import type { StatusReaction } from './createReaction.ts'
 import { statusReactionIndex } from './db.ts'
 
 export const getStatusReactions =
 	({ db, TableName }: { db: DynamoDBClient; TableName: string }) =>
-	async (statusId: string): Promise<Reaction[]> =>
+	async (statusId: string): Promise<StatusReaction[]> =>
 		db
 			.send(
 				new QueryCommand({
