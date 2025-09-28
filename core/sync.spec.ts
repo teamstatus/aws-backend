@@ -1,34 +1,28 @@
+import assert from 'node:assert'
 import { before, describe, test as it } from 'node:test'
-import {
-	aString,
-	arrayContaining,
-	arrayMatching,
-	check,
-	not,
-	objectMatching,
-} from 'tsmatchers'
 import { ulid } from 'ulid'
+import type { UserAuthContext } from './auth.ts'
 import type { CoreEvent } from './CoreEvent.ts'
 import { CoreEventType } from './CoreEventType.ts'
-import type { UserAuthContext } from './auth.ts'
-import { notifier, type Notify } from './notifier.ts'
-import type { DbContext } from './persistence/DbContext.ts'
+import { type Notify, notifier } from './notifier.ts'
+import type { ProblemDetail } from './ProblemDetail.ts'
 import { createOrganization } from './persistence/createOrganization.ts'
 import { createProject } from './persistence/createProject.ts'
+import { createProjectMember } from './persistence/createProjectMember.ts'
 import { createStatus, type Status } from './persistence/createStatus.ts'
 import { createSync } from './persistence/createSync.ts'
+import type { DbContext } from './persistence/DbContext.ts'
+import { deleteSync } from './persistence/deleteSync.ts'
 import { getSync, type SerializedSync } from './persistence/getSync.ts'
+import { l } from './persistence/l.ts'
 import { listStatusInSync } from './persistence/listStatusInSync.ts'
 import { listSyncs } from './persistence/listSyncs.ts'
+import { Role } from './Role.ts'
+import { assertArrayContaining } from './test/assertArrayContaining.ts'
 import { createTestDb } from './test/createTestDb.ts'
 import { eventually } from './test/eventually.ts'
 import { isNotAnError } from './test/isNotAnError.ts'
 import { testDb } from './test/testDb.ts'
-import type { ProblemDetail } from './ProblemDetail.ts'
-import { createProjectMember } from './persistence/createProjectMember.ts'
-import { Role } from './Role.ts'
-import { l } from './persistence/l.ts'
-import { deleteSync } from './persistence/deleteSync.ts'
 
 describe('sync', async () => {
 	const { TableName, db } = testDb()
@@ -133,17 +127,15 @@ describe('sync', async () => {
 			),
 		)
 
-		check(events[0]).is(
-			objectMatching({
-				type: CoreEventType.SYNC_CREATED,
-				projectIds: new Set([projectA, projectB]),
-				title: 'My sync',
-				owner: user.sub,
-				id: syncId,
-				inclusiveStartDate: startDate,
-				inclusiveEndDate: new Date(startDate.getTime() + 60 * 1000),
-			}),
-		)
+		assert.partialDeepStrictEqual(events[0], {
+			type: CoreEventType.SYNC_CREATED,
+			projectIds: new Set([projectA, projectB]),
+			title: 'My sync',
+			owner: user.sub,
+			id: syncId,
+			inclusiveStartDate: startDate,
+			inclusiveEndDate: new Date(startDate.getTime() + 60 * 1000),
+		})
 
 		await eventually(async () => {
 			const statusInSync = isNotAnError(
@@ -154,32 +146,41 @@ describe('sync', async () => {
 				.map(({ id }) => id)
 				.sort((a, b) => a.localeCompare(b))
 
-			check(statusIdsInSync).is(
-				arrayMatching(
-					[
-						...(recentStatus[projectA] ?? []),
-						...(recentStatus[projectB] ?? []),
-					].sort((a, b) => a.localeCompare(b)),
-				).or(
-					not(
-						arrayMatching(
-							[
-								...(olderStatus[projectA] ?? []),
-								...(olderStatus[projectB] ?? []),
-							].sort((a, b) => a.localeCompare(b)),
-						),
-					).and(
-						not(
-							arrayMatching(
-								[
-									...(newerStatus[projectA] ?? []),
-									...(newerStatus[projectB] ?? []),
-								].sort((a, b) => a.localeCompare(b)),
-							),
-						),
-					),
-				),
-			)
+			const syncStatusIds = new Set(statusIdsInSync)
+			const olderStatusIds = new Set([
+				...(olderStatus[projectA] ?? []),
+				...(olderStatus[projectB] ?? []),
+			])
+			const newerStatusIds = new Set([
+				...(newerStatus[projectA] ?? []),
+				...(newerStatus[projectB] ?? []),
+			])
+			const recentStatusIds = new Set([
+				...(recentStatus[projectA] ?? []),
+				...(recentStatus[projectB] ?? []),
+			])
+
+			// Ensure recent status is in the sync
+			for (const id of recentStatusIds) {
+				assert.ok(
+					syncStatusIds.has(id),
+					`Recent status ${id} should be in sync`,
+				)
+			}
+
+			// Ensure no older or newer status is in the sync
+			for (const id of olderStatusIds) {
+				assert.ok(
+					!syncStatusIds.has(id),
+					`Older status ${id} should not be in sync`,
+				)
+			}
+			for (const id of newerStatusIds) {
+				assert.ok(
+					!syncStatusIds.has(id),
+					`Newer status ${id} should not be in sync`,
+				)
+			}
 		})
 	})
 
@@ -189,18 +190,15 @@ describe('sync', async () => {
 				syncs: SerializedSync[]
 			}
 
-			check(syncs?.[0]).is(
-				objectMatching({
-					id: aString,
-					title: 'My sync',
-					owner: user.sub,
-				}),
-			)
-			check(syncs?.[0]?.projectIds.sort((a, b) => a.localeCompare(b))).is(
-				arrayMatching(
-					[projectA, projectB].sort((a, b) => a.localeCompare(b)).map(l),
-				),
-			)
+			assert.partialDeepStrictEqual(syncs?.[0], {
+				title: 'My sync',
+				owner: user.sub,
+			})
+			assert(typeof syncs?.[0]?.id === 'string')
+
+			const projectIdsInSync = new Set(syncs?.[0]?.projectIds)
+			const expectedProjectIds = new Set([projectA, projectB].map(l))
+			assert.deepStrictEqual(projectIdsInSync, expectedProjectIds)
 		})
 
 		await it('should list syncs that the user has access to', async () => {
@@ -263,9 +261,10 @@ describe('sync', async () => {
 				const { syncs } = (await listSyncs(dbContext)(jo)) as {
 					syncs: SerializedSync[]
 				}
-				for (const syncId of syncIds) {
-					check(syncs).is(arrayContaining(objectMatching({ id: syncId })))
-				}
+
+				const syncIds = new Set(syncs.map((s) => s.id))
+				const expectedSyncIds = new Set(syncIds)
+				assert.deepStrictEqual(syncIds, expectedSyncIds)
 			})
 		})
 	})
@@ -275,12 +274,10 @@ describe('sync', async () => {
 			const { sync } = (await getSync(dbContext)(syncId, user)) as {
 				sync: SerializedSync
 			}
-			check(sync).is(
-				objectMatching({
-					title: 'My sync',
-					id: syncId,
-				}),
-			)
+			assert.partialDeepStrictEqual(sync, {
+				title: 'My sync',
+				id: syncId,
+			})
 		})
 
 		const blake: UserAuthContext = {
@@ -292,7 +289,7 @@ describe('sync', async () => {
 			const { error } = (await getSync(dbContext)(syncId, blake)) as {
 				error: ProblemDetail
 			}
-			check(error?.title).is(`Access to sync ${syncId} denied.`)
+			assert.equal(error?.title, `Access to sync ${syncId} denied.`)
 		})
 
 		await it('should allow users to access the sync if they have at least one project in the sync', async () => {
@@ -306,14 +303,12 @@ describe('sync', async () => {
 				const { sync } = (await getSync(dbContext)(syncId, blake)) as {
 					sync: SerializedSync
 				}
-				check(sync).is(
-					objectMatching({
-						title: 'My sync',
-						id: syncId,
-					}),
-				)
-				check(sync.projectIds).is(arrayMatching([projectA.toLowerCase()]))
-				check(sync.projectIds).is(not(arrayContaining(projectB.toLowerCase())))
+				assert.partialDeepStrictEqual(sync, {
+					title: 'My sync',
+					id: syncId,
+				})
+				assert(new Set(sync.projectIds).has(l(projectA)))
+				assert(!new Set(sync.projectIds).has(l(projectB)))
 			})
 		})
 
@@ -327,7 +322,7 @@ describe('sync', async () => {
 				}
 
 				recentStatus[projectA]?.map((id) =>
-					check(status).is(arrayContaining(objectMatching({ id }))),
+					assertArrayContaining(status, { id }),
 				)
 			})
 		})
@@ -352,25 +347,21 @@ describe('sync', async () => {
 			const { sync } = (await getSync(dbContext)(syncId, user)) as {
 				sync: SerializedSync
 			}
-			check(sync).is(
-				objectMatching({
-					id: syncId,
-				}),
-			)
+			assert.partialDeepStrictEqual(sync, {
+				id: syncId,
+			})
 
 			isNotAnError(await deleteSync(dbContext, notify)(syncId, 1, user))
 
-			check(events[0]).is(
-				objectMatching({
-					type: CoreEventType.SYNC_DELETED,
-					id: syncId,
-				}),
-			)
+			assert.partialDeepStrictEqual(events[0], {
+				type: CoreEventType.SYNC_DELETED,
+				id: syncId,
+			})
 
 			const { error } = (await getSync(dbContext)(syncId, user)) as {
 				error: ProblemDetail
 			}
-			check(error?.title).is(`Sync ${syncId} not found!`)
+			assert.equal(error?.title, `Sync ${syncId} not found!`)
 		})
 	})
 })

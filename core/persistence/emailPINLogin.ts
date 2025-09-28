@@ -4,18 +4,18 @@ import {
 	QueryCommand,
 } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import type { EmailAuthContext, UserAuthContext } from '../auth.ts'
 import type { CoreEvent } from '../CoreEvent.ts'
 import { CoreEventType } from '../CoreEventType.ts'
+import type { Notify } from '../notifier.ts'
 import {
 	ConflictError,
 	InternalError,
 	type ProblemDetail,
 } from '../ProblemDetail.ts'
-import type { EmailAuthContext, UserAuthContext } from '../auth.ts'
-import type { Notify } from '../notifier.ts'
 import type { DbContext } from './DbContext.ts'
-import { l } from './l.ts'
 import { emailUserIndex } from './db.ts'
+import { l } from './l.ts'
 
 export type LoggedInWithEmailAndPin = CoreEvent & {
 	type: CoreEventType.EMAIL_LOGIN_PIN_SUCCESS

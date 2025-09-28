@@ -1,11 +1,11 @@
 import { PutItemCommand } from '@aws-sdk/client-dynamodb'
+import type { UserAuthContext } from '../auth.ts'
 import type { CoreEvent } from '../CoreEvent.ts'
 import { CoreEventType } from '../CoreEventType.ts'
-import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
-import type { UserAuthContext } from '../auth.ts'
 import type { Notify } from '../notifier.ts'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
+import type { StatusReaction } from './createReaction.ts'
 import type { DbContext } from './DbContext.ts'
-import type { Reaction } from './createReaction.ts'
 import { canWriteStatus } from './getProjectMember.ts'
 import { l } from './l.ts'
 
@@ -21,7 +21,7 @@ export type Status = {
 	id: string
 	version: number
 	updatedAt?: Date
-	reactions: Reaction[]
+	reactions: StatusReaction[]
 }
 
 export const createStatus =

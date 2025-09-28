@@ -5,14 +5,14 @@ import {
 } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { ulid } from 'ulid'
-import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
 import type { UserAuthContext } from '../auth.ts'
-import type { DbContext } from './DbContext.ts'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
 import type { Status } from './createStatus.ts'
+import type { DbContext } from './DbContext.ts'
+import { projectStatusIndex } from './db.ts'
 import { canReadProjectStatus } from './getProjectMember.ts'
 import { getStatusReactions } from './getStatusReactions.ts'
 import { l } from './l.ts'
-import { projectStatusIndex } from './db.ts'
 
 export const listStatus =
 	(dbContext: DbContext) =>
@@ -91,6 +91,7 @@ export const listStatus =
 		}
 
 		const res = await db.send(new QueryCommand(args))
+
 		return {
 			status: await Promise.all((res.Items ?? []).map(itemToStatus(dbContext))),
 			nextStartKey:

@@ -2,17 +2,17 @@ import {
 	ConditionalCheckFailedException,
 	PutItemCommand,
 } from '@aws-sdk/client-dynamodb'
+import type { EmailAuthContext } from '../auth.ts'
 import type { CoreEvent } from '../CoreEvent.ts'
 import { CoreEventType } from '../CoreEventType.ts'
+import { isUserId } from '../ids.ts'
+import type { Notify } from '../notifier.ts'
 import {
 	BadRequestError,
 	ConflictError,
 	InternalError,
 	type ProblemDetail,
 } from '../ProblemDetail.ts'
-import type { EmailAuthContext } from '../auth.ts'
-import { isUserId } from '../ids.ts'
-import type { Notify } from '../notifier.ts'
 import type { DbContext } from './DbContext.ts'
 import { l } from './l.ts'
 

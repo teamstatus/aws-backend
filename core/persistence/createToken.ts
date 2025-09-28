@@ -1,7 +1,7 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { InternalError, type ProblemDetail } from '../ProblemDetail.ts'
 import { create, type UserAuthContext } from '../auth.ts'
+import { InternalError, type ProblemDetail } from '../ProblemDetail.ts'
 import type { DbContext } from './DbContext.ts'
 import { emailUserIndex } from './db.ts'
 

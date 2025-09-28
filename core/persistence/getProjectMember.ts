@@ -1,15 +1,15 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import { parseProjectId } from '../ids.ts'
 import type { ProblemDetail } from '../ProblemDetail.ts'
 import { Role } from '../Role.ts'
 import type { DbContext } from './DbContext.ts'
-import { l } from './l.ts'
-import { parseProjectId } from '../ids.ts'
+import { projectMemberIndex } from './db.ts'
 import {
 	isOrganizationMember,
 	isOrganizationOwner,
 } from './getOrganizationMember.ts'
-import { projectMemberIndex } from './db.ts'
+import { l } from './l.ts'
 
 type MemberInfo = {
 	role: Role

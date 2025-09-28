@@ -1,13 +1,13 @@
 import { GetItemCommand } from '@aws-sdk/client-dynamodb'
-import { unmarshall, type NativeAttributeValue } from '@aws-sdk/util-dynamodb'
-import type { DbContext } from './DbContext.ts'
-import type { Sync } from './createSync.ts'
+import { type NativeAttributeValue, unmarshall } from '@aws-sdk/util-dynamodb'
 import type { UserAuthContext } from '../auth.ts'
 import {
 	AccessDeniedError,
 	NotFoundError,
 	type ProblemDetail,
 } from '../ProblemDetail.ts'
+import type { Sync } from './createSync.ts'
+import type { DbContext } from './DbContext.ts'
 import { listProjects } from './listProjects.ts'
 
 export type SerializedSync = Omit<Sync, 'projectIds'> & {

@@ -1,11 +1,11 @@
 import { GetItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { NotFoundError, type ProblemDetail } from '../ProblemDetail.ts'
 import type { UserAuthContext } from '../auth.ts'
-import type { DbContext } from './DbContext.ts'
+import { NotFoundError, type ProblemDetail } from '../ProblemDetail.ts'
 import type { Status } from './createStatus.ts'
-import { listStatus } from './listStatus.ts'
+import type { DbContext } from './DbContext.ts'
 import { itemToSync, projectsInSyncForUser } from './getSync.ts'
+import { listStatus } from './listStatus.ts'
 
 export const listStatusInSync =
 	(dbContext: DbContext) =>

@@ -1,19 +1,18 @@
-import { describe, test, before } from 'node:test'
-import { createUser } from '../persistence/createUser.ts'
-import { testDb } from '../test/testDb.ts'
-import type { DbContext } from '../persistence/DbContext.tsx'
-import { notifier } from '../notifier.ts'
-import { createTestDb } from '../test/createTestDb.ts'
-import { arrayContaining, check, objectMatching } from 'tsmatchers'
-import { createProject } from '../persistence/createProject.ts'
+import assert from 'node:assert'
+import { before, describe, test } from 'node:test'
 import type { CoreEvent } from '../CoreEvent.tsx'
 import { CoreEventType } from '../CoreEventType.ts'
+import { notifier } from '../notifier.ts'
 import { createOrganization } from '../persistence/createOrganization.ts'
-import { onboarding } from './onboarding.ts'
-import { ensureUserIsMember } from '../test/ensureUserIsMember.ts'
+import { createProject } from '../persistence/createProject.ts'
+import { createUser } from '../persistence/createUser.ts'
+import type { DbContext } from '../persistence/DbContext.tsx'
 import { randomProfile, randomUser } from '../randomEntities.ts'
-import { eventually } from '../test/eventually.ts'
+import { createTestDb } from '../test/createTestDb.ts'
+import { ensureUserIsMember } from '../test/ensureUserIsMember.ts'
 import { isNotAnError } from '../test/isNotAnError.ts'
+import { testDb } from '../test/testDb.ts'
+import { onboarding } from './onboarding.ts'
 
 describe('Onboarding', async () => {
 	const { TableName, db } = testDb()
@@ -67,17 +66,15 @@ describe('Onboarding', async () => {
 			}),
 		)
 
-		eventually(async () => {
-			check(events).is(
-				arrayContaining(
-					objectMatching({
-						type: CoreEventType.PROJECT_MEMBER_CREATED,
-						project: '$teamstatus#feedback',
-						user: gray.id,
-					}),
-				),
-			)
-		})
+		const maybeEvent = events.find(
+			(e) =>
+				e.type === CoreEventType.PROJECT_MEMBER_CREATED &&
+				'project' in e &&
+				e.project === '$teamstatus#feedback' &&
+				'user' in e &&
+				e.user === gray.id,
+		)
+		assert(maybeEvent)
 
 		await ensureUserIsMember(dbContext, grayUser, `$teamstatus#feedback`)
 	})

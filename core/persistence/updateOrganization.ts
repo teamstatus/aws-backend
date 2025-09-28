@@ -2,20 +2,20 @@ import {
 	ConditionalCheckFailedException,
 	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb'
+import { unmarshall } from '@aws-sdk/util-dynamodb'
+import type { UserAuthContext } from '../auth.ts'
 import type { CoreEvent } from '../CoreEvent.ts'
 import { CoreEventType } from '../CoreEventType.ts'
+import type { Notify } from '../notifier.ts'
 import {
 	BadRequestError,
 	ConflictError,
 	InternalError,
 	type ProblemDetail,
 } from '../ProblemDetail.ts'
-import type { UserAuthContext } from '../auth.ts'
-import type { Notify } from '../notifier.ts'
+import type { Organization } from './createOrganization.ts'
 import type { DbContext } from './DbContext.ts'
 import { isOrganizationOwner } from './getOrganizationMember.ts'
-import type { Organization } from './createOrganization.ts'
-import { unmarshall } from '@aws-sdk/util-dynamodb'
 
 export type OrganizationUpdatedEvent = CoreEvent & {
 	type: CoreEventType.ORGANIZATION_UPDATED

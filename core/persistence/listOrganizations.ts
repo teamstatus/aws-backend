@@ -1,12 +1,12 @@
 import { BatchGetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
-import { unmarshall, type NativeAttributeValue } from '@aws-sdk/util-dynamodb'
-import type { ProblemDetail } from '../ProblemDetail.ts'
-import type { UserAuthContext } from '../auth.ts'
-import type { DbContext } from './DbContext.ts'
-import type { Organization } from './createOrganization.ts'
-import { l } from './l.ts'
-import { organizationMemberIndex } from './db.ts'
+import { type NativeAttributeValue, unmarshall } from '@aws-sdk/util-dynamodb'
 import { chunkArray } from '../../util/chunkArray.ts'
+import type { UserAuthContext } from '../auth.ts'
+import type { ProblemDetail } from '../ProblemDetail.ts'
+import type { Organization } from './createOrganization.ts'
+import type { DbContext } from './DbContext.ts'
+import { organizationMemberIndex } from './db.ts'
+import { l } from './l.ts'
 
 export const listOrganizations =
 	(dbContext: DbContext) =>

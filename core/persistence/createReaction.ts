@@ -1,14 +1,14 @@
 import { GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import type { UserAuthContext } from '../auth.ts'
 import type { CoreEvent } from '../CoreEvent.ts'
 import { CoreEventType } from '../CoreEventType.ts'
+import type { Notify } from '../notifier.ts'
 import {
 	BadRequestError,
 	NotFoundError,
 	type ProblemDetail,
 } from '../ProblemDetail.ts'
-import type { UserAuthContext } from '../auth.ts'
-import type { Notify } from '../notifier.ts'
 import type { DbContext } from './DbContext.ts'
 import { canWriteReaction } from './getProjectMember.ts'
 import { l } from './l.ts'

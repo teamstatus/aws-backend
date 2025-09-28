@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import { describe, test as it } from 'node:test'
-import { check, objectMatching } from 'tsmatchers'
 import {
 	isOrganizationId,
 	isProjectId,
@@ -57,12 +56,10 @@ describe('identifiers', async () => {
 			it('should extract the project', () =>
 				assert.equal(parseProjectId('$acme#teamsite').project, '#teamsite'))
 			it('should not return if project id is invalid', () => {
-				check(parseProjectId('foo')).is(
-					objectMatching({
-						organization: null,
-						project: null,
-					}),
-				)
+				assert.partialDeepStrictEqual(parseProjectId('foo'), {
+					organization: null,
+					project: null,
+				})
 			})
 		})
 	})

@@ -42,6 +42,13 @@
     }
   },
   "files": {
-    "includes": ["cdk/**", "cli/**", "lambdas/**", "util/**", "!cdk.out"]
+    "includes": [
+      "cdk/**",
+      "cli/**",
+      "core/**",
+      "lambdas/**",
+      "util/**",
+      "!cdk.out"
+    ]
   }
 }

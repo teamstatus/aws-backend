@@ -1,11 +1,11 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import { isOrganizationId, isUserId } from '../ids.ts'
 import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
 import { Role } from '../Role.ts'
-import { isOrganizationId, isUserId } from '../ids.ts'
 import type { DbContext } from './DbContext.ts'
-import { l } from './l.ts'
 import { organizationMemberIndex } from './db.ts'
+import { l } from './l.ts'
 
 export const getOrganizationMember =
 	({ db, TableName }: DbContext) =>

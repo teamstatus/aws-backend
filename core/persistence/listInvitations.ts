@@ -1,11 +1,11 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
-import { unmarshall, type NativeAttributeValue } from '@aws-sdk/util-dynamodb'
-import type { ProblemDetail } from '../ProblemDetail.ts'
+import { type NativeAttributeValue, unmarshall } from '@aws-sdk/util-dynamodb'
 import type { UserAuthContext } from '../auth.ts'
+import type { ProblemDetail } from '../ProblemDetail.ts'
 import type { DbContext } from './DbContext.ts'
-import { l } from './l.ts'
-import type { Invitation } from './inviteToProject.ts'
 import { invitationsForUserIndex } from './db.ts'
+import type { Invitation } from './inviteToProject.ts'
+import { l } from './l.ts'
 
 export const listInvitations =
 	(dbContext: DbContext) =>

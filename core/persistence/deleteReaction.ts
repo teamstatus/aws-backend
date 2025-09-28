@@ -2,15 +2,15 @@ import {
 	ConditionalCheckFailedException,
 	DeleteItemCommand,
 } from '@aws-sdk/client-dynamodb'
+import type { UserAuthContext } from '../auth.ts'
 import type { CoreEvent } from '../CoreEvent.ts'
 import { CoreEventType } from '../CoreEventType.ts'
+import type { Notify } from '../notifier.ts'
 import {
 	ConflictError,
 	InternalError,
 	type ProblemDetail,
 } from '../ProblemDetail.ts'
-import type { UserAuthContext } from '../auth.ts'
-import type { Notify } from '../notifier.ts'
 import type { DbContext } from './DbContext.ts'
 
 type ReactionDeletedEvent = CoreEvent & {
