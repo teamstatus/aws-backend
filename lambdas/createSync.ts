@@ -1,12 +1,12 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import { fromEnv } from '@nordicsemiconductor/from-env'
-import { StatusCode } from '../core/StatusCode.ts'
+import { SNSClient } from '@aws-sdk/client-sns'
+import { fromEnv } from '@bifravst/from-env'
 import { notifier } from '../core/notifier.ts'
 import { createSync } from '../core/persistence/createSync.ts'
+import { StatusCode } from '../core/StatusCode.ts'
 import { userAuthRequestPipe } from './requestPipe.ts'
-import { verifyRecentULID } from './verifyULID.ts'
-import { SNSClient } from '@aws-sdk/client-sns'
 import { snsNotifier } from './snsNotifier.ts'
+import { verifyRecentULID } from './verifyULID.ts'
 
 const { TableName, topicArn } = fromEnv({
 	TableName: 'TABLE_NAME',

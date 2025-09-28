@@ -1,5 +1,5 @@
-import type { SNSEvent } from 'aws-lambda'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
+import type { SNSEvent } from 'aws-lambda'
 
 const ses = new SESClient({})
 const fromEmail = process.env.FROM_EMAIL ?? 'notification@teamstatus.space'

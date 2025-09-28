@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import { fromEnv } from '@nordicsemiconductor/from-env'
+import { fromEnv } from '@bifravst/from-env'
 import { listStatusInSync } from '../core/persistence/listStatusInSync.ts'
 import { userAuthRequestPipe } from './requestPipe.ts'
 import { verifyOlderULID } from './verifyULID.ts'

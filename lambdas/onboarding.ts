@@ -1,6 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { SNSClient } from '@aws-sdk/client-sns'
-import { fromEnv } from '@nordicsemiconductor/from-env'
+import { fromEnv } from '@bifravst/from-env'
 import type { SNSEvent } from 'aws-lambda'
 import { notifier } from '../core/notifier.ts'
 import { onboarding } from '../core/onboarding/onboarding.ts'

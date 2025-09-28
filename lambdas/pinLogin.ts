@@ -1,14 +1,14 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { SSMClient } from '@aws-sdk/client-ssm'
-import { fromEnv } from '@nordicsemiconductor/from-env'
+import { fromEnv } from '@bifravst/from-env'
 import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
-import { BadRequestError } from '../core/ProblemDetail.ts'
-import { StatusCode } from '../core/StatusCode.ts'
 import { notifier } from '../core/notifier.ts'
+import { BadRequestError } from '../core/ProblemDetail.ts'
 import { emailPINLogin } from '../core/persistence/emailPINLogin.ts'
+import { StatusCode } from '../core/StatusCode.ts'
 import { problem, result } from './response.ts'
 import { getPrivateKey } from './signingKeyPromise.ts'
 import { tokenCookie } from './tokenCookie.ts'
@@ -41,16 +41,16 @@ export const handler = async (
 		const r = await login({ email, pin })
 
 		if ('error' in r) {
-			return problem(event)(r.error)
+			return problem(r.error)
 		}
 
-		return result(event)(StatusCode.OK, undefined, [
+		return result(StatusCode.OK, undefined, [
 			await tokenCookie({
 				signingKey: await privateKeyPromise,
 				authContext: r.authContext,
 			}),
 		])
 	} catch (_error) {
-		return problem(event)(BadRequestError('Failed to parse JSON.'))
+		return problem(BadRequestError('Failed to parse JSON.'))
 	}
 }

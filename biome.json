@@ -1,12 +1,20 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "organizeImports": {
-    "enabled": false
+  "assist": {
+    "enabled": true,
+    "actions": { "source": { "organizeImports": "on" } }
   },
   "linter": {
     "enabled": true,
+    "domains": {
+      "next": "all",
+      "react": "all",
+      "test": "all",
+      "solid": "all",
+      "project": "all"
+    },
     "rules": {
-      "all": true,
+      "recommended": true,
       "style": {
         "noUnusedTemplateLiteral": "off",
         "useNamingConvention": "off"
@@ -17,7 +25,6 @@
       },
       "suspicious": {
         "noExplicitAny": "warn",
-        "noConsoleLog": "off",
         "useAwait": "warn"
       },
       "performance": {
@@ -35,6 +42,6 @@
     }
   },
   "files": {
-    "ignore": ["./cdk.out"]
+    "includes": ["cdk/**", "cli/**", "lambdas/**", "util/**", "!cdk.out"]
   }
 }

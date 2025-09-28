@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import { fromEnv } from '@nordicsemiconductor/from-env'
+import { fromEnv } from '@bifravst/from-env'
 import { listSyncs } from '../core/persistence/listSyncs.ts'
 import { userAuthRequestPipe } from './requestPipe.ts'
 

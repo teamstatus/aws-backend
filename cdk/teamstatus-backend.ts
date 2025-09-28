@@ -1,3 +1,6 @@
+import { LambdaSource } from '@bifravst/aws-cdk-lambda-helpers/cdk'
+import type { PackedLayer } from '@bifravst/aws-cdk-lambda-helpers/layer'
+import { isTest } from '@bifravst/aws-cdk-lambda-helpers/util'
 import {
 	App,
 	CfnOutput,
@@ -6,19 +9,16 @@ import {
 	Stack,
 } from 'aws-cdk-lib'
 import type { Construct } from 'constructs'
+import { EmailReceiving } from './constructs/EmailReceiving.ts'
+import { EventEmailNotifications } from './constructs/EventEmailNotifications.ts'
+import { Events } from './constructs/Events.ts'
+import { Onboarding } from './constructs/Onboarding.ts'
 import { Persistence } from './constructs/Persistence.ts'
 import { RESTAPI } from './constructs/RESTAPI.ts'
 import {
-	packBackendLambdas,
 	type BackendLambdas,
+	packBackendLambdas,
 } from './lambdas/packBackendLambdas.ts'
-import type { PackedLayer } from '@bifravst/aws-cdk-lambda-helpers/layer'
-import { EmailReceiving } from './constructs/EmailReceiving.ts'
-import { Events } from './constructs/Events.ts'
-import { EventEmailNotifications } from './constructs/EventEmailNotifications.ts'
-import { Onboarding } from './constructs/Onboarding.ts'
-import { LambdaSource } from '@bifravst/aws-cdk-lambda-helpers/cdk'
-import { isTest } from '@bifravst/aws-cdk-lambda-helpers/util'
 import { packBackendLayer } from './lambdas/packBackendLayer.ts'
 
 export const readKeyPolicy = (
@@ -39,7 +39,7 @@ class TeamStatusBackendApp extends App {
 		layer,
 	}: {
 		context: {
-			[key: string]: any
+			[key: string]: unknown
 		}
 		lambdaSources: BackendLambdas
 		layer: PackedLayer

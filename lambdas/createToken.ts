@@ -1,10 +1,10 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { SSMClient } from '@aws-sdk/client-ssm'
-import { fromEnv } from '@nordicsemiconductor/from-env'
+import { fromEnv } from '@bifravst/from-env'
 import type { APIGatewayProxyResultV2 } from 'aws-lambda'
-import { StatusCode } from '../core/StatusCode.ts'
 import type { UserAuthContext } from '../core/auth.ts'
 import { createToken } from '../core/persistence/createToken.ts'
+import { StatusCode } from '../core/StatusCode.ts'
 import type { AuthorizedEvent } from './AuthorizedEvent.ts'
 import { userAuthRequestPipe } from './requestPipe.ts'
 import { problem, result } from './response.ts'
@@ -40,8 +40,8 @@ export const handler = async (
 	)
 
 	if ('error' in r) {
-		return problem(event)(r.error)
+		return problem(r.error)
 	}
 
-	return result(event)(StatusCode.CREATED, undefined, [r.token])
+	return result(StatusCode.CREATED, undefined, [r.token])
 }

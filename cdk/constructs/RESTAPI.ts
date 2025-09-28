@@ -1,3 +1,6 @@
+import type { PackedLambda } from '@bifravst/aws-cdk-lambda-helpers'
+import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
+import { isTest } from '@bifravst/aws-cdk-lambda-helpers/util'
 import {
 	Duration,
 	aws_apigatewayv2 as HttpApi,
@@ -11,11 +14,8 @@ import { readKeyPolicy } from '../teamstatus-backend.ts'
 import { ApiEmailAuthorizer, ApiUserAuthorizer } from './APIAuthorizer.ts'
 import { ApiRoute } from './ApiRoute.ts'
 import { CoreLambda } from './CoreLambda.ts'
-import type { Persistence } from './Persistence.ts'
 import type { Events } from './Events.ts'
-import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
-import type { PackedLambda } from '@bifravst/aws-cdk-lambda-helpers'
-import { isTest } from '@bifravst/aws-cdk-lambda-helpers/util'
+import type { Persistence } from './Persistence.ts'
 
 export class RESTAPI extends Construct {
 	public readonly URL: string

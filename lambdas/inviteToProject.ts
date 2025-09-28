@@ -1,12 +1,12 @@
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { fromEnv } from '@nordicsemiconductor/from-env'
-import { StatusCode } from '../core/StatusCode.ts'
+import { fromEnv } from '@bifravst/from-env'
 import { notifier } from '../core/notifier.ts'
 import type { DbContext } from '../core/persistence/DbContext.ts'
 import { inviteToProject } from '../core/persistence/inviteToProject.ts'
 import { l } from '../core/persistence/l.ts'
+import { StatusCode } from '../core/StatusCode.ts'
 import { userAuthRequestPipe } from './requestPipe.ts'
 
 const { TableName } = fromEnv({

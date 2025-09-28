@@ -1,3 +1,5 @@
+import type { PackedLambda } from '@bifravst/aws-cdk-lambda-helpers'
+import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import {
 	Duration,
 	aws_iam as IAM,
@@ -6,10 +8,8 @@ import {
 } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import { readKeyPolicy } from '../teamstatus-backend.ts'
-import type { Persistence } from './Persistence.ts'
 import type { Events } from './Events.ts'
-import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
-import type { PackedLambda } from '@bifravst/aws-cdk-lambda-helpers'
+import type { Persistence } from './Persistence.ts'
 
 export class CoreLambda extends Construct {
 	public readonly lambda: Lambda.Function

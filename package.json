@@ -28,6 +28,7 @@
     "@aws-sdk/client-cloudformation": "3.896.0",
     "@aws-sdk/client-dynamodb": "3.896.0",
     "@aws-sdk/client-iam": "3.896.0",
+    "@aws-sdk/client-lambda": "3.896.0",
     "@aws-sdk/client-s3": "3.896.0",
     "@aws-sdk/client-ses": "3.896.0",
     "@aws-sdk/client-sns": "3.896.0",
@@ -92,9 +93,9 @@
     ]
   },
   "dependencies": {
+    "@bifravst/from-env": "3.0.2",
     "@middy/core": "6.4.5",
     "@middy/input-output-logger": "6.4.5",
-    "@nordicsemiconductor/from-env": "3.0.1",
     "jsonwebtoken": "9.0.2",
     "mailparser": "3.7.4"
   }

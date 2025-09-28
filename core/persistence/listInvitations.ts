@@ -1,5 +1,5 @@
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
-import { unmarshall } from '@aws-sdk/util-dynamodb'
+import { unmarshall, type NativeAttributeValue } from '@aws-sdk/util-dynamodb'
 import type { ProblemDetail } from '../ProblemDetail.ts'
 import type { UserAuthContext } from '../auth.ts'
 import type { DbContext } from './DbContext.ts'
@@ -42,7 +42,7 @@ export const listInvitations =
 	}
 
 const serializeInvitation = (
-	item: Record<string, any>,
+	item: Record<string, NativeAttributeValue>,
 ): Pick<Invitation, 'id' | 'role' | 'inviter'> => ({
 	id: item.id,
 	role: item.role,

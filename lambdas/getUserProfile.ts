@@ -1,7 +1,7 @@
-import { fromEnv } from '@nordicsemiconductor/from-env'
-import { userAuthRequestPipe } from './requestPipe.ts'
-import { getUserProfile } from '../core/persistence/getUserProfile.ts'
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+import { fromEnv } from '@bifravst/from-env'
+import { getUserProfile } from '../core/persistence/getUserProfile.ts'
+import { userAuthRequestPipe } from './requestPipe.ts'
 
 const { TableName } = fromEnv({
 	TableName: 'TABLE_NAME',

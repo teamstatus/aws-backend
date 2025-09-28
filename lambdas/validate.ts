@@ -1,6 +1,6 @@
 import type { Static, TSchema } from '@sinclair/typebox'
-import { validateWithTypeBox } from '../util/validateWithTypeBox.ts'
 import type { ValueError } from '@sinclair/typebox/errors'
+import { validateWithTypeBox } from '../util/validateWithTypeBox.ts'
 
 export const validate = <T extends TSchema>(
 	schema: T,

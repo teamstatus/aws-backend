@@ -1,8 +1,8 @@
-import type { SESEvent } from 'aws-lambda'
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3'
-import { simpleParser } from 'mailparser'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import type { SESEvent } from 'aws-lambda'
+import { simpleParser } from 'mailparser'
 
 const s3 = new S3Client({})
 const ses = new SESClient({})

@@ -1,7 +1,7 @@
+import { isTest } from '@bifravst/aws-cdk-lambda-helpers/util'
 import { aws_dynamodb as dynamoDb, RemovalPolicy } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import { indexes } from '../../core/persistence/db.ts'
-import { isTest } from '@bifravst/aws-cdk-lambda-helpers/util'
 
 export class Persistence extends Construct {
 	public readonly table: dynamoDb.Table

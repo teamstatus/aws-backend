@@ -1,10 +1,10 @@
-import { type SNSClient, PublishCommand } from '@aws-sdk/client-sns'
-import type { onFn } from '../core/notifier.ts'
-import { CoreEventType } from '../core/CoreEventType.ts'
+import { PublishCommand, type SNSClient } from '@aws-sdk/client-sns'
 import type { CoreEvent } from '../core/CoreEvent.tsx'
-import type { UserCreatedEvent } from '../core/persistence/createUser.ts'
+import { CoreEventType } from '../core/CoreEventType.ts'
+import type { onFn } from '../core/notifier.ts'
 import type { OrganizationCreatedEvent } from '../core/persistence/createOrganization.ts'
 import type { ProjectCreatedEvent } from '../core/persistence/createProject.ts'
+import type { UserCreatedEvent } from '../core/persistence/createUser.ts'
 
 export const snsNotifier =
 	({ sns, topicArn }: { sns: SNSClient; topicArn: string }) =>

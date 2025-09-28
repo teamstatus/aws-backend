@@ -1,11 +1,10 @@
+import { execSync } from 'node:child_process'
 import {
 	GetParameterCommand,
 	ParameterType,
 	PutParameterCommand,
 	SSMClient,
 } from '@aws-sdk/client-ssm'
-
-import { execSync } from 'node:child_process'
 
 const ssm = new SSMClient({})
 

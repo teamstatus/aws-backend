@@ -1,5 +1,5 @@
-import { decodeTime } from 'ulid'
 import { Type } from '@sinclair/typebox'
+import { decodeTime } from 'ulid'
 
 const fiveMinutes = 5 * 60 * 1000
 

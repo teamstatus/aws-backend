@@ -1,5 +1,5 @@
 import { BatchGetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
-import { unmarshall } from '@aws-sdk/util-dynamodb'
+import { unmarshall, type NativeAttributeValue } from '@aws-sdk/util-dynamodb'
 import type { ProblemDetail } from '../ProblemDetail.ts'
 import type { UserAuthContext } from '../auth.ts'
 import type { DbContext } from './DbContext.ts'
@@ -66,7 +66,9 @@ export const listOrganizations =
 		}
 	}
 
-const itemToOrganization = (item: Record<string, any>): Organization => ({
+const itemToOrganization = (
+	item: Record<string, NativeAttributeValue>,
+): Organization => ({
 	id: item.id,
 	name: item.name,
 })

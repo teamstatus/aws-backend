@@ -9,4 +9,4 @@ import { expiredTokenCooked } from './tokenCookie.ts'
 export const handler = async (
 	event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> =>
-	result(event)(StatusCode.OK, undefined, [await expiredTokenCooked({})])
+	result(StatusCode.OK, undefined, [await expiredTokenCooked({})])

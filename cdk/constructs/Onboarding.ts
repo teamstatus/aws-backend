@@ -1,13 +1,13 @@
-import { Construct } from 'constructs'
+import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import {
-	aws_sns_subscriptions as Subscriptions,
-	type aws_lambda as Lambda,
 	aws_iam as IAM,
+	type aws_lambda as Lambda,
+	aws_sns_subscriptions as Subscriptions,
 } from 'aws-cdk-lib'
+import { Construct } from 'constructs'
 import type { BackendLambdas } from '../lambdas/packBackendLambdas.ts'
 import type { Events } from './Events.ts'
 import type { Persistence } from './Persistence.ts'
-import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 
 export class Onboarding extends Construct {
 	constructor(

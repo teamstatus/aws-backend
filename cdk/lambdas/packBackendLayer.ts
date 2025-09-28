@@ -4,7 +4,7 @@ export const packBackendLayer = async () =>
 	await packLayer({
 		id: 'backendLayer',
 		dependencies: [
-			'@nordicsemiconductor/from-env',
+			'@bifravst/from-env',
 			'jsonwebtoken',
 			'ulid',
 			'mailparser',

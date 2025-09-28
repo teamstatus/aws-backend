@@ -1,10 +1,10 @@
-import { Type } from '@sinclair/typebox'
-import { validate } from './validate.ts'
-import { describe, test as it } from 'node:test'
 import assert from 'node:assert/strict'
-import { ULID } from './verifyULID.ts'
-import { ProjectId } from '../core/ids.ts'
+import { describe, test as it } from 'node:test'
+import { Type } from '@sinclair/typebox'
 import { ulid } from 'ulid'
+import { ProjectId } from '../core/ids.ts'
+import { validate } from './validate.ts'
+import { ULID } from './verifyULID.ts'
 
 void describe('validate', async () => {
 	void (await it('Should check input is valid', async () =>

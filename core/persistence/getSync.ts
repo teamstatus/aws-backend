@@ -1,5 +1,5 @@
 import { GetItemCommand } from '@aws-sdk/client-dynamodb'
-import { unmarshall } from '@aws-sdk/util-dynamodb'
+import { unmarshall, type NativeAttributeValue } from '@aws-sdk/util-dynamodb'
 import type { DbContext } from './DbContext.ts'
 import type { Sync } from './createSync.ts'
 import type { UserAuthContext } from '../auth.ts'
@@ -46,7 +46,9 @@ export const serialize = (sync: Sync): SerializedSync => ({
 	projectIds: [...sync.projectIds],
 })
 
-export const itemToSync = (sync: Record<string, any>): Sync => ({
+export const itemToSync = (
+	sync: Record<string, NativeAttributeValue>,
+): Sync => ({
 	id: sync.id,
 	title: sync.title ?? undefined,
 	projectIds: sync.projectIds,

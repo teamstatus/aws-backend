@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, test as it } from 'node:test'
 import { ulid } from 'ulid'
 import { verifyOlderULID, verifyRecentULID } from './verifyULID.ts'
+
 describe('verifyRecentULID()', () => {
 	it('should accept a ULID', () => {
 		const id = ulid()

@@ -1,10 +1,10 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import { fromEnv } from '@nordicsemiconductor/from-env'
-import { StatusCode } from '../core/StatusCode.ts'
+import { fromEnv } from '@bifravst/from-env'
 import { notifier } from '../core/notifier.ts'
+import { deleteSync } from '../core/persistence/deleteSync.ts'
+import { StatusCode } from '../core/StatusCode.ts'
 import { userAuthRequestPipe } from './requestPipe.ts'
 import { verifyOlderULID } from './verifyULID.ts'
-import { deleteSync } from '../core/persistence/deleteSync.ts'
 
 const { TableName } = fromEnv({
 	TableName: 'TABLE_NAME',

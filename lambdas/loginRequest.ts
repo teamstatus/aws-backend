@@ -1,14 +1,14 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
-import { fromEnv } from '@nordicsemiconductor/from-env'
+import { fromEnv } from '@bifravst/from-env'
 import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
-import { BadRequestError } from '../core/ProblemDetail.ts'
-import { StatusCode } from '../core/StatusCode.ts'
 import { notifier } from '../core/notifier.ts'
+import { BadRequestError } from '../core/ProblemDetail.ts'
 import { emailLoginRequest } from '../core/persistence/emailLoginRequest.ts'
+import { StatusCode } from '../core/StatusCode.ts'
 import { problem, result } from './response.ts'
 
 const fromEmail = process.env.FROM_EMAIL ?? 'notification@teamstatus.space'
@@ -41,7 +41,7 @@ export const handler = async (
 		const r = await loginRequest({ email })
 
 		if ('error' in r) {
-			return problem(event)(r.error)
+			return problem(r.error)
 		}
 
 		if (!isTest) {
@@ -63,8 +63,8 @@ export const handler = async (
 			)
 		}
 
-		return result(event)(StatusCode.ACCEPTED)
+		return result(StatusCode.ACCEPTED)
 	} catch (error) {
-		return problem(event)(BadRequestError((error as Error).message))
+		return problem(BadRequestError((error as Error).message))
 	}
 }

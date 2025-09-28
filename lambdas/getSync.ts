@@ -1,7 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import { fromEnv } from '@nordicsemiconductor/from-env'
-import { StatusCode } from '../core/StatusCode.ts'
+import { fromEnv } from '@bifravst/from-env'
 import { getSync } from '../core/persistence/getSync.ts'
+import { StatusCode } from '../core/StatusCode.ts'
 import { userAuthRequestPipe } from './requestPipe.ts'
 
 const { TableName } = fromEnv({

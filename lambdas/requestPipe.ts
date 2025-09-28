@@ -2,14 +2,14 @@ import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyResultV2,
 } from 'aws-lambda'
+import type { EmailAuthContext, UserAuthContext } from '../core/auth.ts'
 import { BadRequestError, type ProblemDetail } from '../core/ProblemDetail.ts'
 import { StatusCode } from '../core/StatusCode.ts'
-import type { EmailAuthContext, UserAuthContext } from '../core/auth.ts'
 import type { AuthorizedEvent } from './AuthorizedEvent.ts'
 import { problem, result } from './response.ts'
 
 export const anonRequestPipe =
-	<ValidInput, Result extends Record<string, any>>(
+	<ValidInput, Result extends Record<string, unknown>>(
 		validateInput: (event: APIGatewayProxyEventV2) => ValidInput,
 		handle: (input: ValidInput) => Promise<{ error: ProblemDetail } | Result>,
 		toStatusCode?: (result?: Result) => StatusCode,
@@ -21,21 +21,18 @@ export const anonRequestPipe =
 				input = validateInput(event)
 			} catch (_error) {
 				console.error('Input validation failed:', _error)
-				return problem(event)(BadRequestError('Input validation failed.'))
+				return problem(BadRequestError('Input validation failed.'))
 			}
 			const maybeResult = await handle(input)
 			if ('error' in maybeResult) {
-				return problem(event)(maybeResult.error)
+				return problem(maybeResult.error as ProblemDetail)
 			}
-			return result(event)(
-				toStatusCode?.(maybeResult) ?? StatusCode.OK,
-				maybeResult,
-			)
+			return result(toStatusCode?.(maybeResult) ?? StatusCode.OK, maybeResult)
 		}
 	}
 
 export const userAuthRequestPipe =
-	<ValidInput, Result extends Record<string, any>>(
+	<ValidInput, Result extends Record<string, unknown>>(
 		validateInput: (event: AuthorizedEvent<UserAuthContext>) => ValidInput,
 		handle: (
 			input: ValidInput,
@@ -57,16 +54,16 @@ export const userAuthRequestPipe =
 				input = validateInput(event)
 			} catch (_error) {
 				console.error('Input validation failed:', _error)
-				return problem(event)(BadRequestError('Input validation failed.'))
+				return problem(BadRequestError('Input validation failed.'))
 			}
 			const maybeResult = await handle(
 				input,
 				event.requestContext.authorizer.lambda,
 			)
 			if ('error' in maybeResult) {
-				return problem(event)(maybeResult.error)
+				return problem(maybeResult.error as ProblemDetail)
 			}
-			return result(event)(
+			return result(
 				toStatusCode?.(maybeResult) ?? StatusCode.OK,
 				maybeResult,
 				await cookies?.(
@@ -79,7 +76,7 @@ export const userAuthRequestPipe =
 	}
 
 export const emailAuthRequestPipe =
-	<ValidInput, Result extends Record<string, any>>(
+	<ValidInput, Result extends Record<string, unknown>>(
 		validateInput: (event: AuthorizedEvent<EmailAuthContext>) => ValidInput,
 		handle: (
 			input: ValidInput,
@@ -101,16 +98,16 @@ export const emailAuthRequestPipe =
 				input = validateInput(event)
 			} catch (_error) {
 				console.error('Input validation failed:', _error)
-				return problem(event)(BadRequestError('Input validation failed.'))
+				return problem(BadRequestError('Input validation failed.'))
 			}
 			const maybeResult = await handle(
 				input,
 				event.requestContext.authorizer.lambda,
 			)
 			if ('error' in maybeResult) {
-				return problem(event)(maybeResult.error)
+				return problem(maybeResult.error as ProblemDetail)
 			}
-			return result(event)(
+			return result(
 				toStatusCode?.(maybeResult) ?? StatusCode.OK,
 				maybeResult,
 				await cookies?.(

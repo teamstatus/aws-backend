@@ -1,14 +1,14 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import { SSMClient } from '@aws-sdk/client-ssm'
 import { SNSClient } from '@aws-sdk/client-sns'
-import { fromEnv } from '@nordicsemiconductor/from-env'
-import { StatusCode } from '../core/StatusCode.ts'
+import { SSMClient } from '@aws-sdk/client-ssm'
+import { fromEnv } from '@bifravst/from-env'
 import { notifier } from '../core/notifier.ts'
 import { createUser } from '../core/persistence/createUser.ts'
+import { StatusCode } from '../core/StatusCode.ts'
 import { emailAuthRequestPipe } from './requestPipe.ts'
 import { getPrivateKey } from './signingKeyPromise.ts'
-import { tokenCookie } from './tokenCookie.ts'
 import { snsNotifier } from './snsNotifier.ts'
+import { tokenCookie } from './tokenCookie.ts'
 
 const { TableName, stackName, topicArn } = fromEnv({
 	TableName: 'TABLE_NAME',

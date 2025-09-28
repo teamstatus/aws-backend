@@ -1,5 +1,5 @@
 import { SSMClient } from '@aws-sdk/client-ssm'
-import { fromEnv } from '@nordicsemiconductor/from-env'
+import { fromEnv } from '@bifravst/from-env'
 import type { APIGatewayProxyEventV2 } from 'aws-lambda'
 import { verifyToken } from '../core/auth.ts'
 import { getPublicKey } from './signingKeyPromise.ts'
@@ -18,7 +18,7 @@ export const handler = async (
 	event: APIGatewayProxyEventV2,
 ): Promise<{
 	isAuthorized: boolean
-	context: Record<string, any>
+	context: Record<string, unknown>
 }> => {
 	const [, token] =
 		event.cookies

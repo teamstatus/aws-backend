@@ -1,3 +1,5 @@
+import type { PackedLambda } from '@bifravst/aws-cdk-lambda-helpers'
+import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
 import {
 	Duration,
 	aws_apigatewayv2 as HttpApi,
@@ -8,8 +10,6 @@ import {
 import { Construct } from 'constructs'
 import { readKeyPolicy } from '../teamstatus-backend.ts'
 import { integrationUri } from './ApiRoute.ts'
-import { PackedLambdaFn } from '@bifravst/aws-cdk-lambda-helpers/cdk'
-import type { PackedLambda } from '@bifravst/aws-cdk-lambda-helpers'
 
 abstract class ApiAuthorizer extends Construct {
 	public readonly fn: Lambda.IFunction

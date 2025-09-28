@@ -10,7 +10,7 @@ const update = updateLambdaCode({ cf, lambda })
 
 const start = new Date()
 const packs = await packBackendLambdas()
-console.debug('Packed lambdas in', new Date().getTime() - start.getTime(), 'ms')
+console.debug('Packed lambdas in', Date.now() - start.getTime(), 'ms')
 
 await Promise.all(
 	[`${process.env.STACK_NAME_PREFIX ?? 'teamstatus'}-backend`].map(
@@ -23,8 +23,4 @@ await Promise.all(
 
 console.debug('Done')
 
-console.debug(
-	'Updated lambdas in',
-	new Date().getTime() - start.getTime(),
-	'ms',
-)
+console.debug('Updated lambdas in', Date.now() - start.getTime(), 'ms')

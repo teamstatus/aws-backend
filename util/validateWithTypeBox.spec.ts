@@ -1,10 +1,10 @@
-import { Type } from '@sinclair/typebox'
 import assert from 'node:assert/strict'
 import { describe, test as it } from 'node:test'
+import { Type } from '@sinclair/typebox'
 import { validateWithTypeBox } from './validateWithTypeBox.ts'
 
 void describe('validateWithTypeBox', () => {
-	void it('Should check input is valid', async () => {
+	void it('Should check input is valid', () => {
 		const maybeValid = validateWithTypeBox(Type.Number())(42)
 		if ('value' in maybeValid) {
 			assert.equal(maybeValid.value, 42)
