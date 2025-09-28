@@ -57,7 +57,7 @@
     "husky": "9.1.7",
     "lint-staged": "16.2.2",
     "prettier": "3.6.2",
-    "tsmatchers": "5.0.2",
+    "tsmatchers": "6.0.1",
     "typescript": "5.9.2",
     "ulid": "3.0.1"
   },
