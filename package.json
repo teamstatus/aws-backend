@@ -56,7 +56,7 @@
     "commitlint": "20.0.0",
     "constructs": "10.4.2",
     "husky": "9.1.7",
-    "lint-staged": "16.2.2",
+    "lint-staged": "16.2.3",
     "prettier": "3.6.2",
     "tsmatchers": "5.0.2",
     "typescript": "5.9.2",
