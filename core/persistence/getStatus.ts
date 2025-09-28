@@ -1,12 +1,12 @@
 import { GetItemCommand } from '@aws-sdk/client-dynamodb'
+import type { UserAuthContext } from '../auth.ts'
 import {
 	BadRequestError,
 	NotFoundError,
 	type ProblemDetail,
 } from '../ProblemDetail.ts'
-import type { UserAuthContext } from '../auth.ts'
-import type { DbContext } from './DbContext.ts'
 import type { Status } from './createStatus.ts'
+import type { DbContext } from './DbContext.ts'
 import { canReadProjectStatus } from './getProjectMember.ts'
 import { itemToStatus } from './listStatus.ts'
 

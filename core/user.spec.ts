@@ -1,17 +1,17 @@
+import assert from 'node:assert'
 import { before, describe, test as it } from 'node:test'
-import { check, objectMatching, undefinedValue } from 'tsmatchers'
+import type { CoreEvent } from './CoreEvent.ts'
+import { CoreEventType } from './CoreEventType.ts'
 import { notifier } from './notifier.ts'
-import type { DbContext } from './persistence/DbContext.ts'
 import { createUser } from './persistence/createUser.ts'
+import type { DbContext } from './persistence/DbContext.ts'
+import { getUser } from './persistence/getUser.ts'
+import { getUserProfile } from './persistence/getUserProfile.ts'
+import { updateUser } from './persistence/updateUser.ts'
+import { randomUser } from './randomEntities.ts'
 import { createTestDb } from './test/createTestDb.ts'
 import { isNotAnError } from './test/isNotAnError.ts'
 import { testDb } from './test/testDb.ts'
-import { getUser } from './persistence/getUser.ts'
-import type { CoreEvent } from './CoreEvent.ts'
-import { CoreEventType } from './CoreEventType.ts'
-import { updateUser } from './persistence/updateUser.ts'
-import { getUserProfile } from './persistence/getUserProfile.ts'
-import { randomUser } from './randomEntities.ts'
 
 describe('user', async () => {
 	const { TableName, db } = testDb()
@@ -41,13 +41,11 @@ describe('user', async () => {
 		)
 
 		const { user } = isNotAnError(await getUser(dbContext)(demi))
-		check(user).is(
-			objectMatching({
-				id: demi.sub,
-				email: demi.email,
-				version: 1,
-			}),
-		)
+		assert.partialDeepStrictEqual(user, {
+			id: demi.sub,
+			email: demi.email,
+			version: 1,
+		})
 	})
 
 	await it('allows users to update their profile', async () => {
@@ -61,26 +59,22 @@ describe('user', async () => {
 			),
 		)
 
-		check(events[0]).is(
-			objectMatching({
-				type: CoreEventType.USER_UPDATED,
-				id: demi.sub,
-				pronouns: 'they/them',
-				name: 'Demi D. Doe',
-				version: 2,
-			}),
-		)
+		assert.partialDeepStrictEqual(events[0], {
+			type: CoreEventType.USER_UPDATED,
+			id: demi.sub,
+			pronouns: 'they/them',
+			name: 'Demi D. Doe',
+			version: 2,
+		})
 
 		const { user } = isNotAnError(await getUser(dbContext)(demi))
-		check(user).is(
-			objectMatching({
-				id: demi.sub,
-				email: demi.email,
-				pronouns: 'they/them',
-				name: 'Demi D. Doe',
-				version: 2,
-			}),
-		)
+		assert.partialDeepStrictEqual(user, {
+			id: demi.sub,
+			email: demi.email,
+			pronouns: 'they/them',
+			name: 'Demi D. Doe',
+			version: 2,
+		})
 	})
 
 	await it('allows users to get the profile of another user', async () => {
@@ -97,13 +91,11 @@ describe('user', async () => {
 		)
 
 		const { user } = isNotAnError(await getUserProfile(dbContext)(finn.sub))
-		check(user).is(
-			objectMatching({
-				id: finn.sub,
-				email: undefinedValue,
-				pronouns: 'xey/xem',
-				name: 'Finn Finnley',
-			}),
-		)
+		assert.partialDeepStrictEqual(user, {
+			id: finn.sub,
+			pronouns: 'xey/xem',
+			name: 'Finn Finnley',
+		})
+		assert(!('email' in user), 'email should not be in public profile')
 	})
 })

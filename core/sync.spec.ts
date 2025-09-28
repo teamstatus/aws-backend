@@ -1,34 +1,34 @@
 import { before, describe, test as it } from 'node:test'
 import {
-	aString,
 	arrayContaining,
 	arrayMatching,
+	aString,
 	check,
 	not,
 	objectMatching,
 } from 'tsmatchers'
 import { ulid } from 'ulid'
+import type { UserAuthContext } from './auth.ts'
 import type { CoreEvent } from './CoreEvent.ts'
 import { CoreEventType } from './CoreEventType.ts'
-import type { UserAuthContext } from './auth.ts'
-import { notifier, type Notify } from './notifier.ts'
-import type { DbContext } from './persistence/DbContext.ts'
+import { type Notify, notifier } from './notifier.ts'
+import type { ProblemDetail } from './ProblemDetail.ts'
 import { createOrganization } from './persistence/createOrganization.ts'
 import { createProject } from './persistence/createProject.ts'
+import { createProjectMember } from './persistence/createProjectMember.ts'
 import { createStatus, type Status } from './persistence/createStatus.ts'
 import { createSync } from './persistence/createSync.ts'
+import type { DbContext } from './persistence/DbContext.ts'
+import { deleteSync } from './persistence/deleteSync.ts'
 import { getSync, type SerializedSync } from './persistence/getSync.ts'
+import { l } from './persistence/l.ts'
 import { listStatusInSync } from './persistence/listStatusInSync.ts'
 import { listSyncs } from './persistence/listSyncs.ts'
+import { Role } from './Role.ts'
 import { createTestDb } from './test/createTestDb.ts'
 import { eventually } from './test/eventually.ts'
 import { isNotAnError } from './test/isNotAnError.ts'
 import { testDb } from './test/testDb.ts'
-import type { ProblemDetail } from './ProblemDetail.ts'
-import { createProjectMember } from './persistence/createProjectMember.ts'
-import { Role } from './Role.ts'
-import { l } from './persistence/l.ts'
-import { deleteSync } from './persistence/deleteSync.ts'
 
 describe('sync', async () => {
 	const { TableName, db } = testDb()

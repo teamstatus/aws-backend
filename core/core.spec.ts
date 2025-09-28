@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import { before, describe, test as it } from 'node:test'
 import {
-	aString,
 	arrayContaining,
+	aString,
 	check,
 	definedValue,
 	objectMatching,
@@ -10,54 +10,54 @@ import {
 	undefinedValue,
 } from 'tsmatchers'
 import { ulid } from 'ulid'
+import type { EmailAuthContext, UserAuthContext } from './auth.ts'
 import type { CoreEvent } from './CoreEvent.ts'
 import { CoreEventType } from './CoreEventType.ts'
-import type { ProblemDetail } from './ProblemDetail.ts'
-import { Role } from './Role.ts'
-import type { EmailAuthContext, UserAuthContext } from './auth.ts'
 import { notifier } from './notifier.ts'
-import type { DbContext } from './persistence/DbContext.ts'
+import type { ProblemDetail } from './ProblemDetail.ts'
 import { acceptProjectInvitation } from './persistence/acceptProjectInvitation.ts'
 import {
 	createOrganization,
 	type Organization,
 } from './persistence/createOrganization.ts'
 import { createProject, type Project } from './persistence/createProject.ts'
+import type { ProjectMember } from './persistence/createProjectMember.ts'
 import { createReaction, type Reaction } from './persistence/createReaction.ts'
 import { createStatus, type Status } from './persistence/createStatus.ts'
 import { createUser } from './persistence/createUser.ts'
+import type { DbContext } from './persistence/DbContext.ts'
+import { deleteProject } from './persistence/deleteProject.ts'
 import { deleteReaction } from './persistence/deleteReaction.ts'
 import { deleteStatus } from './persistence/deleteStatus.ts'
 import {
-	emailLoginRequest,
 	type EmailLoginRequest,
+	emailLoginRequest,
 } from './persistence/emailLoginRequest.ts'
 import { emailPINLogin } from './persistence/emailPINLogin.ts'
+import { getStatus } from './persistence/getStatus.ts'
 import type {
 	Invitation,
 	MemberInvitedEvent,
 } from './persistence/inviteToProject.ts'
 import { inviteToProject } from './persistence/inviteToProject.ts'
+import { listInvitations } from './persistence/listInvitations.ts'
 import { listOrganizationProjects } from './persistence/listOrganizationProjects.ts'
 import { listOrganizations } from './persistence/listOrganizations.ts'
+import { listProjectMembers } from './persistence/listProjectMembers.ts'
 import { listProjects } from './persistence/listProjects.ts'
 import { listStatus } from './persistence/listStatus.ts'
+import { updateOrganization } from './persistence/updateOrganization.ts'
+import { updateProject } from './persistence/updateProject.ts'
 import { updateStatus } from './persistence/updateStatus.ts'
+import { Role } from './Role.ts'
+import { randomOrganization, randomUser } from './randomEntities.ts'
 import { aUlid } from './test/aUlid.ts'
 import { createTestDb } from './test/createTestDb.ts'
-import { isNotAnError } from './test/isNotAnError.ts'
-import { testDb } from './test/testDb.ts'
-import { listInvitations } from './persistence/listInvitations.ts'
-import { eventually } from './test/eventually.ts'
-import { updateOrganization } from './persistence/updateOrganization.ts'
-import { getStatus } from './persistence/getStatus.ts'
-import { updateProject } from './persistence/updateProject.ts'
-import { deleteProject } from './persistence/deleteProject.ts'
-import type { ProjectMember } from './persistence/createProjectMember.ts'
-import { listProjectMembers } from './persistence/listProjectMembers.ts'
-import { randomOrganization, randomUser } from './randomEntities.ts'
 import { ensureUserIsMember } from './test/ensureUserIsMember.ts'
+import { eventually } from './test/eventually.ts'
+import { isNotAnError } from './test/isNotAnError.ts'
 import { storeEvent } from './test/storeEvent.ts'
+import { testDb } from './test/testDb.ts'
 
 describe('core', async () => {
 	const { TableName, db } = testDb()
@@ -572,7 +572,7 @@ describe('core', async () => {
 				)
 			})
 
-			await it('should allow watchers read status of a project', async () => {
+			await it('should allow watchers read status of a project', async () =>
 				eventually(async () => {
 					const { status } = (await listStatus(dbContext)(
 						{ projectId: `${acme.id}#teamstatus` },
@@ -589,8 +589,7 @@ describe('core', async () => {
 							}),
 						),
 					)
-				})
-			})
+				}))
 		})
 
 		await describe('status', async () => {

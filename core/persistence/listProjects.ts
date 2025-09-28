@@ -1,14 +1,14 @@
 import { BatchGetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import { chunkArray } from '../../util/chunkArray.ts'
+import type { UserAuthContext } from '../auth.ts'
 import type { ProblemDetail } from '../ProblemDetail.ts'
 import type { Role } from '../Role.ts'
-import type { UserAuthContext } from '../auth.ts'
-import type { DbContext } from './DbContext.ts'
 import type { Project } from './createProject.ts'
+import type { DbContext } from './DbContext.ts'
+import { projectMemberIndex } from './db.ts'
 import { itemToProject } from './getProject.ts'
 import { l } from './l.ts'
-import { projectMemberIndex } from './db.ts'
-import { chunkArray } from '../../util/chunkArray.ts'
 
 type UserProject = Project & { role: Role }
 

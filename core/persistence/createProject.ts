@@ -2,8 +2,11 @@ import {
 	ConditionalCheckFailedException,
 	PutItemCommand,
 } from '@aws-sdk/client-dynamodb'
+import type { UserAuthContext } from '../auth.ts'
 import type { CoreEvent } from '../CoreEvent.ts'
 import { CoreEventType } from '../CoreEventType.ts'
+import { parseProjectId } from '../ids.ts'
+import type { Notify } from '../notifier.ts'
 import {
 	BadRequestError,
 	ConflictError,
@@ -11,11 +14,8 @@ import {
 	type ProblemDetail,
 } from '../ProblemDetail.ts'
 import { Role } from '../Role.ts'
-import type { UserAuthContext } from '../auth.ts'
-import { parseProjectId } from '../ids.ts'
-import type { Notify } from '../notifier.ts'
-import type { DbContext } from './DbContext.ts'
 import { createProjectMember } from './createProjectMember.ts'
+import type { DbContext } from './DbContext.ts'
 import { isOrganizationMember } from './getOrganizationMember.ts'
 import { l } from './l.ts'
 export type ProjectCreatedEvent = CoreEvent & {

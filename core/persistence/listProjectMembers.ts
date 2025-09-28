@@ -1,12 +1,12 @@
-import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
-import type { UserAuthContext } from '../auth.ts'
-import type { DbContext } from './DbContext.ts'
-import { l } from './l.ts'
-import { canUpdateProject } from './getProjectMember.ts'
-import type { ProjectMember } from './createProjectMember.ts'
 import { QueryCommand } from '@aws-sdk/client-dynamodb'
+import { unmarshall } from '@aws-sdk/util-dynamodb'
+import type { UserAuthContext } from '../auth.ts'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
+import type { ProjectMember } from './createProjectMember.ts'
+import type { DbContext } from './DbContext.ts'
 import { projectMembersIndex } from './db.ts'
+import { canUpdateProject } from './getProjectMember.ts'
+import { l } from './l.ts'
 
 export const listProjectMembers =
 	(dbContext: DbContext) =>

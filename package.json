@@ -47,6 +47,7 @@
     "@types/chance": "1.1.7",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mailparser": "3.4.6",
+    "@types/node": "24.5.2",
     "aws-cdk": "2.1029.3",
     "aws-cdk-lib": "2.217.0",
     "cdk": "2.1029.3",
@@ -58,7 +59,6 @@
     "husky": "9.1.7",
     "lint-staged": "16.2.3",
     "prettier": "3.6.2",
-    "tsmatchers": "5.0.2",
     "typescript": "5.9.2",
     "ulid": "3.0.1"
   },
@@ -72,7 +72,7 @@
     ]
   },
   "engines": {
-    "node": ">=22.7.0",
+    "node": ">=22.13.0",
     "npm": ">=9"
   },
   "release": {
@@ -97,6 +97,7 @@
     "@middy/core": "6.4.5",
     "@middy/input-output-logger": "6.4.5",
     "jsonwebtoken": "9.0.2",
-    "mailparser": "3.7.4"
+    "mailparser": "3.7.4",
+    "tsmatchers": "5.0.2"
   }
 }

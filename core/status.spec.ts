@@ -1,24 +1,24 @@
-import { describe, it, before } from 'node:test'
-import type { CoreEvent } from './CoreEvent.tsx'
-import { testDb } from './test/testDb.ts'
-import type { DbContext } from './persistence/DbContext.tsx'
-import { notifier } from './notifier.ts'
-import { createTestDb } from './test/createTestDb.ts'
-import { CoreEventType } from './CoreEventType.ts'
-import { storeEvent } from './test/storeEvent.ts'
-import { ensureUserIsMember } from './test/ensureUserIsMember.ts'
+import assert from 'node:assert'
+import { before, describe, it } from 'node:test'
 import { ulid } from 'ulid'
-import { isNotAnError } from './test/isNotAnError.ts'
-import { createStatus } from './persistence/createStatus.ts'
+import type { CoreEvent } from './CoreEvent.tsx'
+import { CoreEventType } from './CoreEventType.ts'
+import { notifier } from './notifier.ts'
 import { createOrganization } from './persistence/createOrganization.ts'
-import { aString, arrayContaining, check, objectMatching } from 'tsmatchers'
 import { createProject } from './persistence/createProject.ts'
+import { createStatus } from './persistence/createStatus.ts'
+import type { DbContext } from './persistence/DbContext.tsx'
 import { getStatus } from './persistence/getStatus.ts'
 import {
-	randomUser,
 	randomOrganization,
 	randomProject,
+	randomUser,
 } from './randomEntities.ts'
+import { createTestDb } from './test/createTestDb.ts'
+import { ensureUserIsMember } from './test/ensureUserIsMember.ts'
+import { isNotAnError } from './test/isNotAnError.ts'
+import { storeEvent } from './test/storeEvent.ts'
+import { testDb } from './test/testDb.ts'
 
 describe('status', async () => {
 	const { TableName, db } = testDb()
@@ -55,18 +55,23 @@ describe('status', async () => {
 				user,
 			),
 		)
-		check(events).is(
-			arrayContaining(
-				objectMatching({
-					type: CoreEventType.STATUS_CREATED,
-					project: project.id,
-					message: `This is a status update by Blake`,
-					author: user.sub,
-					id,
-					attributeTo: 'Blake',
-				}),
-			),
+
+		const maybeEvent = events.find(
+			(e) =>
+				e.type === CoreEventType.STATUS_CREATED &&
+				'id' in e &&
+				e.id === id &&
+				'project' in e &&
+				e.project === project.id &&
+				'message' in e &&
+				e.message === `This is a status update by Blake` &&
+				'author' in e &&
+				e.author === user.sub &&
+				'attributeTo' in e &&
+				e.attributeTo === 'Blake',
 		)
+
+		assert(maybeEvent, 'Expected STATUS_CREATED event to be emitted')
 
 		const { status } = isNotAnError(
 			await getStatus(dbContext)(
@@ -77,11 +82,10 @@ describe('status', async () => {
 				user,
 			),
 		)
-		check(status).is(
-			objectMatching({
-				id: aString,
-				attributeTo: 'Blake',
-			}),
-		)
+		assert.partialDeepStrictEqual(status, {
+			attributeTo: 'Blake',
+		})
+		assert.equal(status.attributeTo, 'Blake')
+		assert(typeof status.id === 'string')
 	})
 })

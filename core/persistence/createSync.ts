@@ -1,12 +1,12 @@
 import { PutItemCommand } from '@aws-sdk/client-dynamodb'
+import type { UserAuthContext } from '../auth.ts'
 import type { CoreEvent } from '../CoreEvent.ts'
 import { CoreEventType } from '../CoreEventType.ts'
-import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
-import type { UserAuthContext } from '../auth.ts'
 import type { Notify } from '../notifier.ts'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
 import type { DbContext } from './DbContext.ts'
-import { l } from './l.ts'
 import { canWriteStatus } from './getProjectMember.ts'
+import { l } from './l.ts'
 
 type SyncCreatedEvent = CoreEvent & {
 	type: CoreEventType.SYNC_CREATED

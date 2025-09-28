@@ -1,14 +1,14 @@
 import { BatchGetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
-import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
+import { chunkArray } from '../../util/chunkArray.ts'
 import type { UserAuthContext } from '../auth.ts'
-import type { DbContext } from './DbContext.ts'
+import { BadRequestError, type ProblemDetail } from '../ProblemDetail.ts'
 import type { Project } from './createProject.ts'
+import type { DbContext } from './DbContext.ts'
+import { projectMemberIndex } from './db.ts'
 import { isOrganizationMember } from './getOrganizationMember.ts'
 import { itemToProject } from './getProject.ts'
 import { l } from './l.ts'
-import { projectMemberIndex } from './db.ts'
-import { chunkArray } from '../../util/chunkArray.ts'
 
 export const listOrganizationProjects =
 	(dbContext: DbContext) =>

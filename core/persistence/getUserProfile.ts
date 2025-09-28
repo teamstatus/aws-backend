@@ -1,8 +1,8 @@
 import { type AttributeValue, GetItemCommand } from '@aws-sdk/client-dynamodb'
-import { NotFoundError, type ProblemDetail } from '../ProblemDetail.ts'
-import type { DbContext } from './DbContext.ts'
-import type { User } from './createUser.ts'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import { NotFoundError, type ProblemDetail } from '../ProblemDetail.ts'
+import type { User } from './createUser.ts'
+import type { DbContext } from './DbContext.ts'
 
 type UserProfile = Pick<User, 'id' | 'name' | 'pronouns'>
 

@@ -1,7 +1,7 @@
 import { GetItemCommand } from '@aws-sdk/client-dynamodb'
-import { unmarshall, type NativeAttributeValue } from '@aws-sdk/util-dynamodb'
-import type { DbContext } from './DbContext.ts'
+import { type NativeAttributeValue, unmarshall } from '@aws-sdk/util-dynamodb'
 import type { Project } from './createProject.ts'
+import type { DbContext } from './DbContext.ts'
 
 export const getProject =
 	({ db, TableName }: DbContext) =>

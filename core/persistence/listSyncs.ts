@@ -1,14 +1,14 @@
 import { BatchGetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { decodeTime } from 'ulid'
-import type { ProblemDetail } from '../ProblemDetail.ts'
+import { chunkArray } from '../../util/chunkArray.ts'
 import type { UserAuthContext } from '../auth.ts'
+import type { ProblemDetail } from '../ProblemDetail.ts'
 import type { DbContext } from './DbContext.ts'
-import { itemToSync, serialize, type SerializedSync } from './getSync.ts'
+import { projectSyncProjectIndex, syncOwnerIndex } from './db.ts'
+import { itemToSync, type SerializedSync, serialize } from './getSync.ts'
 import { l } from './l.ts'
 import { listProjects } from './listProjects.ts'
-import { projectSyncProjectIndex, syncOwnerIndex } from './db.ts'
-import { chunkArray } from '../../util/chunkArray.ts'
 
 export const listSyncs =
 	(dbContext: DbContext) =>

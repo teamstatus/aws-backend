@@ -1,7 +1,7 @@
 import { type AttributeValue, ScanCommand } from '@aws-sdk/client-dynamodb'
 import type { User } from './createUser.ts'
-import { itemToUser } from './getUser.ts'
 import type { DbContext } from './DbContext.tsx'
+import { itemToUser } from './getUser.ts'
 
 export const getAllUsers =
 	({ db, TableName }: DbContext) =>

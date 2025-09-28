@@ -2,18 +2,18 @@ import {
 	ConditionalCheckFailedException,
 	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb'
+import { unmarshall } from '@aws-sdk/util-dynamodb'
+import type { UserAuthContext } from '../auth.ts'
 import type { CoreEvent } from '../CoreEvent.ts'
 import { CoreEventType } from '../CoreEventType.ts'
+import type { Notify } from '../notifier.ts'
 import {
 	ConflictError,
 	InternalError,
 	type ProblemDetail,
 } from '../ProblemDetail.ts'
-import type { UserAuthContext } from '../auth.ts'
-import type { Notify } from '../notifier.ts'
-import type { DbContext } from './DbContext.ts'
 import type { User } from './createUser.ts'
-import { unmarshall } from '@aws-sdk/util-dynamodb'
+import type { DbContext } from './DbContext.ts'
 
 export type UserUpdatedEvent = CoreEvent & {
 	type: CoreEventType.USER_UPDATED

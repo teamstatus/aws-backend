@@ -1,16 +1,16 @@
 import { DeleteItemCommand, GetItemCommand } from '@aws-sdk/client-dynamodb'
 import { unmarshall } from '@aws-sdk/util-dynamodb'
+import type { UserAuthContext } from '../auth.ts'
+import type { Notify } from '../notifier.ts'
 import {
 	BadRequestError,
 	NotFoundError,
 	type ProblemDetail,
 } from '../ProblemDetail.ts'
-import type { UserAuthContext } from '../auth.ts'
-import type { Notify } from '../notifier.ts'
-import type { DbContext } from './DbContext.ts'
 import { createProjectMember } from './createProjectMember.ts'
-import { l } from './l.ts'
+import type { DbContext } from './DbContext.ts'
 import { createInvitationId } from './inviteToProject.ts'
+import { l } from './l.ts'
 
 export const acceptProjectInvitation =
 	(dbContext: DbContext, notify: Notify) =>
