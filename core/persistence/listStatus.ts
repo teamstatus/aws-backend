@@ -91,6 +91,7 @@ export const listStatus =
 		}
 
 		const res = await db.send(new QueryCommand(args))
+
 		return {
 			status: await Promise.all((res.Items ?? []).map(itemToStatus(dbContext))),
 			nextStartKey:

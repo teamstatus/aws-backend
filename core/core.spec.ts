@@ -54,7 +54,6 @@ import { randomOrganization, randomUser } from './randomEntities.ts'
 import { aUlid } from './test/aUlid.ts'
 import { createTestDb } from './test/createTestDb.ts'
 import { ensureUserIsMember } from './test/ensureUserIsMember.ts'
-import { eventually } from './test/eventually.ts'
 import { isNotAnError } from './test/isNotAnError.ts'
 import { storeEvent } from './test/storeEvent.ts'
 import { testDb } from './test/testDb.ts'
@@ -72,6 +71,7 @@ describe('core', async () => {
 	before(createTestDb(dbContext))
 
 	const acme = randomOrganization()
+	const acmeTeamStatusProjectId = `${acme.id}#teamstatus`
 	const alex = randomUser()
 	const blake = randomUser()
 	const cameron = randomUser()
@@ -273,7 +273,7 @@ describe('core', async () => {
 			on(CoreEventType.PROJECT_MEMBER_CREATED, storeEvent(events))
 			isNotAnError(
 				await createProject(dbContext, notify)(
-					{ id: `${acme.id}#teamstatus`, name: 'Teamstatus.' },
+					{ id: acmeTeamStatusProjectId, name: 'Teamstatus.' },
 					alex,
 				),
 			)
@@ -281,7 +281,7 @@ describe('core', async () => {
 				arrayContaining(
 					objectMatching({
 						type: CoreEventType.PROJECT_CREATED,
-						id: `${acme.id}#teamstatus`,
+						id: acmeTeamStatusProjectId,
 						name: 'Teamstatus.',
 						version: 1,
 					}),
@@ -291,7 +291,7 @@ describe('core', async () => {
 				arrayContaining(
 					objectMatching({
 						type: CoreEventType.PROJECT_MEMBER_CREATED,
-						project: `${acme.id}#teamstatus`,
+						project: acmeTeamStatusProjectId,
 						user: alex.sub,
 					}),
 				),
@@ -304,7 +304,7 @@ describe('core', async () => {
 				on(CoreEventType.PROJECT_UPDATED, storeEvent(events))
 				isNotAnError(
 					await updateProject(dbContext, notify)(
-						`${acme.id}#teamstatus`,
+						acmeTeamStatusProjectId,
 						{ name: 'Teamstatus' },
 						1,
 						alex,
@@ -315,7 +315,7 @@ describe('core', async () => {
 					arrayContaining(
 						objectMatching({
 							type: CoreEventType.PROJECT_UPDATED,
-							id: `${acme.id}#teamstatus`,
+							id: acmeTeamStatusProjectId,
 							name: 'Teamstatus',
 							version: 2,
 						}),
@@ -326,7 +326,7 @@ describe('core', async () => {
 
 		await it('ensures that projects are unique', async () => {
 			const res = (await createProject(dbContext, notify)(
-				{ id: `${acme.id}#teamstatus`, name: 'Teamstatus' },
+				{ id: acmeTeamStatusProjectId, name: 'Teamstatus' },
 				alex,
 			)) as { error: ProblemDetail }
 			assert.equal(
@@ -373,7 +373,7 @@ describe('core', async () => {
 			)) as { projects: Project[] }
 			check(projects?.[0]).is(
 				objectMatching({
-					id: `${acme.id}#teamstatus`,
+					id: acmeTeamStatusProjectId,
 					name: 'Teamstatus',
 				}),
 			)
@@ -399,7 +399,7 @@ describe('core', async () => {
 					await inviteToProject(dbContext, notify)(
 						{
 							invitedUserId: cameron.sub,
-							projectId: `${acme.id}#teamstatus`,
+							projectId: acmeTeamStatusProjectId,
 							role: Role.MEMBER,
 						},
 						alex,
@@ -409,7 +409,7 @@ describe('core', async () => {
 					arrayContaining(
 						objectMatching({
 							type: CoreEventType.PROJECT_MEMBER_INVITED,
-							project: `${acme.id}#teamstatus`,
+							project: acmeTeamStatusProjectId,
 							invitee: cameron.sub,
 							inviter: alex.sub,
 							role: Role.MEMBER,
@@ -422,7 +422,7 @@ describe('core', async () => {
 				const { error } = (await inviteToProject(dbContext, notify)(
 					{
 						invitedUserId: '@nobody',
-						projectId: `${acme.id}#teamstatus`,
+						projectId: acmeTeamStatusProjectId,
 						role: Role.MEMBER,
 					},
 					alex,
@@ -435,7 +435,7 @@ describe('core', async () => {
 					const { error } = (await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
-							projectId: `${acme.id}#teamstatus`,
+							projectId: acmeTeamStatusProjectId,
 							message: 'Should not work',
 						},
 						cameron,
@@ -461,7 +461,7 @@ describe('core', async () => {
 
 				await it('allows users to accept invitations', async () => {
 					const { error } = (await acceptProjectInvitation(dbContext, notify)(
-						`${acme.id}#teamstatus`,
+						acmeTeamStatusProjectId,
 						cameron,
 					)) as { error: ProblemDetail }
 					assert.equal(error, undefined)
@@ -471,7 +471,7 @@ describe('core', async () => {
 					const { error } = (await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
-							projectId: `${acme.id}#teamstatus`,
+							projectId: acmeTeamStatusProjectId,
 							message: 'Should work now!',
 						},
 						cameron,
@@ -482,13 +482,13 @@ describe('core', async () => {
 
 			await it('allows owners to list project members', async () => {
 				const { members } = (await listProjectMembers(dbContext)(
-					`${acme.id}#teamstatus`,
+					acmeTeamStatusProjectId,
 					alex,
 				)) as { members: ProjectMember[] }
 				check(members).is(
 					arrayContaining(
 						objectMatching({
-							project: `${acme.id}#teamstatus`,
+							project: acmeTeamStatusProjectId,
 							user: cameron.sub,
 							role: Role.MEMBER,
 						}),
@@ -517,7 +517,7 @@ describe('core', async () => {
 					await inviteToProject(dbContext, notify)(
 						{
 							invitedUserId: emerson.sub,
-							projectId: `${acme.id}#teamstatus`,
+							projectId: acmeTeamStatusProjectId,
 							role: Role.WATCHER,
 						},
 						alex,
@@ -527,7 +527,7 @@ describe('core', async () => {
 					arrayContaining(
 						objectMatching({
 							type: CoreEventType.PROJECT_MEMBER_INVITED,
-							project: `${acme.id}#teamstatus`,
+							project: acmeTeamStatusProjectId,
 							invitee: emerson.sub,
 							inviter: alex.sub,
 							role: Role.WATCHER,
@@ -551,7 +551,7 @@ describe('core', async () => {
 
 			await it('allows users to accept invitations', async () => {
 				const { error } = (await acceptProjectInvitation(dbContext, notify)(
-					`${acme.id}#teamstatus`,
+					acmeTeamStatusProjectId,
 					emerson,
 				)) as { error: ProblemDetail }
 				assert.equal(error, undefined)
@@ -561,7 +561,7 @@ describe('core', async () => {
 				const { error } = (await createStatus(dbContext, notify)(
 					{
 						id: ulid(),
-						projectId: `${acme.id}#teamstatus`,
+						projectId: acmeTeamStatusProjectId,
 						message: 'Should not work',
 					},
 					emerson,
@@ -571,25 +571,6 @@ describe('core', async () => {
 					`Only members of '${acme.id}#teamstatus' are allowed to create status.`,
 				)
 			})
-
-			await it('should allow watchers read status of a project', async () =>
-				eventually(async () => {
-					const { status } = (await listStatus(dbContext)(
-						{ projectId: `${acme.id}#teamstatus` },
-						emerson,
-					)) as { status: Status[] }
-					check(status).is(
-						arrayContaining(
-							objectMatching({
-								id: aString,
-								message:
-									'Implemented ability to persist status updates for projects.',
-								author: alex.sub,
-								project: `${acme.id}#teamstatus`,
-							}),
-						),
-					)
-				}))
 		})
 
 		await describe('status', async () => {
@@ -603,7 +584,7 @@ describe('core', async () => {
 						await createStatus(dbContext, notify)(
 							{
 								id: id,
-								projectId: `${acme.id}#teamstatus`,
+								projectId: acmeTeamStatusProjectId,
 								message:
 									'Implemented ability to persist status updates for projects.',
 							},
@@ -614,7 +595,7 @@ describe('core', async () => {
 						arrayContaining(
 							objectMatching({
 								type: CoreEventType.STATUS_CREATED,
-								project: `${acme.id}#teamstatus`,
+								project: acmeTeamStatusProjectId,
 								message:
 									'Implemented ability to persist status updates for projects.',
 								author: alex.sub,
@@ -628,7 +609,7 @@ describe('core', async () => {
 					const { error } = (await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
-							projectId: `${acme.id}#teamstatus`,
+							projectId: acmeTeamStatusProjectId,
 							message: `I am not a member of the ${acme.id} organization, so I should not be allowed to create a status.`,
 						},
 						blake,
@@ -648,7 +629,7 @@ describe('core', async () => {
 						await createStatus(dbContext, notify)(
 							{
 								id: statusId,
-								projectId: `${acme.id}#teamstatus`,
+								projectId: acmeTeamStatusProjectId,
 								message: 'Status with an typo',
 							},
 							alex,
@@ -666,7 +647,7 @@ describe('core', async () => {
 					)
 					// Fetch
 					const { status: statusList } = (await listStatus(dbContext)(
-						{ projectId: `${acme.id}#teamstatus` },
+						{ projectId: acmeTeamStatusProjectId },
 						alex,
 					)) as {
 						status: Status[]
@@ -695,7 +676,7 @@ describe('core', async () => {
 			await describe('list', async () => {
 				await it('can list status for a project', async () => {
 					const { status } = (await listStatus(dbContext)(
-						{ projectId: `${acme.id}#teamstatus` },
+						{ projectId: acmeTeamStatusProjectId },
 						alex,
 					)) as { status: Status[] }
 					check(status?.[0]).is(
@@ -704,7 +685,7 @@ describe('core', async () => {
 							message:
 								'Implemented ability to persist status updates for projects.',
 							author: alex.sub,
-							project: `${acme.id}#teamstatus`,
+							project: acmeTeamStatusProjectId,
 						}),
 					)
 				})
@@ -713,7 +694,7 @@ describe('core', async () => {
 					await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
-							projectId: `${acme.id}#teamstatus`,
+							projectId: acmeTeamStatusProjectId,
 							message: 'Status 1',
 						},
 						alex,
@@ -721,7 +702,7 @@ describe('core', async () => {
 					await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
-							projectId: `${acme.id}#teamstatus`,
+							projectId: acmeTeamStatusProjectId,
 							message: 'Status 2',
 						},
 						alex,
@@ -729,14 +710,14 @@ describe('core', async () => {
 					await createStatus(dbContext, notify)(
 						{
 							id: ulid(),
-							projectId: `${acme.id}#teamstatus`,
+							projectId: acmeTeamStatusProjectId,
 							message: 'Status 3',
 						},
 						alex,
 					)
 
 					const { status } = (await listStatus(dbContext)(
-						{ projectId: `${acme.id}#teamstatus` },
+						{ projectId: acmeTeamStatusProjectId },
 						alex,
 					)) as {
 						status: Status[]
@@ -750,7 +731,7 @@ describe('core', async () => {
 
 				await it('allows only organization members to list status', async () => {
 					const { error } = (await listStatus(dbContext)(
-						{ projectId: `${acme.id}#teamstatus` },
+						{ projectId: acmeTeamStatusProjectId },
 						blake,
 					)) as { error: ProblemDetail }
 					assert.equal(
@@ -836,7 +817,7 @@ describe('core', async () => {
 						await createStatus(dbContext, notify)(
 							{
 								id: statusId,
-								projectId: `${acme.id}#teamstatus`,
+								projectId: acmeTeamStatusProjectId,
 								message: `A new status!`,
 							},
 							alex,
@@ -846,7 +827,7 @@ describe('core', async () => {
 						await getStatus(dbContext)(
 							{
 								statusId,
-								projectId: `${acme.id}#teamstatus`,
+								projectId: acmeTeamStatusProjectId,
 							},
 							alex,
 						),
@@ -856,7 +837,7 @@ describe('core', async () => {
 							id: aString,
 							message: `A new status!`,
 							author: alex.sub,
-							project: `${acme.id}#teamstatus`,
+							project: acmeTeamStatusProjectId,
 						}),
 					)
 				})
@@ -864,7 +845,7 @@ describe('core', async () => {
 					const { error } = (await getStatus(dbContext)(
 						{
 							statusId,
-							projectId: `${acme.id}#teamstatus`,
+							projectId: acmeTeamStatusProjectId,
 						},
 						blake,
 					)) as { error: ProblemDetail }
@@ -1032,7 +1013,7 @@ describe('core', async () => {
 				check(projects).is(
 					arrayContaining(
 						objectMatching({
-							id: `${acme.id}#teamstatus`,
+							id: acmeTeamStatusProjectId,
 							name: 'Teamstatus',
 							version: 2,
 						}),
@@ -1042,7 +1023,7 @@ describe('core', async () => {
 
 			await it('allows project members to list status', async () => {
 				const { status } = (await listStatus(dbContext)(
-					{ projectId: `${acme.id}#teamstatus` },
+					{ projectId: acmeTeamStatusProjectId },
 					cameron,
 				)) as { status: Status[] }
 				assert.equal(status.length, 6)

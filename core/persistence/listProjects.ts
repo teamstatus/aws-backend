@@ -10,7 +10,7 @@ import { projectMemberIndex } from './db.ts'
 import { itemToProject } from './getProject.ts'
 import { l } from './l.ts'
 
-type UserProject = Project & { role: Role }
+export type UserProject = Project & { role: Role }
 
 export const listProjects =
 	(dbContext: DbContext) =>
