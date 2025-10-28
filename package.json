@@ -35,7 +35,7 @@
     "@aws-sdk/client-ssm": "3.918.0",
     "@aws-sdk/s3-request-presigner": "3.918.0",
     "@aws-sdk/util-dynamodb": "3.918.0",
-    "@bifravst/aws-cdk-lambda-helpers": "3.5.72",
+    "@bifravst/aws-cdk-lambda-helpers": "3.5.73",
     "@bifravst/ci": "2.1.1",
     "@biomejs/biome": "2.3.1",
     "@commitlint/config-conventional": "20.0.0",
