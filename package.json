@@ -37,7 +37,7 @@
     "@aws-sdk/util-dynamodb": "3.928.0",
     "@bifravst/aws-cdk-lambda-helpers": "3.5.94",
     "@bifravst/ci": "2.1.1",
-    "@biomejs/biome": "2.3.4",
+    "@biomejs/biome": "2.3.5",
     "@commitlint/config-conventional": "20.0.0",
     "@nordicsemiconductor/cloudformation-helpers": "9.1.0",
     "@sinclair/typebox": "0.34.41",
