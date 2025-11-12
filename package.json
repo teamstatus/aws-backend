@@ -43,7 +43,7 @@
     "@sinclair/typebox": "0.34.41",
     "@swc/cli": "0.7.9",
     "@swc/core": "1.15.1",
-    "@types/aws-lambda": "8.10.157",
+    "@types/aws-lambda": "8.10.158",
     "@types/chance": "1.1.7",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mailparser": "3.4.6",
