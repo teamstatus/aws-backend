@@ -60,7 +60,7 @@
     "lint-staged": "16.2.7",
     "prettier": "3.7.3",
     "typescript": "5.9.3",
-    "ulid": "3.0.1"
+    "ulid": "3.0.2"
   },
   "lint-staged": {
     "*.{md,json,yaml,yml}": [
