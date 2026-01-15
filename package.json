@@ -58,7 +58,7 @@
     "constructs": "10.4.4",
     "husky": "9.1.7",
     "lint-staged": "16.2.7",
-    "prettier": "3.7.4",
+    "prettier": "3.8.0",
     "typescript": "5.9.3",
     "ulid": "3.0.2"
   },
