@@ -40,7 +40,7 @@
     "@biomejs/biome": "2.4.9",
     "@commitlint/config-conventional": "20.5.0",
     "@nordicsemiconductor/cloudformation-helpers": "9.1.0",
-    "@sinclair/typebox": "0.34.48",
+    "@sinclair/typebox": "0.34.49",
     "@swc/cli": "0.8.0",
     "@swc/core": "1.15.21",
     "@types/aws-lambda": "8.10.161",
